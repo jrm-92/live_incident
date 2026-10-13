@@ -1,0 +1,519 @@
+import ttkbootstrap as ttk
+from ttkbootstrap.constants import *
+import tkinter as tk
+import tkinter.font as tkfont
+from tkinter import messagebox, Listbox, END, MULTIPLE
+from PIL import Image, ImageDraw, ImageFont, ImageTk, ImageOps
+import sys
+import os
+from datetime import datetime
+
+# --- Chemins relatifs pour version portable ---
+def get_base_path():
+    """Obtient le chemin de base de l'application (pour exe et script)"""
+    if getattr(sys, 'frozen', False):
+        # Si compilé avec PyInstaller
+        return os.path.dirname(sys.executable)
+    else:
+        # Si lancé comme script Python
+        return os.path.dirname(os.path.abspath(__file__))
+
+BASE_PATH = get_base_path()
+IMAGES_PATH = os.path.join(BASE_PATH, "images", "images")
+INTERSTATIONS_PATH = os.path.join(BASE_PATH, "images", "Interstations")
+OUTPUT_PATH = os.path.join(BASE_PATH, "Visuels")
+
+# --- Données ---
+stations_ligne_9 = [
+    "Pont de Sèvres", "Billancourt", "Marcel Sembat", "Porte de Saint-Cloud", "Exelmans",
+    "Michel-Ange Molitor", "Michel-Ange Auteuil", "Jasmin", "Ranelagh", "La Muette",
+    "Rue de la Pompe", "Trocadéro", "Iéna", "Alma-Marceau", "Franklin D. Roosevelt",
+    "Saint-Philippe du Roule", "Miromesnil", "Saint-Augustin", "Havre-Caumartin",
+    "Chaussée d'Antin", "Richelieu - Drouot", "Grands Boulevards",
+    "Bonne Nouvelle", "Strasbourg - Saint-Denis", "République", "Oberkampf",
+    "Saint-Ambroise", "Voltaire", "Charonne", "Rue des Boulets", "Nation",
+    "Buzenval", "Maraîchers", "Porte de Montreuil", "Robespierre", "Croix de Chavaux",
+    "Mairie de Montreuil"
+]
+
+def resource_path(relative_path):
+    """Obtient le chemin absolu vers une ressource"""
+    return os.path.join(IMAGES_PATH, relative_path)
+
+def get_interstations_images():
+    """Récupère la liste des images dans le dossier Interstations"""
+    try:
+        if os.path.exists(INTERSTATIONS_PATH):
+            files = os.listdir(INTERSTATIONS_PATH)
+            # Filtrer uniquement les fichiers images
+            image_extensions = ['.png', '.jpg', '.jpeg', '.gif', '.bmp']
+            images = [f for f in files if any(f.lower().endswith(ext) for ext in image_extensions)]
+            return sorted(images)
+        else:
+            return []
+    except Exception as e:
+        print(f"Erreur lors de la lecture du dossier Interstations : {e}")
+        return []
+
+def ensure_directories():
+    """S'assure que les répertoires nécessaires existent"""
+    os.makedirs(OUTPUT_PATH, exist_ok=True)
+    if not os.path.exists(IMAGES_PATH):
+        messagebox.showerror("Erreur", 
+                            f"Le répertoire des images n'existe pas :\n{IMAGES_PATH}\n\n"
+                            f"Vérifiez que la structure de dossiers est correcte :\n"
+                            f"- images/images/\n"
+                            f"- images/Interstations/\n\n"
+                            f"Chemin de base : {BASE_PATH}")
+        return False
+    return True
+
+# Vérification des répertoires au démarrage
+if not ensure_directories():
+    sys.exit(1)
+
+# --- Interface graphique ---
+root = ttk.Window(themename="flatly")
+
+style = ttk.Style()
+style.configure("Custom.TLabelframe.Label", font=("Helvetica", 10, "bold"), foreground="white")
+style.configure("Custom.TLabelframe", background="white", borderwidth=1, relief="groove")
+root.title("Live Incident")
+root.geometry("800x900")
+
+# Variables
+incident_var = tk.StringVar()
+autre_incident_var = tk.StringVar()
+localisation_var = tk.StringVar()
+infos_var = tk.StringVar()
+selected_image_var = tk.StringVar()
+
+# --- Interface graphique ---
+header_frame = ttk.Frame(root)
+header_frame.pack(pady=(0, 0))
+
+try:
+    img_live = Image.open(resource_path("live_incident.png"))
+    img_live = img_live.resize((90, 50), Image.Resampling.LANCZOS)
+    img_logo = Image.open(resource_path("logo_ligne9.png")).resize((70, 70))
+    tk_img_live = ImageTk.PhotoImage(img_live)
+    tk_img_logo = ImageTk.PhotoImage(img_logo)
+
+    img_row = ttk.Frame(header_frame)
+    img_row.pack()
+
+    ttk.Label(img_row, image=tk_img_live).pack(side="left", padx=(50, 20), pady=0)
+    ttk.Label(img_row, image=tk_img_logo).pack(side="right", padx=(20, 50), pady=0)
+
+except Exception as e:
+    messagebox.showerror("Erreur image", f"Impossible de charger l'entête : {e}")
+
+# Frame principale
+frame = ttk.Frame(root, padding=10)
+frame.pack(fill="both", expand=True, pady=(5, 0))
+
+# Widgets
+zone_incident_vars = []
+selected_stations = []
+
+def toggle_station_selection(station):
+    if station in selected_stations:
+        selected_stations.remove(station)
+    else:
+        selected_stations.append(station)
+
+def on_incident_change(*args):
+    """Fonction appelée quand le type d'incident change"""
+    if incident_var.get() in ["Service de sécurité","Service de sécurité sur ordre","Ralentissement provisoire"]:
+        # Afficher le sélecteur d'image
+        image_label.grid(row=2, column=0, sticky="w", pady=5)
+        image_menu.grid(row=2, column=1, sticky="ew", pady=5)
+        # Charger les images disponibles
+        images = get_interstations_images()
+        image_menu['values'] = images
+        if images:
+            image_menu.current(0)
+            selected_image_var.set(images[0])
+    else:
+        # Cacher le sélecteur d'image
+        image_label.grid_remove()
+        image_menu.grid_remove()
+        selected_image_var.set("")
+
+station_frame = ttk.Labelframe(frame, text="Zone d'incident", padding=10, bootstyle="info", style="Custom.TLabelframe")
+station_frame.configure(labelanchor="n")
+style.configure("Custom.TLabelframe.Label", font=("Helvetica", 10, "bold"), foreground="#000082")
+station_frame.configure(style="Custom.TLabelframe")
+canvas = tk.Canvas(station_frame, width=700, height=500, bg="#ACCA24", highlightthickness=1, highlightbackground="#000082")
+scrollbar = ttk.Scrollbar(station_frame, orient="vertical", command=canvas.yview)
+scrollable_frame = ttk.Frame(canvas)
+
+scrollable_frame.bind(
+    "<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+)
+
+canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+canvas.configure(yscrollcommand=scrollbar.set)
+
+station_frame.grid(row=1, column=0, columnspan=2, sticky="n", pady=10)
+canvas.pack(side="left", fill="both", expand=True)
+scrollbar.pack(side="right", fill="y")
+
+for i, station in enumerate(stations_ligne_9):
+    var = tk.BooleanVar()
+    chk = ttk.Checkbutton(scrollable_frame, text=station, variable=var, command=lambda s=station: toggle_station_selection(s))
+    chk.grid(row=i, column=0, sticky="w", padx=5, pady=2)
+    zone_incident_vars.append(var)
+
+# Type d'incident
+ttk.Label(frame, text="Type d'incident :", font=('Helvetica', 10, 'bold'), foreground="#000082").grid(row=0, column=0, sticky="w", pady=2)
+incident_menu = ttk.Combobox(frame, textvariable=incident_var, values=["Choisir type incident",
+"Ralentissement provisoire", "Station(s) fermée(s)",
+"Interruption de trafic", "Service de sécurité","Service de sécurité sur ordre"])
+incident_menu.grid(row=0, column=1, sticky="ew", pady=10)
+incident_menu.current(0)
+incident_menu.configure(foreground="#000082")
+
+# Liaison de la fonction de callback
+incident_var.trace('w', on_incident_change)
+
+# Sélecteur d'image (initialement caché)
+image_label = ttk.Label(frame, text="Choisir interstation :", font=('Helvetica', 10, 'bold'), foreground="#000082")
+image_menu = ttk.Combobox(frame, textvariable=selected_image_var, values=[], state="readonly")
+image_menu.configure(foreground="#000082")
+
+# Ces widgets seront affichés/cachés dynamiquement
+image_label.grid(row=2, column=0, sticky="w", pady=5)
+image_menu.grid(row=2, column=1, sticky="ew", pady=5)
+image_label.grid_remove()  # Cacher initialement
+image_menu.grid_remove()   # Cacher initialement
+
+# Titre à afficher
+ttk.Label(frame, text="Titre incident:", font=('Helvetica', 10, 'bold'), foreground="#000082")\
+    .grid(row=3, column=0, sticky="w", pady=10)
+ttk.Entry(frame, textvariable=localisation_var).grid(row=3, column=1, sticky="ew")
+
+# + d'informations
+ttk.Label(frame, text="+ d'informations :", font=('Helvetica', 10, 'bold'), foreground="#000082")\
+    .grid(row=4, column=0, sticky="w", pady=10)
+ttk.Entry(frame, textvariable=infos_var).grid(row=4, column=1, sticky="ew")
+
+# Fonction de génération d'image 4K
+def generer_image():
+    scale = 2
+    base_width, base_height = 1920, 1080
+    width, height = base_width * scale, base_height * scale
+
+    img = Image.new("RGB", (width, height), "white")
+    draw = ImageDraw.Draw(img)
+
+    type_incident = incident_var.get()
+    stations_choisies = selected_stations.copy()
+    stations_choisies.sort(key=lambda x: stations_ligne_9.index(x))
+
+    localisation = localisation_var.get()
+    infos = infos_var.get()
+    horodatage = datetime.now().strftime("%d/%m/%Y %H:%M")
+
+    # Chargement des polices avec chemins absolus
+    try:
+        # Utilisation des polices système Windows
+        try:
+            font_title = ImageFont.truetype("arial.ttf", 60 * scale)
+            font_text = ImageFont.truetype("arial.ttf", 18 * scale)
+            font_bold = ImageFont.truetype("arialbd.ttf", 24 * scale)
+            font_ferme = ImageFont.truetype("arialbd.ttf", 20 * scale)  
+            font_station = ImageFont.truetype("arialbd.ttf", 13 * scale)
+            font_date = ImageFont.truetype("arial.ttf", 14 * scale)
+        except OSError:
+            # Si Arial n'est pas trouvé, utiliser la police par défaut
+            font_title = ImageFont.load_default()
+            font_text = ImageFont.load_default()
+            font_bold = ImageFont.load_default()
+            font_ferme = ImageFont.load_default()
+            font_station = ImageFont.load_default()
+            font_date = ImageFont.load_default()
+    except Exception as e:
+        # En cas d'erreur, utiliser la police par défaut
+        font_title = ImageFont.load_default()
+        font_text = ImageFont.load_default()
+        font_bold = ImageFont.load_default()
+        font_ferme = ImageFont.load_default()
+        font_station = ImageFont.load_default()
+        font_date = ImageFont.load_default()
+
+    # Chargement des images avec chemins absolus
+    try:
+        image_live_incident = Image.open(resource_path("live_incident.png"))
+        image_live_incident = image_live_incident.resize((130 * scale, 90 * scale), Image.Resampling.LANCZOS)
+        image_logo_ligne9 = Image.open(resource_path("logo_ligne9.png")).resize((100 * scale, 100 * scale))
+        
+        # Coller les images avec gestion de la transparence
+        if image_live_incident.mode in ('RGBA', 'LA'):
+            img.paste(image_live_incident, ((width - image_live_incident.width) // 2, 20 * scale), mask=image_live_incident)
+        else:
+            img.paste(image_live_incident, ((width - image_live_incident.width) // 2, 20 * scale))
+            
+        if image_logo_ligne9.mode in ('RGBA', 'LA'):
+            img.paste(image_logo_ligne9, (width - image_logo_ligne9.width - 20 * scale, 20 * scale), mask=image_logo_ligne9)
+        else:
+            img.paste(image_logo_ligne9, (width - image_logo_ligne9.width - 20 * scale, 20 * scale))
+    except Exception as e:
+        print(f"Erreur chargement logos : {e}")
+        draw.text((width // 2, 30 * scale), f"[Erreur chargement logos : {e}]", font=font_text, fill="red", anchor="mm")
+
+    y_line = 270 * scale
+    y_bottom = y_line + 50 * scale
+
+    if stations_choisies and type_incident.lower() == "station(s) fermée(s)":
+        spacing = 47 * scale
+        total_length = spacing * (len(stations_ligne_9) - 1)
+        x_start = 60 * scale
+
+        # Dessiner la ligne principale
+        draw.line((x_start, y_line, x_start + total_length, y_line), fill="#B7E600", width=8 * scale)
+
+        # Dessiner les stations et les croix rouges
+        for i, station in enumerate(stations_ligne_9):
+            x = x_start + i * spacing
+
+            if station in stations_choisies:
+                # Station fermée : dessiner une croix rouge sur le tracé
+                draw.line((x - 8 * scale, y_line - 8 * scale, x + 8 * scale, y_line + 8 * scale), fill="red", width=4 * scale)
+                draw.line((x - 8 * scale, y_line + 8 * scale, x + 8 * scale, y_line - 8 * scale), fill="red", width=4 * scale)
+            else:
+                # Station normale
+                draw.ellipse((x - 5 * scale, y_line - 5 * scale, x + 5 * scale, y_line + 5 * scale), fill="#F7F8F3", outline="black")
+
+            # Noms des stations en rotation
+            rotated = Image.new("RGBA", (200 * scale, 50 * scale), (255, 255, 255, 0))
+            d = ImageDraw.Draw(rotated)
+            d.text((0, 0), station, font=font_station, fill="#000082")
+            rotated = rotated.rotate(30, expand=1)
+            img.paste(rotated, (int(x), int(y_line - 125 * scale)), rotated)
+
+        # Liste des stations fermées centrée au milieu de l'image
+        y_list_start = y_bottom + 110 * scale
+        line_height = 45 * scale  # Augmenté pour la plus grande police
+        
+        # Calculer si on a besoin de 2 colonnes (plus de 6 stations)
+        if len(stations_choisies) > 6:
+            # Répartir équitablement en 2 colonnes
+            mid_point = (len(stations_choisies) + 1) // 2
+            left_stations = stations_choisies[:mid_point]
+            right_stations = stations_choisies[mid_point:]
+            
+            # Calculer la largeur maximale des textes pour centrer les colonnes
+            max_left_width = 0
+            max_right_width = 0
+            
+            for station in left_stations:
+                station_text = f"• {station}"
+                bbox = draw.textbbox((0, 0), station_text, font=font_ferme)
+                text_width = bbox[2] - bbox[0]
+                max_left_width = max(max_left_width, text_width)
+            
+            for station in right_stations:
+                station_text = f"• {station}"
+                bbox = draw.textbbox((0, 0), station_text, font=font_ferme)
+                text_width = bbox[2] - bbox[0]
+                max_right_width = max(max_right_width, text_width)
+            
+            # Positions des colonnes avec alignement des puces
+            column_spacing = 200 * scale
+            total_width = max_left_width + column_spacing + max_right_width
+            x_left_start = (width - total_width) // 2
+            x_right_start = x_left_start + max_left_width + column_spacing
+            
+            # Dessiner la colonne de gauche avec alignement des puces
+            y_current = y_list_start
+            for station in left_stations:
+                station_text = f"• {station}"
+                draw.text((x_left_start, y_current), station_text, font=font_ferme, fill="#000082")
+                y_current += line_height
+            
+            # Dessiner la colonne de droite avec alignement des puces
+            y_current = y_list_start
+            for station in right_stations:
+                station_text = f"• {station}"
+                draw.text((x_right_start, y_current), station_text, font=font_ferme, fill="#000082")
+                y_current += line_height
+        else:
+            # Une seule colonne centrée avec alignement des puces
+            y_current = y_list_start
+            
+            # Calculer la largeur maximale pour aligner toutes les puces
+            max_width = 0
+            for station in stations_choisies:
+                station_text = f"• {station}"
+                bbox = draw.textbbox((0, 0), station_text, font=font_ferme)
+                text_width = bbox[2] - bbox[0]
+                max_width = max(max_width, text_width)
+            
+            # Position de départ pour centrer la colonne
+            x_start = (width - max_width) // 2
+            
+            for station in stations_choisies:
+                station_text = f"• {station}"
+                draw.text((x_start, y_current), station_text, font=font_ferme, fill="#000082")
+                y_current += line_height
+
+    if stations_choisies and (type_incident.lower() in ["ralentissement provisoire","service de sécurité","service de sécurité sur ordre","interruption de trafic"]):
+        spacing = 47 * scale
+        total_length = spacing * (len(stations_ligne_9) - 1)
+        x_start = 60 * scale
+
+        draw.line((x_start, y_line, x_start + total_length, y_line), fill="#B7E600", width=8 * scale)
+
+        start_idx = stations_ligne_9.index(stations_choisies[0])
+        end_idx = stations_ligne_9.index(stations_choisies[-1])
+        draw.line(
+            (x_start + start_idx * spacing, y_line, x_start + end_idx * spacing, y_line),
+            fill="#E75454", width=8 * scale
+        )
+
+        for i, station in enumerate(stations_ligne_9):
+            x = x_start + i * spacing
+
+            if station in stations_choisies:
+                if type_incident.lower() == "interruption de trafic" and stations_choisies[0] != station and stations_choisies[-1] != station:
+                    draw.line((x - 6 * scale, y_line - 6 * scale, x + 6 * scale, y_line + 6 * scale), fill="red", width=3 * scale)
+                    draw.line((x - 6 * scale, y_line + 6 * scale, x + 6 * scale, y_line - 6 * scale), fill="red", width=3 * scale)
+                else:
+                    draw.ellipse((x - 5 * scale, y_line - 5 * scale, x + 5 * scale, y_line + 5 * scale), fill="#F4F5F0", outline="black")
+            else:
+                draw.ellipse((x - 5 * scale, y_line - 5 * scale, x + 5 * scale, y_line + 5 * scale), fill="#FDFDFA", outline="black")
+
+            rotated = Image.new("RGBA", (200 * scale, 50 * scale), (255, 255, 255, 0))
+            d = ImageDraw.Draw(rotated)
+            d.text((0, 0), station, font=font_station, fill="#000082")
+            rotated = rotated.rotate(30, expand=1)
+            img.paste(rotated, (int(x), int(y_line - 125 * scale)), rotated)
+
+    # Type d'incident (ex localisation)
+    y_bottom = y_line + 50 * scale
+    if localisation:
+        loc_lines = [localisation[:250], localisation[250:500]]
+        for line in loc_lines:
+            if line.strip():
+                draw.text((width // 2, y_bottom), line.strip(), font=font_bold, fill="#F70505", anchor="mm")
+                y_bottom += 40 * scale
+
+    # + d'informations
+    if infos:
+        y_localisation = y_bottom + 10 * scale
+        infos_lines = [infos[:250], infos[250:500]]
+        for line in infos_lines:
+            if line.strip():
+                draw.text((width // 2, y_localisation), line.strip(), font=font_text, fill="#000082", anchor="mm")
+
+    # Image de rappel avec chemins absolus
+    y_image = 390 * scale
+    try:
+        if type_incident.lower() == "ralentissement provisoire":
+            # Utiliser l'image sélectionnée si disponible, sinon l'image par défaut
+            if selected_image_var.get():
+                img_path = os.path.join(INTERSTATIONS_PATH, selected_image_var.get())
+                if os.path.exists(img_path):
+                    img_custom = Image.open(img_path)
+                    # Redimensionner proportionnellement pour s'adapter à la taille souhaitée
+                    img_custom = img_custom.resize((1340 * scale, 205 * scale), Image.Resampling.LANCZOS)
+                    img.paste(img_custom, ((width - 1340 * scale) // 2, y_image))
+      
+        elif "service de sécurité" in type_incident.lower():
+            # Utiliser l'image sélectionnée si disponible, sinon l'image par défaut
+            if selected_image_var.get():
+                img_path = os.path.join(INTERSTATIONS_PATH, selected_image_var.get())
+                if os.path.exists(img_path):
+                    img_custom = Image.open(img_path)
+                    # Redimensionner proportionnellement pour s'adapter à la taille souhaitée
+                    img_custom = img_custom.resize((1345 * scale, 189 * scale), Image.Resampling.LANCZOS)
+                    img.paste(img_custom, ((width - 1345 * scale) // 2, y_image))
+
+        elif "service de sécurité sur ordre" in type_incident.lower():
+            # Utiliser l'image sélectionnée si disponible, sinon l'image par défaut
+            if selected_image_var.get():
+                img_path = os.path.join(INTERSTATIONS_PATH, selected_image_var.get())
+                if os.path.exists(img_path):
+                    img_custom = Image.open(img_path)
+                    # Redimensionner proportionnellement pour s'adapter à la taille souhaitée
+                    img_custom = img_custom.resize((1345 * scale, 189 * scale), Image.Resampling.LANCZOS)
+                    img.paste(img_custom, ((width - 1345 * scale) // 2, y_image))           
+
+    except Exception as e:
+        draw.text((width // 2, y_image), f"[Erreur image : {e}]", font=font_text, fill="gray", anchor="mm")
+
+    # Image cas pratique
+    y_image = 630 * scale   # ✅ juste au-dessus de l'heure
+
+    try:
+        if type_incident.lower() == "ralentissement provisoire":
+            img_ralentissement = Image.open(resource_path("ralentissement_provisoire.png"))
+            img_ralentissement = img_ralentissement.resize((1278 * scale, 410 * scale), Image.Resampling.LANCZOS)
+            img.paste(img_ralentissement, ((width - img_ralentissement.width) // 2, y_image))
+
+        elif type_incident.lower() == "service de sécurité":
+            img_securite = Image.open(resource_path("service_securite.png"))
+            img_securite = img_securite.resize((1278 * scale, 410 * scale), Image.Resampling.LANCZOS)
+            img.paste(img_securite, ((width - img_securite.width) // 2, y_image))
+
+        elif type_incident.lower() == "service de sécurité sur ordre":
+            img_securite_ordre = Image.open(resource_path("service_securite_sur_ordre.png"))
+            img_securite_ordre = img_securite_ordre.resize((1278 * scale, 410 * scale), Image.Resampling.LANCZOS)
+            img.paste(img_securite_ordre, ((width - img_securite_ordre.width) // 2, y_image))
+
+        elif type_incident.lower() == "interruption de trafic":
+            img_interruption = Image.open(resource_path("interruption_trafic.png"))
+            img_interruption = img_interruption.resize((1277 * scale, 565 * scale), Image.Resampling.LANCZOS)
+
+            # Décalages configurables
+            offset_x = 0    # négatif = gauche, positif = droite
+            offset_y = + 400  # négatif = monte, positif = descend
+
+            # Calcul position centrée + décalage
+            x_pos = (width - img_interruption.width) // 2 + offset_x
+            y_pos = (height - img_interruption.height) // 2 + offset_y
+            img.paste(img_interruption, (x_pos, y_pos))
+
+        elif type_incident.lower() == "station(s) fermée(s)":
+            y_image = 730 * scale
+            img_station_fermee = Image.open(resource_path("station_fermee.png"))
+            img_station_fermee = img_station_fermee.resize((1278 * scale, 311 * scale), Image.Resampling.LANCZOS)
+            img.paste(img_station_fermee, ((width - img_station_fermee.width) // 2, y_image))
+    except Exception as e:
+        draw.text((width // 2, y_image), f"[Erreur image : {e}]", font=font_text, fill="gray", anchor="mm")
+
+    y_dateetheure = 1050 * scale
+    draw.text((50 * scale, y_dateetheure), f"Date et heure : {datetime.now().strftime('%d/%m/%Y %H:%M')}", font=font_bold, fill="gray")
+
+    # Sauvegarde avec chemin absolu
+    nom_fichier = f"incident_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+    chemin_fichier = os.path.join(OUTPUT_PATH, nom_fichier)
+
+    try:
+        img.save(chemin_fichier)
+        messagebox.showinfo("Succès", f"Image enregistrée sous : {chemin_fichier}")
+        
+        # Tentative d'ouverture du fichier
+        try:
+            os.startfile(chemin_fichier)
+        except Exception as e:
+            messagebox.showwarning("Erreur d'ouverture", f"Image enregistrée mais non ouverte : {e}")
+            
+    except Exception as e:
+        messagebox.showerror("Erreur de sauvegarde", f"Impossible de sauvegarder l'image : {e}")
+
+# Bouton générer
+style.configure("BlueMarine.TButton", font=("Helvetica", 12, "bold"), padding=10, background="#000082", foreground="white")
+ttk.Button(
+    frame,
+    text="Générer visuel",
+    command=generer_image,
+    style="BlueMarine.TButton"
+).grid(row=5, column=0, columnspan=2, pady=10)
+
+frame.columnconfigure(1, weight=1)
+
+# Boucle principale
+if __name__ == "__main__":
+    root.mainloop()
