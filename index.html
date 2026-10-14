@@ -361,13 +361,19 @@
   /* bandeau : fond bleu nuit de la charte, sans halo ovale ; logo fondu dans le bandeau */
   #home .hero{background:linear-gradient(180deg,#0a1f44 0%,#0d2a5c 100%);box-shadow:none;}
   #home .hero .logo-wrap{border-radius:18px;box-shadow:0 0 0 1px rgba(255,255,255,.35),0 0 36px rgba(94,164,222,.38);}
+
+  /* logo transparent (version claire) directement sur le fond bleu nuit */
+  .brand-chip{background:none;padding:0;border-radius:0;}
+  .brand-chip img{height:40px;}
+  #home .hero .logo-wrap{background:none;box-shadow:none;padding:0;border-radius:0;}
+  #home .hero .logo-hero{height:112px;}
 </style>
 </head>
 <body>
 <a class="sr-only" href="#main">Aller au contenu</a>
 <header class="topbar" id="topbar">
   <button class="icon-btn hidden" id="navBack" type="button" aria-label="Retour">‹</button>
-  <span class="brand-chip" id="brandChip"><img src="live_incident.png" alt="Live Incident"></span>
+  <span class="brand-chip" id="brandChip"><img src="live_incident_clair.png" alt="Live Incident"></span>
   <span class="top-title" id="topTitle"></span>
   <span class="top-ctx hidden" id="topCtx"><img id="topCtxImg" alt=""><span id="topCtxTxt"></span></span>
 </header>
@@ -410,7 +416,7 @@
       <g filter="url(#fglow)" opacity=".9"><circle r="6" fill="#F28E42"/><text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-family="Arial,sans-serif" font-size="6" font-weight="900" fill="#000">5</text><animateMotion dur="4s" repeatCount="indefinite" begin="-0.22s"><mpath href="#hp5"/></animateMotion></g>
     </svg>
     <div class="hero-content">
-      <div class="logo-wrap"><img class="logo-hero" src="live_incident.png" alt="Live Incident"/></div>
+      <div class="logo-wrap"><img class="logo-hero" src="live_incident_clair.png" alt="Live Incident"/></div>
     </div>
   </div>
   <div class="home-wrap">
