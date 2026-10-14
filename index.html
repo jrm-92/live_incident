@@ -367,6 +367,9 @@
   .brand-chip img{height:40px;}
   #home .hero .logo-wrap{background:none;box-shadow:none;padding:0;border-radius:0;}
   #home .hero .logo-hero{height:112px;}
+
+  .trow.xin .dot{border-color:#c8102e;color:#c8102e;}
+  .trow.xin .dot::after{content:"✕";}
 </style>
 </head>
 <body>
@@ -1482,7 +1485,7 @@ function computeInc(){
 }
 function updateThermo(){
   if(!currentLineId)return;
-  const kind=kindOf(),sel=selectedStations;
+  const kind=kindOf(),sel=selectedStations,isInter=els.type.value==="Interruption de trafic";
   const{inc,redPairs}=computeInc();
   rows.forEach((r,name)=>{
     const isSel=sel.has(name);
@@ -1490,17 +1493,17 @@ function updateThermo(){
     const isPend=pendingStart===name;
     const list=r.sec.list;
     const b=r.el;
-    b.classList.toggle("sel",isSel);b.classList.toggle("shut",shut);b.classList.toggle("inc",inc.has(name));b.classList.toggle("pend",isPend);
+    b.classList.toggle("sel",isSel);b.classList.toggle("shut",shut);b.classList.toggle("inc",inc.has(name));b.classList.toggle("xin",isInter&&inc.has(name));b.classList.toggle("pend",isPend);
     b.classList.toggle("up-red",r.i>0&&redPairs.has(list[r.i-1]+"|"+name));
     b.classList.toggle("down-red",r.i<list.length-1&&redPairs.has(name+"|"+list[r.i+1]));
     b.setAttribute("aria-checked",String(isSel));
     let tag="";
     if(isPend)tag="Début ?";
-    else if(isSel&&kind==="traffic")tag=sel.size>=2?"Limite":"Point";
+    else if(isSel&&kind==="traffic")tag=sel.size>=2?(isInter?"Limite · SP":"Limite"):"Point";
     else if(isSel&&kind==="closed")tag="Fermée";
     else if(isSel&&kind==="served")tag="Desservie";
     else if(shut)tag="Fermée";
-    else if(inc.has(name))tag="Incluse";
+    else if(inc.has(name))tag=isInter?"Barrée":"Incluse";
     else if(r.term)tag="Terminus";
     r.tag.textContent=tag;r.tag.style.display=tag?"":"none";
   });
@@ -1515,7 +1518,7 @@ function updateStatus(inc){
   else if(kind==="traffic"){
     if(!sel.size){txt="Aucune station sélectionnée. Touchez la 1re station du tronçon, puis la dernière.";warn=true;}
     else if(sel.size===1){txt="1 station : "+sorted[0]+". Touchez-en une deuxième pour former un tronçon.";warn=true;}
-    else txt="Tronçon : "+sorted[0]+" → "+sorted[sorted.length-1]+" · "+inc.size+" station(s) entre les deux";
+    else txt="Tronçon : "+sorted[0]+" → "+sorted[sorted.length-1]+" · "+inc.size+(els.type.value==="Interruption de trafic"?" station(s) barrée(s) d'une croix rouge · SP aux limites":" station(s) entre les deux");
   }else if(kind==="closed"){
     txt=sel.size?sel.size+" station(s) fermée(s)":"Aucune station sélectionnée.";warn=!sel.size;
   }else if(kind==="served"){
@@ -1545,7 +1548,7 @@ function updateStep2Texts(){
   const m=curModel();if(!m)return;
   const k=m.kind;
   const hint={
-    traffic:pickMode==="troncon"?"Touchez la première station du tronçon, puis la dernière. Les stations entre les deux sont incluses.":"Touchez chaque station concernée (en général les deux limites du tronçon).",
+    traffic:pickMode==="troncon"?(els.type.value==="Interruption de trafic"?"Touchez la première station du tronçon, puis la dernière. « SP » est inscrit sur ces deux stations et les stations entre les deux sont barrées d'une croix rouge.":"Touchez la première station du tronçon, puis la dernière. Les stations entre les deux sont incluses."):"Touchez chaque station concernée (en général les deux limites du tronçon).",
     closed:pickMode==="troncon"?"Touchez la première et la dernière d'une suite de stations fermées.":"Touchez chaque station fermée.",
     served:pickMode==="troncon"?"Touchez la première et la dernière d'une suite de stations desservies.":"Touchez les stations desservies. Les autres seront barrées d'une croix rouge.",
     free:""
@@ -2157,6 +2160,29 @@ function fitLines(text,maxW,maxLines,baseFs,minFs,weight){
     fs=Math.max(minFs,fs*0.94);
   }
 }
+// Pastille « SP » placée au bout de l'étiquette de la station (au-dessus de la station)
+function drawSPBadge(name,x,yLine,isTerm,below){
+  const bw=36*SCALE,bh=22*SCALE;
+  let cx,cy;
+  if(below){cx=x;cy=yLine-_mR*1.5-bh/2-8*SCALE;}
+  else{
+    const parts=splitName(name),n=parts.length,smallCount=WRAP_SMALL[name]||0;
+    const fsFor=i=>(i<smallCount?_lf*0.6:_lf);
+    let w=0;for(let i=0;i<n;i++){ctx.font=`${isTerm?800:600} ${fsFor(i)}px Lato, Arial`;w=Math.max(w,ctx.measureText(parts[i]).width);}
+    let tot=2.5*SCALE*(n-1);for(let i=0;i<n;i++)tot+=fsFor(i);
+    const off=_mR+(isTerm?13:12)*SCALE,Ox=x,Oy=yLine-off;
+    const lxEnd=6*SCALE+w+(isTerm?11*SCALE:0),ly=-(2*SCALE+tot/2);
+    const k=0.7071;
+    const ex=Ox+k*lxEnd+k*ly,ey=Oy-k*lxEnd+k*ly;
+    const d=bh*0.85;cx=ex+k*d;cy=ey-k*d;
+  }
+  ctx.save();
+  rrect(cx-bw/2,cy-bh/2,bw,bh,6*SCALE);ctx.fillStyle="#1f5fd0";ctx.fill();
+  ctx.lineWidth=1.6*SCALE;ctx.strokeStyle="#fff";ctx.stroke();
+  ctx.fillStyle="#fff";ctx.font=`900 ${15*SCALE}px Lato, Arial`;ctx.textAlign="center";ctx.textBaseline="middle";
+  ctx.fillText("SP",cx,cy+1*SCALE);
+  ctx.restore();
+}
 function draw(){
   if(!currentLineId)return;
   const type=els.type.value,typeLow=type.toLowerCase();
@@ -2217,11 +2243,16 @@ function draw(){
       let drawX=false;
       if(isFerme&&isSel) drawX=true;
       if(isFerme20&&!isSel&&selectedStations.size>0) drawX=true;
-      if((typeLow==="interruption de trafic")&&isSel&&(redDeg[name]||0)>=2) drawX=true;
+      if((typeLow==="interruption de trafic")&&(redDeg[name]||0)>=2) drawX=true;
       if(drawX){const x=p.x,y=p.y;ctx.strokeStyle="#E2001A";ctx.lineWidth=Math.max(3*SCALE,_mR*0.6);ctx.lineCap="round";
         ctx.beginPath();ctx.moveTo(x-xr,y-xr);ctx.lineTo(x+xr,y+xr);ctx.moveTo(x-xr,y+xr);ctx.lineTo(x+xr,y-xr);ctx.stroke();}
       });
     Object.keys(pos).forEach(name=>{const p=pos[name];drawLabel(name,p.x,p.y,p.isTerm,p.below);});
+    // « SP » (service provisoire) : stations encadrant le tronçon d'une interruption de trafic
+    if(typeLow==="interruption de trafic"){
+      Object.keys(pos).forEach(name=>{const p=pos[name];
+        if(selectedStations.has(name)&&(redDeg[name]||0)===1)drawSPBadge(name,p.x,p.y,p.isTerm,p.below);});
+    }
    if(_ps!==1)ctx.restore();
   }
 
