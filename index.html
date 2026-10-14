@@ -11,6 +11,24 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;0,900;1,400;1,700&display=swap" rel="stylesheet">
 <style>
+  .hero{position:relative;overflow:hidden;border-radius:0 0 24px 24px;margin:0 -24px 32px;
+    min-height:260px;display:flex;align-items:center;justify-content:center;text-align:center;
+    background:radial-gradient(ellipse 55% 70% at 50% 60%,rgba(0,79,158,.25) 0%,transparent 65%),
+    linear-gradient(160deg,#010f22 0%,#021d40 55%,#010e1f 100%);
+    box-shadow:0 12px 40px rgba(1,20,55,.35);}
+  .hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;
+    background:linear-gradient(90deg,#FFCD00,#F28E42,#E2001A,#B6BD00,#00814F,#5ea4de,#662483);}
+  .hero-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
+  .hero-content{position:relative;z-index:2;padding:38px 24px 44px;}
+  .hero .logo-wrap{display:inline-flex;align-items:center;justify-content:center;
+    background:#fff;border-radius:14px;padding:14px 22px;overflow:hidden;margin-bottom:18px;
+    box-shadow:0 6px 24px rgba(0,0,0,.28),0 0 0 1px rgba(255,255,255,.08);}
+  .hero .logo-hero{height:72px;display:block;}
+  @keyframes trkDraw{to{stroke-dashoffset:0}}
+  .trk{fill:none;stroke:rgba(255,255,255,.10);stroke-width:1.5;stroke-dasharray:2500;
+    stroke-dashoffset:2500;animation:trkDraw 2s cubic-bezier(.4,0,.2,1) forwards;}
+  .trk-mid{stroke:rgba(255,255,255,.17);}
+  .trk-faint{stroke:rgba(255,255,255,.05);}
   /* ── SECTION QR CODE ── */
   .qr-section{margin-top:18px;border-top:1px solid var(--border);padding-top:16px;}
   .qr-label{display:block;font-size:11px;font-weight:800;letter-spacing:.10em;
@@ -333,6 +351,12 @@
     .stepper{max-width:640px;}
   }
   @media(prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important;}}
+
+  /* accueil : bandeau animé (lignes de métro) */
+  #home .hero{margin:-16px calc(-14px - var(--sar)) 22px calc(-14px - var(--sal));min-height:240px;}
+  #home .hero-content{padding:calc(30px + var(--sat)) 24px 36px;}
+  #home .hero .logo-wrap{margin-bottom:0;}
+  @media(prefers-reduced-motion:reduce){.trk{stroke-dashoffset:0 !important;}}
 </style>
 </head>
 <body>
@@ -348,8 +372,48 @@
 
 <!-- ── ACCUEIL ── -->
 <section id="home" aria-labelledby="homeTitle">
+    <div class="hero">
+    <svg class="hero-svg" viewBox="0 0 1000 260" preserveAspectRatio="xMidYMid slice" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="fglow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="3.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <filter id="fglow-lg" x="-200%" y="-200%" width="500%" height="500%"><feGaussianBlur stdDeviation="12" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <radialGradient id="ng" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="white" stop-opacity=".7"/><stop offset="100%" stop-color="white" stop-opacity="0"/></radialGradient>
+        <path id="hp1" d="M 0 22 C 200 22, 380 126, 500 130 C 650 134, 800 68, 1000 62"/>
+        <path id="hp2" d="M 0 74 C 200 74, 380 128, 500 130 C 650 132, 800 128, 1000 122"/>
+        <path id="hp3" d="M 0 130 L 500 130 C 650 130, 800 148, 1000 164"/>
+        <path id="hp4" d="M 0 186 C 200 186, 380 132, 500 130 C 650 128, 800 202, 1000 218"/>
+        <path id="hp5" d="M 0 238 C 200 238, 380 134, 500 130 C 650 126, 800 70, 1000 62"/>
+      </defs>
+      <ellipse cx="500" cy="130" rx="130" ry="85" fill="rgba(0,100,210,.07)"/>
+      <path class="trk trk-faint" d="M 0 -8 C 200 -5, 380 125, 500 130" style="animation-delay:.3s"/>
+      <path class="trk" d="M 0 22 C 200 22, 380 126, 500 130" style="animation-delay:.05s"/>
+      <path class="trk" d="M 0 74 C 200 74, 380 128, 500 130" style="animation-delay:.15s"/>
+      <path class="trk trk-mid" d="M 0 130 L 500 130" style="animation-delay:0s"/>
+      <path class="trk" d="M 0 186 C 200 186, 380 132, 500 130" style="animation-delay:.15s"/>
+      <path class="trk" d="M 0 238 C 200 238, 380 134, 500 130" style="animation-delay:.05s"/>
+      <path class="trk trk-faint" d="M 0 268 C 200 265, 380 135, 500 130" style="animation-delay:.3s"/>
+      <path class="trk" d="M 500 130 C 650 134, 800 68, 1000 62" style="animation-delay:.55s"/>
+      <path class="trk" d="M 500 130 C 650 132, 800 128, 1000 122" style="animation-delay:.6s"/>
+      <path class="trk trk-mid" d="M 500 130 C 650 130, 800 148, 1000 164" style="animation-delay:.5s"/>
+      <path class="trk" d="M 500 130 C 650 128, 800 202, 1000 218" style="animation-delay:.65s"/>
+      <circle cx="500" cy="130" r="28" fill="url(#ng)" opacity=".6"/>
+      <circle cx="500" cy="130" r="5" fill="white" opacity=".9" filter="url(#fglow-lg)"/>
+      <circle cx="500" cy="130" r="2.5" fill="white"/>
+      <g filter="url(#fglow)" opacity=".92"><circle r="6" fill="#FFCD00"/><text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-family="Arial,sans-serif" font-size="6" font-weight="900" fill="#000">1</text><animateMotion dur="4s" repeatCount="indefinite" begin="-2s"><mpath href="#hp1"/></animateMotion></g>
+      <g filter="url(#fglow)" opacity=".92"><circle r="6" fill="#FFCD00"/><text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-family="Arial,sans-serif" font-size="6" font-weight="900" fill="#000">1</text><animateMotion dur="4s" repeatCount="indefinite" begin="0s"><mpath href="#hp1"/></animateMotion></g>
+      <g filter="url(#fglow)" opacity=".9"><circle r="6" fill="#0064B0"/><text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-family="Arial,sans-serif" font-size="6" font-weight="900" fill="#fff">2</text><animateMotion dur="4s" repeatCount="indefinite" begin="-1.56s"><mpath href="#hp2"/></animateMotion></g>
+      <g filter="url(#fglow)" opacity=".88"><circle r="5.5" fill="#662483"/><text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-family="Arial,sans-serif" font-size="4.5" font-weight="900" fill="#fff">14</text><animateMotion dur="4s" repeatCount="indefinite" begin="-3.56s"><mpath href="#hp2"/></animateMotion></g>
+      <g filter="url(#fglow)" opacity=".95"><circle r="6" fill="#B6BD00"/><text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-family="Arial,sans-serif" font-size="6" font-weight="900" fill="#000">9</text><animateMotion dur="4s" repeatCount="indefinite" begin="-1.11s"><mpath href="#hp3"/></animateMotion></g>
+      <g filter="url(#fglow)" opacity=".95"><circle r="6" fill="#B6BD00"/><text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-family="Arial,sans-serif" font-size="6" font-weight="900" fill="#000">9</text><animateMotion dur="4s" repeatCount="indefinite" begin="-3.11s"><mpath href="#hp3"/></animateMotion></g>
+      <g filter="url(#fglow)" opacity=".9"><circle r="6" fill="#C04191"/><text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-family="Arial,sans-serif" font-size="6" font-weight="900" fill="#fff">4</text><animateMotion dur="4s" repeatCount="indefinite" begin="-0.67s"><mpath href="#hp4"/></animateMotion></g>
+      <g filter="url(#fglow)" opacity=".88"><circle r="5.5" fill="#00814F"/><text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-family="Arial,sans-serif" font-size="4.5" font-weight="900" fill="#fff">12</text><animateMotion dur="4s" repeatCount="indefinite" begin="-2.67s"><mpath href="#hp4"/></animateMotion></g>
+      <g filter="url(#fglow)" opacity=".9"><circle r="6" fill="#F28E42"/><text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-family="Arial,sans-serif" font-size="6" font-weight="900" fill="#000">5</text><animateMotion dur="4s" repeatCount="indefinite" begin="-0.22s"><mpath href="#hp5"/></animateMotion></g>
+    </svg>
+    <div class="hero-content">
+      <div class="logo-wrap"><img class="logo-hero" src="live_incident.png" alt="Live Incident"/></div>
+    </div>
+  </div>
   <div class="home-wrap">
-    <div class="home-logo"><img src="live_incident.png" alt="Live Incident"></div>
     <p class="home-intro" id="homeTitle">Créez un visuel d'incident pour les écrans du personnel de conduite.</p>
     <button class="home-act primary" id="actNew" type="button"><span class="ico">＋</span><span><b>Créer un visuel</b><small>Modèle, ligne, stations, texte, image</small></span></button>
     <button class="home-act" id="actDrafts" type="button"><span class="ico">✎</span><span><b>Mes brouillons</b><small>Reprendre un visuel en cours</small></span><span class="count" id="cntDrafts">0</span></button>
@@ -1635,7 +1699,7 @@ function showView(name,opts){
   els.listView.classList.toggle("hidden",name!=="list");
   els.app.classList.toggle("hidden",name!=="app");
   $("navBack").classList.toggle("hidden",name==="home");
-  $("brandChip").classList.toggle("hidden",name==="home");
+  $("topbar").classList.toggle("hidden",name==="home");
   $("topTitle").textContent=name==="list"?(listKind==="drafts"?"Mes brouillons":"Mes visuels récents"):"";
   updateTopCtx();
   if(name==="home")updateCounts();
@@ -1966,6 +2030,7 @@ function initApp(){
   if(LS.get(K_DOCK,false)){$("dockBody").classList.add("collapsed");$("dockToggle").textContent="Afficher";$("dockToggle").setAttribute("aria-expanded","false");}
   loadKnownAssets();renderAssetStatus();
   updateCounts();updateTextHints();
+  try{if(window.matchMedia("(prefers-reduced-motion: reduce)").matches){const sv=document.querySelector(".hero-svg");if(sv&&sv.pauseAnimations)sv.pauseAnimations();}}catch(e){}
   showView("home",{noPush:true});
 }
 
