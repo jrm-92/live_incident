@@ -699,26 +699,6 @@
           <summary>Options avancées : QR code, images</summary>
           <div class="adv-body">
             <div class="asset-status" id="assetStatus" role="status"></div>
-            <div class="qr-section" style="margin-top:6px">
-              <span class="qr-label">Rappel des règles du haut le pied</span>
-              <div class="qr-body">
-                <div class="qr-wrap">
-                  <label class="qr-drop" id="qrDrop" title="Charger un QR code">
-                    <input type="file" id="qrInput" accept="image/*" style="display:none">
-                    <div class="qr-drop-placeholder" id="qrPlaceholder">
-                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="4" height="4" rx=".5"/><rect x="19" y="13" width="2" height="2"/><rect x="17" y="17" width="4" height="4"/></svg>
-                      <span>Charger<br>un QR code</span>
-                    </div>
-                    <img id="qrPreviewImg" alt="" style="display:none">
-                  </label>
-                  <button type="button" class="qr-delete" id="qrDeleteBtn" aria-label="Supprimer le QR code" title="Supprimer le QR" onclick="removeQR(event)">✕</button>
-                </div>
-                <div class="qr-info">
-                  <strong>QR code optionnel</strong>
-                  Image carrée (JPG, PNG).<br>Apparaît en bas à droite<br>du visuel. Non conservé dans les brouillons.
-                </div>
-              </div>
-            </div>
             <div class="file-line"><strong>Importer le dossier d'images</strong> (si les images ne se chargent pas seules)
               <input type="file" id="folderInput" webkitdirectory directory multiple>
             </div>
@@ -887,6 +867,7 @@ let _mR=13,_lf=26,_lw=20;
 // ── MODE ÉDITION : offsets et bbox ──────────────────────────────────
 let editMode=false, selItem=null;
 let HIDDEN=new Set();
+const SHOW_HELP_BUBBLE=false; // bulle « Besoin d'aide ? » + QR retirés du visuel
 const DELETABLE=['bubble'];
 const OFF={logo:{dx:0,dy:0,s:1},badge:{dx:0,dy:0,s:1},plan:{dx:0,dy:0,s:1},title:{dx:0,dy:0,s:1},stations:{dx:0,dy:0,s:1},bubble:{dx:0,dy:0,s:0.65}};
 const BBOX={};
@@ -1046,25 +1027,6 @@ const ctx=els.canvas.getContext("2d");
 
 // Grille d'accueil
 
-// Chargement du QR code
-document.getElementById('qrInput').addEventListener('change',e=>{
-  const f=e.target.files[0]; if(!f) return;
-  const rd=new FileReader();
-  rd.onload=ev=>{
-    const img=new Image();
-    img.onload=()=>{
-      qrImg=img;
-      document.getElementById('qrPlaceholder').style.display='none';
-      const pv=document.getElementById('qrPreviewImg');
-      pv.src=ev.target.result; pv.style.display='block';
-      document.getElementById('qrDeleteBtn').style.display='flex';
-      draw();
-    };
-    img.src=ev.target.result;
-  };
-  rd.readAsDataURL(f);
-});
-document.getElementById('qrDrop').addEventListener('click',()=>document.getElementById('qrInput').click());
 
 // Suppression du QR (croix sur la miniature) — fonction globale appelée par onclick inline
 function removeQR(e){
@@ -1284,7 +1246,7 @@ document.getElementById('eTDraw').addEventListener('click',()=>setMode('draw'));
 function updateBubbleOverlay(){
   const btn=document.getElementById('bubbleDelOverlay');
   if(!btn)return;
-  if(!editMode||HIDDEN.has('bubble')||!BBOX.bubble){btn.style.display='none';return;}
+  if(!editMode||!SHOW_HELP_BUBBLE||HIDDEN.has('bubble')||!BBOX.bubble){btn.style.display='none';return;}
   const cv=els.canvas;
   const scale=cv.offsetWidth/cv.width;
   const bb=BBOX.bubble;
@@ -2533,7 +2495,7 @@ function draw(){
   ctx.fillText("Date et heure : "+nowStamp(),60*SCALE,H-44*SCALE);
 
   // === Bulle "BESOIN D'AIDE ?" — très arrondie (pill), queue à droite, largeur = QR ===
-  if(!HIDDEN.has('bubble')){
+  if(SHOW_HELP_BUBBLE&&!HIDDEN.has('bubble')){
   ctx.save();
   {const qrS=280*SCALE,tW=50*SCALE,tH=32*SCALE,rad2=100*SCALE;
    const titleFs2=23*SCALE,subFs=10*SCALE,subGap=8*SCALE,titlePad=24*SCALE;
