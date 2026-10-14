@@ -409,9 +409,6 @@
   /* logo : pas de surbrillance de sélection ni de glisser-déposer */
   .logo-split img{user-select:none;-webkit-user-select:none;-webkit-user-drag:none;pointer-events:none;}
 
-  /* carte « Qu'est-ce que Live Incident ? » */
-  .about-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:18px;margin-top:6px;}
-  .about-card h2{margin:0 0 14px;font-size:19px;color:var(--night);font-weight:900;}
   .about-grid{display:grid;grid-template-columns:1fr;gap:12px;}
   .about-item{background:var(--panel-2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;}
   .about-item h3{margin:0 0 4px;font-size:15px;color:var(--brand);font-weight:900;}
@@ -426,18 +423,46 @@
   .flow li b{display:block;color:var(--night);}
   .flow li span{color:var(--muted);}
   @media(min-width:600px){.about-grid{grid-template-columns:1fr 1fr;}}
-  @media(min-width:900px){
-    #home .home-wrap{max-width:1180px;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:18px 22px;align-items:start;}
-    #home .home-intro{grid-column:1/-1;}
-    #home .about-card{grid-column:1;grid-row:2;margin:0;padding:22px;}
-    #home .home-actions{grid-column:2;grid-row:2;align-self:stretch;}
-    #home .home-act{flex:1;flex-direction:row;align-items:center;gap:16px;min-height:110px;padding:20px;}
-    #home .home-act .count{position:static;margin-left:auto;}
-    #home .home-act b{font-size:20px;}
-  }
 
   .home-actions{display:flex;flex-direction:column;gap:12px;}
-  @media(min-width:900px){.home-actions{gap:18px;}}
+  @media(min-width:900px){
+    .home-actions{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+    #home .about{grid-column:1/-1;}
+  }
+  /* « Qu'est-ce que Live Incident ? » déroulant */
+  .about{background:#fff;border:1px solid var(--border-strong);border-radius:14px;margin-top:6px;}
+  .about>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;min-height:64px;padding:14px 18px;border-radius:14px;}
+  .about>summary::-webkit-details-marker{display:none;}
+  .about>summary:hover{background:var(--panel-2);}
+  .about-q{font-size:18px;font-weight:900;color:var(--night);}
+  .about-hint{font-size:13px;color:var(--muted);margin-left:auto;}
+  .about .chev{flex:none;width:32px;height:32px;border-radius:50%;background:var(--panel-2);border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;color:var(--brand);font-size:16px;transition:transform .2s;}
+  .about[open] .chev{transform:rotate(180deg);}
+  .about[open]>summary{border-bottom:1px solid var(--border);border-radius:14px 14px 0 0;}
+  .about-body{padding:18px;}
+  .about-h{margin:24px 0 10px;font-size:16px;color:var(--night);font-weight:900;padding-top:16px;border-top:1px dashed var(--border-strong);}
+  .about-p{font-size:15px;margin:0 0 10px;line-height:1.5;}
+  .actors{display:grid;grid-template-columns:1fr;gap:10px;}
+  .actor{border:1px solid var(--border);border-left:4px solid var(--brand);border-radius:10px;padding:10px 14px;background:var(--panel-2);}
+  .actor b{color:var(--night);}
+  .actor p{margin:4px 0 0;font-size:14px;line-height:1.45;}
+  .legend{font-size:13px;color:var(--muted);margin-top:10px;line-height:1.5;}
+  .lg{font-weight:800;padding-left:22px;position:relative;}
+  .lg::before{content:"";position:absolute;left:0;top:50%;width:16px;height:3px;border-radius:2px;}
+  .lg.cur{color:#2f5fb3;}.lg.cur::before{background:#4a76c9;}
+  .lg.opt{color:#c8102e;}.lg.opt::before{background:#e2001a;}
+  .chips{list-style:none;padding:0;margin:0 0 14px;display:flex;flex-wrap:wrap;gap:8px;}
+  .chips li{background:#eef5ff;border:1px solid #bcd3f0;color:var(--night);border-radius:999px;padding:6px 12px;font-size:14px;font-weight:700;}
+  .examples{display:grid;grid-template-columns:1fr;gap:14px;}
+  .examples figure{margin:0;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#fff;}
+  .examples img{width:100%;height:auto;display:block;}
+  .examples figcaption{font-size:13px;font-weight:800;color:var(--night);padding:8px 12px;border-top:1px solid var(--border);}
+  .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--border);border-radius:10px;}
+  .tbl{border-collapse:collapse;width:100%;min-width:640px;font-size:14px;}
+  .tbl th{background:#4472c4;color:#fff;text-align:left;padding:10px;font-weight:800;}
+  .tbl td{padding:10px;border-top:1px solid var(--border);vertical-align:top;}
+  .tbl tr:nth-child(even) td{background:var(--panel-2);}
+  @media(min-width:700px){.actors{grid-template-columns:repeat(3,1fr);}.examples{grid-template-columns:1fr 1fr;}}
 </style>
 </head>
 <body>
@@ -495,22 +520,60 @@
     <button class="home-act" id="actDrafts" type="button"><span class="ico">✎</span><span><b>Mes brouillons</b><small>Reprendre un visuel en cours</small></span><span class="count" id="cntDrafts">0</span></button>
     <button class="home-act" id="actRecents" type="button"><span class="ico">⟳</span><span><b>Mes visuels récents</b><small>Dupliquer un visuel déjà généré</small></span><span class="count" id="cntRecents">0</span></button>
     </div>
-    <section class="about-card" aria-labelledby="aboutTitle">
-      <h2 id="aboutTitle">Qu'est-ce que Live Incident&nbsp;?</h2>
-      <div class="about-grid">
-        <div class="about-item"><h3>C'est quoi&nbsp;?</h3><p>Un support visuel qui permet d'avoir des informations sur un incident en cours.</p></div>
-        <div class="about-item"><h3>Pour qui&nbsp;?</h3><p>Tous les agents qualifiés conduite.</p></div>
-        <div class="about-item"><h3>Pourquoi&nbsp;?</h3><ul><li>Optimiser la circulation de l'information</li><li>Faire des rappels sur des cas concrets</li><li>Écarter des doutes</li></ul></div>
-        <div class="about-item"><h3>Comment&nbsp;?</h3><ul><li>Sur les écrans présents dans les corps de garde</li><li>À l'aide d'un générateur de visuel</li></ul></div>
+    <details class="about" id="about">
+      <summary><span class="about-q">Qu'est-ce que Live Incident&nbsp;?</span><span class="about-hint">Présentation complète</span><span class="chev" aria-hidden="true">▾</span></summary>
+      <div class="about-body">
+
+        <div class="about-grid">
+          <div class="about-item"><h3>C'est quoi&nbsp;?</h3><p>Un support visuel qui permet d'avoir des informations sur un incident en cours.</p></div>
+          <div class="about-item"><h3>Pour qui&nbsp;?</h3><p>Tous les agents qualifiés conduite.</p></div>
+          <div class="about-item"><h3>Pourquoi&nbsp;?</h3><ul><li>Optimiser la circulation de l'information</li><li>Faire des rappels sur des cas concrets</li><li>Écarter des doutes</li></ul></div>
+          <div class="about-item"><h3>Comment&nbsp;?</h3><ul><li>Sur les écrans présents dans les corps de garde</li><li>À l'aide d'un générateur de visuel</li></ul></div>
+        </div>
+
+        <h3 class="about-h">Circulation de l'information lors d'un incident</h3>
+        <div class="actors">
+          <div class="actor"><b>Acteur : PCC</b><p>« Appel général du PCC pour vous signaler la mise en place d'un ralentissement provisoire dans l'interstation “XXXX - XXXX”. »</p></div>
+          <div class="actor"><b>Acteur : Manager</b><p>Prise en compte de l'information et création d'un support à diffuser sur les écrans via « Live Incident ». <em>(Temps d'exécution estimé : moins de 5 minutes.)</em></p></div>
+          <div class="actor"><b>Acteur : Conducteur</b><p>Les conducteurs (hors trains) bénéficient d'informations précises sur les écrans des CDG.</p></div>
+        </div>
+        <div class="legend"><span class="lg cur">Situation actuelle</span> : le PCC informe le manager et les conducteurs par appel général. <span class="lg opt">Optimisation</span> : le manager crée le visuel avec Live Incident, diffusé sur les écrans des CDG pour les conducteurs.</div>
+
+        <h3 class="about-h">Comment ça fonctionne&nbsp;?</h3>
+        <p class="about-p">L'outil permet de générer un support visuel en lien avec un incident en cours, à partir des critères saisis par l'utilisateur&nbsp;:</p>
+        <ul class="chips"><li>Type d'incident</li><li>Zone d'incident</li><li>Voie(s) impactée(s)</li><li>Précision sur l'incident</li></ul>
+        <p class="about-p"><b>Déroulé de l'opération</b> <em>(temps estimé : moins de 5 minutes)</em></p>
+        <ol class="flow">
+          <li><b>Étape 1</b><span>Le manager prend note d'un incident en cours.</span></li>
+          <li><b>Étape 2</b><span>Il génère un visuel intégrant les caractéristiques de l'incident en cours à l'aide de l'interface.</span></li>
+          <li><b>Étape 3</b><span>Il diffuse le visuel sur les écrans des corps de garde.</span></li>
+        </ol>
+        <p class="about-p"><b>Dans l'outil</b>&nbsp;: 1. choix du type d'incident · 2. choix de la zone d'incident · 3. titre de l'incident <em>(RP, SSO, IT, etc.)</em> · 4. commentaire à ajouter · 5. génération du visuel.</p>
+
+        <h3 class="about-h">Exemples de visuels</h3>
+        <div class="examples">
+          <figure><img src="presentation/exemple_ralentissement_provisoire.jpg" alt="Exemple : ralentissement provisoire, ligne 9" loading="lazy"><figcaption>Ralentissement provisoire</figcaption></figure>
+          <figure><img src="presentation/exemple_service_securite_sur_ordre.jpg" alt="Exemple : service de sécurité sur ordre, ligne 9" loading="lazy"><figcaption>Service de sécurité sur ordre</figcaption></figure>
+          <figure><img src="presentation/exemple_interruption_trafic.jpg" alt="Exemple : interruption de trafic, ligne 9" loading="lazy"><figcaption>Interruption de trafic</figcaption></figure>
+          <figure><img src="presentation/exemple_stations_fermees.jpg" alt="Exemple : stations fermées, ligne 9" loading="lazy"><figcaption>Stations fermées</figcaption></figure>
+        </div>
+
+        <h3 class="about-h">Les différentes étapes de la mise en place</h3>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th>Étapes</th><th>Ressources humaines</th><th>Ressources matérielles</th><th>Durée (estimatif)</th></tr></thead>
+            <tbody>
+              <tr><td>Brainstorming avec encadrants et conducteurs pour apporter des améliorations et adapter les visuels à des problématiques de VB2.</td><td>3 CR + 3 encadrants ?</td><td>Salle de réunion</td><td>+/- 2 h de brainstorming</td></tr>
+              <tr><td>Modification des visuels et du script.</td><td>La personne qui gèrera le script</td><td>—</td><td>3 semaines</td></tr>
+              <tr><td>Validation des visuels.</td><td>Encadrants + CR</td><td>—</td><td>+/- 2 h, le temps d'une réunion</td></tr>
+              <tr><td>Tests de diffusion sur les écrans des CDG.</td><td>Encadrant référent (à définir)</td><td>Accès écrans CDG</td><td>1 semaine ?</td></tr>
+              <tr><td>Formation des encadrants à l'utilisation de l'outil.</td><td>Encadrant référent (à définir)</td><td>Support PPT explicatif</td><td>4 semaines ? (le temps de former tous les managers)</td></tr>
+              <tr><td>Communication conducteurs sur l'arrivée de « Live Incident ».</td><td>Encadrant référent (à définir)</td><td>Note d'information</td><td>+/- 2 h, le temps de créer la note</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-      <h3 class="flow-title">Circulation de l'information lors d'un incident</h3>
-      <ol class="flow">
-        <li><b>PCC</b><span>Appel général signalant l'incident</span></li>
-        <li><b>Manager</b><span>Crée le visuel avec Live Incident en moins de 5&nbsp;minutes</span></li>
-        <li><b>Écrans des CDG</b><span>Diffusion du visuel</span></li>
-        <li><b>Conducteurs</b><span>Informations précises hors trains</span></li>
-      </ol>
-    </section>
+    </details>
   </div>
 </section>
 
