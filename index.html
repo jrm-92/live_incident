@@ -357,6 +357,10 @@
   #home .hero-content{padding:calc(30px + var(--sat)) 24px 36px;}
   #home .hero .logo-wrap{margin-bottom:0;}
   @media(prefers-reduced-motion:reduce){.trk{stroke-dashoffset:0 !important;}}
+
+  /* bandeau : fond bleu nuit de la charte, sans halo ovale ; logo fondu dans le bandeau */
+  #home .hero{background:linear-gradient(180deg,#0a1f44 0%,#0d2a5c 100%);box-shadow:none;}
+  #home .hero .logo-wrap{border-radius:18px;box-shadow:0 0 0 1px rgba(255,255,255,.35),0 0 36px rgba(94,164,222,.38);}
 </style>
 </head>
 <body>
@@ -384,7 +388,6 @@
         <path id="hp4" d="M 0 186 C 200 186, 380 132, 500 130 C 650 128, 800 202, 1000 218"/>
         <path id="hp5" d="M 0 238 C 200 238, 380 134, 500 130 C 650 126, 800 70, 1000 62"/>
       </defs>
-      <ellipse cx="500" cy="130" rx="130" ry="85" fill="rgba(0,100,210,.07)"/>
       <path class="trk trk-faint" d="M 0 -8 C 200 -5, 380 125, 500 130" style="animation-delay:.3s"/>
       <path class="trk" d="M 0 22 C 200 22, 380 126, 500 130" style="animation-delay:.05s"/>
       <path class="trk" d="M 0 74 C 200 74, 380 128, 500 130" style="animation-delay:.15s"/>
@@ -396,9 +399,6 @@
       <path class="trk" d="M 500 130 C 650 132, 800 128, 1000 122" style="animation-delay:.6s"/>
       <path class="trk trk-mid" d="M 500 130 C 650 130, 800 148, 1000 164" style="animation-delay:.5s"/>
       <path class="trk" d="M 500 130 C 650 128, 800 202, 1000 218" style="animation-delay:.65s"/>
-      <circle cx="500" cy="130" r="28" fill="url(#ng)" opacity=".6"/>
-      <circle cx="500" cy="130" r="5" fill="white" opacity=".9" filter="url(#fglow-lg)"/>
-      <circle cx="500" cy="130" r="2.5" fill="white"/>
       <g filter="url(#fglow)" opacity=".92"><circle r="6" fill="#FFCD00"/><text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-family="Arial,sans-serif" font-size="6" font-weight="900" fill="#000">1</text><animateMotion dur="4s" repeatCount="indefinite" begin="-2s"><mpath href="#hp1"/></animateMotion></g>
       <g filter="url(#fglow)" opacity=".92"><circle r="6" fill="#FFCD00"/><text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-family="Arial,sans-serif" font-size="6" font-weight="900" fill="#000">1</text><animateMotion dur="4s" repeatCount="indefinite" begin="0s"><mpath href="#hp1"/></animateMotion></g>
       <g filter="url(#fglow)" opacity=".9"><circle r="6" fill="#0064B0"/><text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-family="Arial,sans-serif" font-size="6" font-weight="900" fill="#fff">2</text><animateMotion dur="4s" repeatCount="indefinite" begin="-1.56s"><mpath href="#hp2"/></animateMotion></g>
