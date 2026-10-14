@@ -405,6 +405,39 @@
     #step1 .line-grid{grid-column:2;grid-row:2;grid-template-columns:repeat(2,1fr);}
     .items{grid-template-columns:repeat(3,1fr);}
   }
+
+  /* logo : pas de surbrillance de sélection ni de glisser-déposer */
+  .logo-split img{user-select:none;-webkit-user-select:none;-webkit-user-drag:none;pointer-events:none;}
+
+  /* carte « Qu'est-ce que Live Incident ? » */
+  .about-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:18px;margin-top:6px;}
+  .about-card h2{margin:0 0 14px;font-size:19px;color:var(--night);font-weight:900;}
+  .about-grid{display:grid;grid-template-columns:1fr;gap:12px;}
+  .about-item{background:var(--panel-2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;}
+  .about-item h3{margin:0 0 4px;font-size:15px;color:var(--brand);font-weight:900;}
+  .about-item p,.about-item ul{margin:0;font-size:14px;color:var(--ink);line-height:1.45;}
+  .about-item ul{padding-left:18px;}
+  .flow-title{margin:18px 0 10px;font-size:15px;color:var(--night);font-weight:900;}
+  .flow{list-style:none;margin:0;padding:0;display:grid;gap:0;counter-reset:f;}
+  .flow li{position:relative;padding:0 0 14px 40px;counter-increment:f;font-size:14px;}
+  .flow li::before{content:counter(f);position:absolute;left:0;top:0;width:26px;height:26px;border-radius:50%;background:var(--night);color:#fff;
+    font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center;}
+  .flow li:not(:last-child)::after{content:"";position:absolute;left:12px;top:28px;bottom:2px;width:2px;background:var(--border-strong);}
+  .flow li b{display:block;color:var(--night);}
+  .flow li span{color:var(--muted);}
+  @media(min-width:600px){.about-grid{grid-template-columns:1fr 1fr;}}
+  @media(min-width:900px){
+    #home .home-wrap{max-width:1180px;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:18px 22px;align-items:start;}
+    #home .home-intro{grid-column:1/-1;}
+    #home .about-card{grid-column:1;grid-row:2;margin:0;padding:22px;}
+    #home .home-actions{grid-column:2;grid-row:2;align-self:stretch;}
+    #home .home-act{flex:1;flex-direction:row;align-items:center;gap:16px;min-height:110px;padding:20px;}
+    #home .home-act .count{position:static;margin-left:auto;}
+    #home .home-act b{font-size:20px;}
+  }
+
+  .home-actions{display:flex;flex-direction:column;gap:12px;}
+  @media(min-width:900px){.home-actions{gap:18px;}}
 </style>
 </head>
 <body>
@@ -457,9 +490,27 @@
   </div>
   <div class="home-wrap">
     <p class="home-intro" id="homeTitle">Créez un visuel d'incident pour les écrans du personnel de conduite.</p>
+    <div class="home-actions">
     <button class="home-act primary" id="actNew" type="button"><span class="ico">＋</span><span><b>Créer un visuel</b><small>Modèle, ligne, stations, texte, image</small></span></button>
     <button class="home-act" id="actDrafts" type="button"><span class="ico">✎</span><span><b>Mes brouillons</b><small>Reprendre un visuel en cours</small></span><span class="count" id="cntDrafts">0</span></button>
     <button class="home-act" id="actRecents" type="button"><span class="ico">⟳</span><span><b>Mes visuels récents</b><small>Dupliquer un visuel déjà généré</small></span><span class="count" id="cntRecents">0</span></button>
+    </div>
+    <section class="about-card" aria-labelledby="aboutTitle">
+      <h2 id="aboutTitle">Qu'est-ce que Live Incident&nbsp;?</h2>
+      <div class="about-grid">
+        <div class="about-item"><h3>C'est quoi&nbsp;?</h3><p>Un support visuel qui permet d'avoir des informations sur un incident en cours.</p></div>
+        <div class="about-item"><h3>Pour qui&nbsp;?</h3><p>Tous les agents qualifiés conduite.</p></div>
+        <div class="about-item"><h3>Pourquoi&nbsp;?</h3><ul><li>Optimiser la circulation de l'information</li><li>Faire des rappels sur des cas concrets</li><li>Écarter des doutes</li></ul></div>
+        <div class="about-item"><h3>Comment&nbsp;?</h3><ul><li>Sur les écrans présents dans les corps de garde</li><li>À l'aide d'un générateur de visuel</li></ul></div>
+      </div>
+      <h3 class="flow-title">Circulation de l'information lors d'un incident</h3>
+      <ol class="flow">
+        <li><b>PCC</b><span>Appel général signalant l'incident</span></li>
+        <li><b>Manager</b><span>Crée le visuel avec Live Incident en moins de 5&nbsp;minutes</span></li>
+        <li><b>Écrans des CDG</b><span>Diffusion du visuel</span></li>
+        <li><b>Conducteurs</b><span>Informations précises hors trains</span></li>
+      </ol>
+    </section>
   </div>
 </section>
 
