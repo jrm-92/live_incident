@@ -453,16 +453,7 @@
   .lg.opt{color:#c8102e;}.lg.opt::before{background:#e2001a;}
   .chips{list-style:none;padding:0;margin:0 0 14px;display:flex;flex-wrap:wrap;gap:8px;}
   .chips li{background:#eef5ff;border:1px solid #bcd3f0;color:var(--night);border-radius:999px;padding:6px 12px;font-size:14px;font-weight:700;}
-  .examples{display:grid;grid-template-columns:1fr;gap:14px;}
-  .examples figure{margin:0;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#fff;}
-  .examples img{width:100%;height:auto;display:block;}
-  .examples figcaption{font-size:13px;font-weight:800;color:var(--night);padding:8px 12px;border-top:1px solid var(--border);}
-  .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--border);border-radius:10px;}
-  .tbl{border-collapse:collapse;width:100%;min-width:640px;font-size:14px;}
-  .tbl th{background:#4472c4;color:#fff;text-align:left;padding:10px;font-weight:800;}
-  .tbl td{padding:10px;border-top:1px solid var(--border);vertical-align:top;}
-  .tbl tr:nth-child(even) td{background:var(--panel-2);}
-  @media(min-width:700px){.actors{grid-template-columns:repeat(3,1fr);}.examples{grid-template-columns:1fr 1fr;}}
+  @media(min-width:700px){.actors{grid-template-columns:repeat(3,1fr);}}
 
   /* schéma de circulation de l'information */
   .flow-svg{display:none;width:100%;height:auto;font-family:var(--sans);background:var(--panel-2);border:1px solid var(--border);border-radius:12px;}
@@ -640,30 +631,6 @@
           <li><b>Étape 2</b><span>Il génère un visuel intégrant les caractéristiques de l'incident en cours à l'aide de l'interface.</span></li>
           <li><b>Étape 3</b><span>Il diffuse le visuel sur les écrans des corps de garde.</span></li>
         </ol>
-        <p class="about-p"><b>Dans l'outil</b>&nbsp;: 1. choix du type d'incident · 2. choix de la zone d'incident · 3. titre de l'incident <em>(RP, SSO, IT, etc.)</em> · 4. commentaire à ajouter · 5. génération du visuel.</p>
-
-        <h3 class="about-h">Exemples de visuels</h3>
-        <div class="examples">
-          <figure><img src="presentation/exemple_ralentissement_provisoire.jpg" alt="Exemple : ralentissement provisoire, ligne 9" loading="lazy"><figcaption>Ralentissement provisoire</figcaption></figure>
-          <figure><img src="presentation/exemple_service_securite_sur_ordre.jpg" alt="Exemple : service de sécurité sur ordre, ligne 9" loading="lazy"><figcaption>Service de sécurité sur ordre</figcaption></figure>
-          <figure><img src="presentation/exemple_interruption_trafic.jpg" alt="Exemple : interruption de trafic, ligne 9" loading="lazy"><figcaption>Interruption de trafic</figcaption></figure>
-          <figure><img src="presentation/exemple_stations_fermees.jpg" alt="Exemple : stations fermées, ligne 9" loading="lazy"><figcaption>Stations fermées</figcaption></figure>
-        </div>
-
-        <h3 class="about-h">Les différentes étapes de la mise en place</h3>
-        <div class="tbl-wrap">
-          <table class="tbl">
-            <thead><tr><th>Étapes</th><th>Ressources humaines</th><th>Ressources matérielles</th><th>Durée (estimatif)</th></tr></thead>
-            <tbody>
-              <tr><td>Brainstorming avec encadrants et conducteurs pour apporter des améliorations et adapter les visuels à des problématiques de VB2.</td><td>3 CR + 3 encadrants ?</td><td>Salle de réunion</td><td>+/- 2 h de brainstorming</td></tr>
-              <tr><td>Modification des visuels et du script.</td><td>La personne qui gèrera le script</td><td>—</td><td>3 semaines</td></tr>
-              <tr><td>Validation des visuels.</td><td>Encadrants + CR</td><td>—</td><td>+/- 2 h, le temps d'une réunion</td></tr>
-              <tr><td>Tests de diffusion sur les écrans des CDG.</td><td>Encadrant référent (à définir)</td><td>Accès écrans CDG</td><td>1 semaine ?</td></tr>
-              <tr><td>Formation des encadrants à l'utilisation de l'outil.</td><td>Encadrant référent (à définir)</td><td>Support PPT explicatif</td><td>4 semaines ? (le temps de former tous les managers)</td></tr>
-              <tr><td>Communication conducteurs sur l'arrivée de « Live Incident ».</td><td>Encadrant référent (à définir)</td><td>Note d'information</td><td>+/- 2 h, le temps de créer la note</td></tr>
-            </tbody>
-          </table>
-        </div>
       </div>
     </details>
   </div>
