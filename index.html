@@ -370,6 +370,13 @@
 
   .trow.xin .dot{border-color:#c8102e;color:#c8102e;}
   .trow.xin .dot::after{content:"✕";}
+
+  /* logo en deux parties : « live » au-dessus des lignes, « incident » en dessous */
+  #home .hero{min-height:260px;}
+  #home .hero-content{position:absolute;inset:0;padding:0;}
+  .logo-split{height:100%;width:min(236px,64vw);margin:0 auto;display:grid;grid-template-rows:1fr 32px 1fr;}
+  .logo-live{grid-row:1;align-self:end;justify-self:start;width:64.8%;height:auto;display:block;margin-left:2%;}
+  .logo-incident{grid-row:3;align-self:start;justify-self:start;width:100%;height:auto;display:block;}
 </style>
 </head>
 <body>
@@ -419,7 +426,7 @@
       <g filter="url(#fglow)" opacity=".9"><circle r="6" fill="#F28E42"/><text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-family="Arial,sans-serif" font-size="6" font-weight="900" fill="#000">5</text><animateMotion dur="4s" repeatCount="indefinite" begin="-0.22s"><mpath href="#hp5"/></animateMotion></g>
     </svg>
     <div class="hero-content">
-      <div class="logo-wrap"><img class="logo-hero" src="live_incident_clair.png" alt="Live Incident"/></div>
+      <div class="logo-split" role="img" aria-label="Live Incident"><img class="logo-live" src="live_clair_haut.png" alt=""><img class="logo-incident" src="incident_clair_bas.png" alt=""></div>
     </div>
   </div>
   <div class="home-wrap">
