@@ -442,7 +442,7 @@
   .about-body{padding:18px;}
   .about-h{margin:24px 0 10px;font-size:16px;color:var(--night);font-weight:900;padding-top:16px;border-top:1px dashed var(--border-strong);}
   .about-p{font-size:15px;margin:0 0 10px;line-height:1.5;}
-  .actors{display:grid;grid-template-columns:1fr;gap:10px;}
+  .actors{display:none;}
   .actor{border:1px solid var(--border);border-left:4px solid var(--brand);border-radius:10px;padding:10px 14px;background:var(--panel-2);}
   .actor b{color:var(--night);}
   .actor p{margin:4px 0 0;font-size:14px;line-height:1.45;}
@@ -463,6 +463,24 @@
   .tbl td{padding:10px;border-top:1px solid var(--border);vertical-align:top;}
   .tbl tr:nth-child(even) td{background:var(--panel-2);}
   @media(min-width:700px){.actors{grid-template-columns:repeat(3,1fr);}.examples{grid-template-columns:1fr 1fr;}}
+
+  /* schéma de circulation de l'information */
+  .flow-svg{display:none;width:100%;height:auto;font-family:var(--sans);background:var(--panel-2);border:1px solid var(--border);border-radius:12px;}
+  .flow-v{list-style:none;margin:0;padding:0;}
+  .fv-node{background:#fff;border:1.5px solid var(--border-strong);border-radius:12px;padding:12px 14px;}
+  .fv-node b{color:var(--night);font-size:15px;}
+  .fv-node p{margin:4px 0 0;font-size:14px;line-height:1.45;}
+  .fv-node.screen{text-align:center;background:var(--night);border-color:var(--night);}
+  .fv-node.screen img{width:150px;height:auto;background:#fff;border-radius:6px;padding:8px 14px;}
+  .fv-node.screen p{color:#fff;font-weight:800;margin-top:6px;}
+  .fv-arrow{position:relative;padding:12px 0 18px 34px;margin-left:14px;border-left:4px solid;}
+  .fv-arrow::after{content:"";position:absolute;left:-10px;bottom:0;border:8px solid transparent;border-bottom:0;border-top:10px solid;}
+  .fv-arrow.blue{border-color:#4a76c9;color:#2f5fb3;}.fv-arrow.blue::after{border-top-color:#4a76c9;}
+  .fv-arrow.red{border-color:#e2001a;color:#c8102e;}.fv-arrow.red::after{border-top-color:#e2001a;}
+  .fv-arrow span{display:block;font-weight:800;font-size:14px;}
+  .fv-arrow small{font-size:12px;opacity:.8;}
+  .fv-arrow i{font-style:normal;display:inline-flex;width:20px;height:20px;border-radius:50%;background:#e2001a;color:#fff;font-size:12px;align-items:center;justify-content:center;margin-right:4px;}
+  @media(min-width:700px){.flow-svg{display:block;}.flow-v{display:none;}}
 </style>
 </head>
 <body>
@@ -528,16 +546,90 @@
           <div class="about-item"><h3>C'est quoi&nbsp;?</h3><p>Un support visuel qui permet d'avoir des informations sur un incident en cours.</p></div>
           <div class="about-item"><h3>Pour qui&nbsp;?</h3><p>Tous les agents qualifiés conduite.</p></div>
           <div class="about-item"><h3>Pourquoi&nbsp;?</h3><ul><li>Optimiser la circulation de l'information</li><li>Faire des rappels sur des cas concrets</li><li>Écarter des doutes</li></ul></div>
-          <div class="about-item"><h3>Comment&nbsp;?</h3><ul><li>Sur les écrans présents dans les corps de garde</li><li>À l'aide d'un générateur de visuel</li></ul></div>
+          <div class="about-item"><h3>Comment&nbsp;?</h3><ul><li>Sur les écrans présents dans les corps de garde</li><li>Sur les tablettes</li><li>À l'aide d'un générateur de visuel</li></ul></div>
         </div>
 
         <h3 class="about-h">Circulation de l'information lors d'un incident</h3>
-        <div class="actors">
-          <div class="actor"><b>Acteur : PCC</b><p>« Appel général du PCC pour vous signaler la mise en place d'un ralentissement provisoire dans l'interstation “XXXX - XXXX”. »</p></div>
-          <div class="actor"><b>Acteur : Manager</b><p>Prise en compte de l'information et création d'un support à diffuser sur les écrans via « Live Incident ». <em>(Temps d'exécution estimé : moins de 5 minutes.)</em></p></div>
-          <div class="actor"><b>Acteur : Conducteur</b><p>Les conducteurs (hors trains) bénéficient d'informations précises sur les écrans des CDG.</p></div>
-        </div>
-        <div class="legend"><span class="lg cur">Situation actuelle</span> : le PCC informe le manager et les conducteurs par appel général. <span class="lg opt">Optimisation</span> : le manager crée le visuel avec Live Incident, diffusé sur les écrans des CDG pour les conducteurs.</div>
+        <!-- Schéma (tablette / ordinateur) -->
+        <svg class="flow-svg" viewBox="0 0 960 560" role="img" aria-labelledby="flowT flowD">
+          <title id="flowT">Circulation de l'information lors d'un incident</title>
+          <desc id="flowD">Situation actuelle : le PCC fait un appel général entendu par le manager et par les conducteurs. Optimisation : le manager crée en moins de 5 minutes un visuel avec Live Incident, diffusé sur les écrans des CDG et les tablettes pour les conducteurs hors trains.</desc>
+          <defs>
+            <marker id="arB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#4a76c9"/></marker>
+            <marker id="arR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#e2001a"/></marker>
+          </defs>
+          <!-- légende -->
+          <g font-size="13" font-weight="800">
+            <line x1="24" y1="34" x2="56" y2="34" stroke="#4a76c9" stroke-width="4" stroke-linecap="round"/><text x="66" y="38" fill="#2f5fb3">Situation actuelle</text>
+            <line x1="24" y1="60" x2="56" y2="60" stroke="#e2001a" stroke-width="4" stroke-linecap="round"/><text x="66" y="64" fill="#c8102e">Optimisation</text>
+          </g>
+          <!-- flèches : situation actuelle -->
+          <path d="M290 96 C 180 96, 160 150, 160 232" fill="none" stroke="#4a76c9" stroke-width="3.5" marker-end="url(#arB)"/>
+          <path d="M670 96 C 780 96, 800 150, 800 232" fill="none" stroke="#4a76c9" stroke-width="3.5" marker-end="url(#arB)"/>
+          <text x="180" y="172" fill="#2f5fb3" font-size="13" font-weight="800">Appel général</text>
+          <text x="780" y="172" fill="#2f5fb3" font-size="13" font-weight="800" text-anchor="end">Appel général</text>
+          <!-- flèches : optimisation -->
+          <path d="M160 374 C 160 452, 290 468, 390 466" fill="none" stroke="#e2001a" stroke-width="3.5" marker-end="url(#arR)"/>
+          <path d="M570 466 C 680 468, 800 452, 800 382" fill="none" stroke="#e2001a" stroke-width="3.5" marker-end="url(#arR)"/>
+          <g text-anchor="middle">
+            <circle cx="210" cy="496" r="12" fill="#e2001a"/><text x="210" y="501" fill="#fff" font-size="13" font-weight="900">1</text>
+            <text x="290" y="501" fill="#c8102e" font-size="14" font-weight="900">Création du visuel</text>
+            <rect x="226" y="512" width="128" height="24" rx="12" fill="#fdecec" stroke="#f3b4b4"/><text x="290" y="529" fill="#9b0d24" font-size="12.5" font-weight="800">moins de 5 minutes</text>
+            <circle cx="636" cy="496" r="12" fill="#e2001a"/><text x="636" y="501" fill="#fff" font-size="13" font-weight="900">2</text>
+            <text x="700" y="501" fill="#c8102e" font-size="14" font-weight="900">Diffusion</text>
+            <text x="700" y="522" fill="#5d2030" font-size="12.5">sur les écrans des CDG</text>
+            <text x="700" y="538" fill="#5d2030" font-size="12.5">et les tablettes</text>
+          </g>
+          <!-- PCC -->
+          <rect x="290" y="16" width="380" height="146" rx="14" fill="#fff" stroke="#bcc7da" stroke-width="1.5"/>
+          <circle cx="328" cy="52" r="22" fill="#0a1f44"/>
+          <path d="M318 47 h6 l12 -8 v26 l-12 -8 h-6 z M324 57 l3 8 h4 l-2 -8" fill="#fff"/>
+          <path d="M340 45 q5 7 0 14" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <text x="360" y="58" fill="#0a1f44" font-size="18" font-weight="900">Acteur : PCC</text>
+          <g fill="#1e2230" font-size="12.5" font-style="italic">
+            <text x="308" y="94">« Appel général du PCC pour vous signaler la mise</text>
+            <text x="308" y="111">en place d'un ralentissement provisoire dans</text>
+            <text x="308" y="128">l'interstation Franklin D. Roosevelt – Alma-Marceau</text>
+            <text x="308" y="145">Voie 2. »</text>
+          </g>
+          <!-- Manager -->
+          <rect x="20" y="240" width="280" height="134" rx="14" fill="#fff" stroke="#bcc7da" stroke-width="1.5"/>
+          <circle cx="58" cy="276" r="22" fill="#0a1f44"/>
+          <circle cx="58" cy="269" r="7" fill="#fff"/><path d="M45 289 q13 -16 26 0 z" fill="#fff"/>
+          <text x="90" y="282" fill="#0a1f44" font-size="18" font-weight="900">Acteur : Manager</text>
+          <g fill="#1e2230" font-size="12.5">
+            <text x="38" y="318">Prise en compte de l'information et</text>
+            <text x="38" y="335">création d'un support à diffuser sur les</text>
+            <text x="38" y="352">écrans via « Live Incident ».</text>
+          </g>
+          <!-- Conducteur -->
+          <rect x="660" y="240" width="280" height="134" rx="14" fill="#fff" stroke="#bcc7da" stroke-width="1.5"/>
+          <circle cx="698" cy="276" r="22" fill="#0a1f44"/>
+          <rect x="686" y="264" width="24" height="20" rx="5" fill="#fff"/><rect x="690" y="268" width="16" height="7" rx="1.5" fill="#0a1f44"/><circle cx="692" cy="280" r="1.8" fill="#0a1f44"/><circle cx="704" cy="280" r="1.8" fill="#0a1f44"/><path d="M688 288 l-3 4 M708 288 l3 4" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+          <text x="730" y="282" fill="#0a1f44" font-size="18" font-weight="900">Acteur : Conducteur</text>
+          <g fill="#1e2230" font-size="12.5">
+            <text x="678" y="318">Les conducteurs (hors trains)</text>
+            <text x="678" y="335">bénéficient d'informations précises</text>
+            <text x="678" y="352">sur les écrans des CDG.</text>
+          </g>
+          <!-- Écran Live Incident -->
+          <rect x="398" y="404" width="164" height="104" rx="9" fill="#0a1f44"/>
+          <rect x="406" y="412" width="148" height="86" rx="4" fill="#fff"/>
+          <image href="live_incident_transparent.png" x="425" y="422" width="110" height="60"/>
+          <rect x="471" y="508" width="18" height="14" fill="#0a1f44"/><rect x="448" y="522" width="64" height="7" rx="3" fill="#0a1f44"/>
+          <text x="480" y="550" text-anchor="middle" fill="#0a1f44" font-size="14" font-weight="900">Live Incident</text>
+        </svg>
+        <!-- Schéma (téléphone) -->
+        <ol class="flow-v" aria-label="Circulation de l'information lors d'un incident">
+          <li class="fv-node"><b>Acteur : PCC</b><p><em>« Appel général du PCC pour vous signaler la mise en place d'un ralentissement provisoire dans l'interstation Franklin D. Roosevelt – Alma-Marceau Voie 2. »</em></p></li>
+          <li class="fv-arrow blue"><span>Appel général : le manager et les conducteurs entendent l'annonce</span><small>Situation actuelle</small></li>
+          <li class="fv-node"><b>Acteur : Manager</b><p>Prise en compte de l'information et création d'un support à diffuser sur les écrans via « Live Incident ».</p></li>
+          <li class="fv-arrow red"><span><i>1</i> Création du visuel · moins de 5 minutes</span><small>Optimisation</small></li>
+          <li class="fv-node screen"><img src="live_incident_transparent.png" alt="Live Incident"><p>Visuel Live Incident</p></li>
+          <li class="fv-arrow red"><span><i>2</i> Diffusion sur les écrans des CDG et les tablettes</span><small>Optimisation</small></li>
+          <li class="fv-node"><b>Acteur : Conducteur</b><p>Les conducteurs (hors trains) bénéficient d'informations précises sur les écrans des CDG.</p></li>
+        </ol>
+        <p class="legend"><span class="lg cur">Situation actuelle</span> : l'information passe par l'appel général du PCC. <span class="lg opt">Optimisation</span> : le manager en fait un visuel avec Live Incident, consultable par les conducteurs sur les écrans des CDG et les tablettes.</p>
 
         <h3 class="about-h">Comment ça fonctionne&nbsp;?</h3>
         <p class="about-p">L'outil permet de générer un support visuel en lien avec un incident en cours, à partir des critères saisis par l'utilisateur&nbsp;:</p>
