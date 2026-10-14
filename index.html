@@ -451,8 +451,6 @@
   .lg::before{content:"";position:absolute;left:0;top:50%;width:16px;height:3px;border-radius:2px;}
   .lg.cur{color:#2f5fb3;}.lg.cur::before{background:#4a76c9;}
   .lg.opt{color:#c8102e;}.lg.opt::before{background:#e2001a;}
-  .chips{list-style:none;padding:0;margin:0 0 14px;display:flex;flex-wrap:wrap;gap:8px;}
-  .chips li{background:#eef5ff;border:1px solid #bcd3f0;color:var(--night);border-radius:999px;padding:6px 12px;font-size:14px;font-weight:700;}
   @media(min-width:700px){.actors{grid-template-columns:repeat(3,1fr);}}
 
   /* schéma de circulation de l'information */
@@ -473,36 +471,7 @@
   .fv-arrow i{font-style:normal;display:inline-flex;width:20px;height:20px;border-radius:50%;background:#e2001a;color:#fff;font-size:12px;align-items:center;justify-content:center;margin-right:4px;}
   @media(min-width:700px){.flow-svg{display:block;}.flow-v{display:none;}}
 
-  /* tutoriel : déroulé de l'opération illustré */
-  .tuto{display:grid;gap:16px;min-width:0;}
-  .tuto>*,.tuto-step>*{min-width:0;}
-  .tuto-step{border:1px solid var(--border);border-radius:12px;padding:14px;background:var(--panel-2);}
-  .tuto-head{display:flex;gap:12px;align-items:flex-start;margin-bottom:12px;}
-  .tuto-head b{color:var(--night);font-size:15px;}
-  .tuto-head p{margin:2px 0 0;font-size:14px;line-height:1.45;}
-  .tuto-n{flex:none;width:30px;height:30px;border-radius:50%;background:var(--night);color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center;}
-  .tuto-note{display:grid;gap:6px;max-width:560px;}
-  .tn-call{display:flex;gap:10px;align-items:flex-start;background:#fff;border:1px solid var(--border);border-radius:12px 12px 12px 2px;padding:10px 12px;}
-  .tn-call p{margin:0;font-size:14px;line-height:1.45;}
-  .tn-ico{font-size:22px;line-height:1;}
-  .tn-arrow{text-align:center;color:var(--brand);font-weight:900;font-size:18px;}
-  .tn-memo{background:#fffbe6;border:1px solid #f1dc8a;border-radius:10px;padding:10px 14px;font-size:14px;box-shadow:2px 2px 0 #f1dc8a;}
-  .tn-memo b{color:#6b5300;}
-  .tn-memo ul{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:3px;}
-  .tn-memo span{display:inline-block;min-width:44px;font-weight:800;color:#6b5300;}
-  .shots{display:grid;grid-auto-flow:column;grid-auto-columns:68%;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px;-webkit-overflow-scrolling:touch;}
-  .shots figure{margin:0;scroll-snap-align:start;}
-  .shots img{width:100%;height:auto;display:block;border:6px solid var(--night);border-radius:22px;background:#fff;}
-  .shots figcaption{font-size:13px;font-weight:700;color:var(--night);margin-top:8px;line-height:1.35;display:flex;gap:6px;align-items:flex-start;}
-  .shots figcaption i{flex:none;font-style:normal;width:20px;height:20px;border-radius:50%;background:var(--brand);color:#fff;font-size:12px;display:inline-flex;align-items:center;justify-content:center;}
-  .tv{margin:0 auto;max-width:720px;}
-  .tv-screen{background:var(--night);padding:10px;border-radius:12px;}
-  .tv-screen img{width:100%;height:auto;display:block;border-radius:3px;}
-  .tv-stand{width:90px;height:16px;margin:0 auto;background:var(--night);clip-path:polygon(30% 0,70% 0,80% 100%,20% 100%);}
-  .tv figcaption{text-align:center;font-size:13px;color:var(--muted);margin-top:6px;}
-  @media(min-width:700px){.shots{grid-auto-flow:row;grid-template-columns:repeat(4,1fr);overflow:visible;}}
-  .shots-hint{font-size:12px;color:var(--muted);margin:0 0 8px;}
-  @media(min-width:700px){.shots-hint{display:none;}}
+  .about-todo{color:var(--muted);font-style:italic;}
 </style>
 </head>
 <body>
@@ -654,33 +623,7 @@
         <p class="legend"><span class="lg cur">Situation actuelle</span> : l'information passe par l'appel général du PCC. <span class="lg opt">Optimisation</span> : le manager en fait un visuel avec Live Incident, consultable par les conducteurs sur les écrans des CDG et les tablettes.</p>
 
         <h3 class="about-h">Comment ça fonctionne&nbsp;?</h3>
-        <p class="about-p">L'outil permet de générer un support visuel en lien avec un incident en cours, à partir des critères saisis par l'utilisateur&nbsp;:</p>
-        <ul class="chips"><li>Type d'incident</li><li>Zone d'incident</li><li>Voie(s) impactée(s)</li><li>Précision sur l'incident</li></ul>
-        <p class="about-p"><b>Déroulé de l'opération</b> <em>(temps estimé : moins de 5 minutes)</em></p>
-        <div class="tuto">
-          <article class="tuto-step">
-            <div class="tuto-head"><span class="tuto-n">1</span><div><b>Étape 1</b><p>Le manager prend note d'un incident en cours.</p></div></div>
-            <div class="tuto-note">
-              <div class="tn-call"><span class="tn-ico" aria-hidden="true">📢</span><p><em>« Appel général du PCC pour vous signaler la mise en place d'un ralentissement provisoire dans l'interstation Franklin D. Roosevelt – Alma-Marceau Voie 2. »</em></p></div>
-              <div class="tn-arrow" aria-hidden="true">↓</div>
-              <div class="tn-memo"><b>À noter</b><ul><li><span>Type</span> Ralentissement provisoire</li><li><span>Zone</span> Franklin D. Roosevelt – Alma-Marceau</li><li><span>Voie</span> Voie 2</li></ul></div>
-            </div>
-          </article>
-          <article class="tuto-step">
-            <div class="tuto-head"><span class="tuto-n">2</span><div><b>Étape 2</b><p>Il génère un visuel intégrant les caractéristiques de l'incident en cours à l'aide de l'interface.</p></div></div>
-            <p class="shots-hint">Faites glisser pour voir les 4 écrans →</p>
-            <div class="shots">
-              <figure><img src="tutoriel/etape2-1-modele-ligne.jpg" alt="Écran 1 : choix du modèle Ralentissement provisoire" loading="lazy" width="390" height="780"><figcaption><i>a</i><span>Choisir le modèle, puis la ligne</span></figcaption></figure>
-              <figure><img src="tutoriel/etape2-2-stations.jpg" alt="Écran 2 : tronçon Franklin D. Roosevelt – Alma-Marceau sélectionné sur le thermomètre" loading="lazy" width="390" height="780"><figcaption><i>b</i><span>Toucher la 1<sup>re</sup> puis la dernière station du tronçon</span></figcaption></figure>
-              <figure><img src="tutoriel/etape2-3-informations.jpg" alt="Écran 3 : saisie du titre, aperçu mis à jour en direct" loading="lazy" width="390" height="780"><figcaption><i>c</i><span>Saisir le titre et les informations : l'aperçu se met à jour</span></figcaption></figure>
-              <figure><img src="tutoriel/etape2-4-apercu-telecharger.jpg" alt="Écran 4 : vérification de l'aperçu et bouton Télécharger l'image" loading="lazy" width="390" height="780"><figcaption><i>d</i><span>Vérifier l'aperçu, puis « Télécharger l'image »</span></figcaption></figure>
-            </div>
-          </article>
-          <article class="tuto-step">
-            <div class="tuto-head"><span class="tuto-n">3</span><div><b>Étape 3</b><p>Il diffuse le visuel sur les écrans des corps de garde.</p></div></div>
-            <figure class="tv"><div class="tv-screen"><img src="tutoriel/etape3-visuel.jpg" alt="Visuel généré : ralentissement provisoire entre Franklin D. Roosevelt et Alma-Marceau, ligne 9" loading="lazy" width="1280" height="720"></div><div class="tv-stand" aria-hidden="true"></div><figcaption>Le visuel téléchargé, prêt à être diffusé sur les écrans des CDG et les tablettes.</figcaption></figure>
-          </article>
-        </div>
+        <p class="about-p about-todo">Cette partie sera complétée lorsque l'outil sera finalisé.</p>
       </div>
     </details>
   </div>
