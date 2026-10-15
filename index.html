@@ -923,7 +923,7 @@ const LINES = {
  , "14":{color:"#662483",forkNote:null,stations:["Saint-Denis–Pleyel","Mairie de Saint-Ouen","Saint-Ouen","Porte de Clichy","Pont Cardinet","Saint-Lazare","Madeleine","Pyramides","Châtelet","Gare de Lyon","Bercy","Cour Saint-Émilion","Bibliothèque François Mitterrand","Olympiades","Maison Blanche","Hôpital Bicêtre","Villejuif–Gustave Roussy","L'Haÿ-les-Roses","Chevilly-Larue","Thiais–Orly","Aéroport d'Orly"]},
 };
 const LINE_ORDER=["1","2","3","3bis","4","5","6","7","7bis","8","9","10","11","12","13","14"];
-const SCALE=2,W=1920*SCALE,H=1080*SCALE,NAVY="#000082",RED_SEG="#E75454",HDR=124;
+const SCALE=2,W=1920*SCALE,H=1080*SCALE,NAVY="#000082",RED_SEG="#E2001A",HDR=124;
 const TYPES_AVEC_INTER=["Service de sécurité","Service de sécurité sur ordre","Ralentissement provisoire"];
 const KNOWN=["ralentissement_provisoire.png","service_securite.png","service_securite_sur_ordre.png","interruption_trafic.png","station_fermee.png"];
 let currentLineId=null,STATIONS=[],LINE_COLOR="#B7E600";
@@ -2297,7 +2297,7 @@ function initApp(){
 }
 
 /* ── Banque d'images : éléments à placer sur le visuel (schéma explicatif) ── */
-const BANK=[{"k": "rame", "label": "Rame de métro", "cat": "Matériel", "w": 386, "h": 148}, {"k": "rame_inverse", "label": "Rame de métro (autre sens)", "cat": "Matériel", "w": 386, "h": 148}, {"k": "rame_entiere", "label": "Rame entière", "cat": "Matériel", "w": 975, "h": 148}, {"k": "signal_ferme", "label": "Signal de manœuvre fermé", "cat": "Signalisation", "w": 122, "h": 112}, {"k": "signal_ouvert", "label": "Signal de manœuvre ouvert", "cat": "Signalisation", "w": 134, "h": 112}, {"k": "signal_espacement_ferme", "label": "Signal d'espacement fermé", "cat": "Signalisation", "w": 108, "h": 154}, {"k": "signal_rouge", "label": "Signal rouge", "cat": "Signalisation", "w": 104, "h": 176}, {"k": "signal_vert", "label": "Signal vert", "cat": "Signalisation", "w": 106, "h": 152}, {"k": "signal_manoeuvre_triple", "label": "Signal de manœuvre (3 feux)", "cat": "Signalisation", "w": 172, "h": 104}, {"k": "signal_avertissement", "label": "Signal d'avertissement", "cat": "Signalisation", "w": 64, "h": 100}, {"k": "signal_reprise", "label": "Signal de reprise", "cat": "Signalisation", "w": 96, "h": 64}, {"k": "sp_clignotant", "label": "Indicateur SP clignotant", "cat": "Indicateurs SP", "w": 124, "h": 94}, {"k": "plaque_sp_avant", "label": "Plaque SP avant gare", "cat": "Indicateurs SP", "w": 88, "h": 66}, {"k": "plaque_sp_apres", "label": "Plaque SP après gare", "cat": "Indicateurs SP", "w": 86, "h": 66}, {"k": "depart", "label": "Indicateur « Départ »", "cat": "Indicateurs SP", "w": 82, "h": 82}, {"k": "quai1", "label": "Indicateur « Quai 1 »", "cat": "Indicateurs SP", "w": 86, "h": 80}, {"k": "limite_manoeuvre", "label": "Plaque limite de manœuvre", "cat": "Plaques", "w": 150, "h": 104}, {"k": "plm", "label": "Plaque PLM", "cat": "Plaques", "w": 116, "h": 74}, {"k": "tiv_jc15", "label": "TIV « JC 15 »", "cat": "Plaques", "w": 92, "h": 74}, {"k": "tiv_45", "label": "TIV « 45 »", "cat": "Plaques", "w": 102, "h": 66}, {"k": "lanterne_clignotante", "label": "Lanterne feu clignotant", "cat": "Chantier", "w": 122, "h": 86}, {"k": "lanterne_fixe", "label": "Lanterne feu fixe", "cat": "Chantier", "w": 82, "h": 56}, {"k": "agent", "label": "Agent en intervention", "cat": "Chantier", "w": 86, "h": 140}, {"k": "afficheur", "label": "Afficheur cabine", "cat": "Matériel", "w": 128, "h": 186}, {"k": "voie", "label": "Voie ferrée", "cat": "Matériel", "w": 1390, "h": 40}, {"k": "voie_courte", "label": "Voie ferrée (courte)", "cat": "Matériel", "w": 560, "h": 40}, {"k": "aiguillage_montant", "label": "Changement de voie (montant)", "cat": "Matériel", "w": 1100, "h": 300}, {"k": "aiguillage_descendant", "label": "Changement de voie (descendant)", "cat": "Matériel", "w": 1100, "h": 300}];
+const BANK=[{"k": "rame", "label": "Rame de métro", "cat": "Matériel", "w": 386, "h": 148}, {"k": "rame_inverse", "label": "Rame de métro (autre sens)", "cat": "Matériel", "w": 386, "h": 148}, {"k": "rame_entiere", "label": "Rame entière", "cat": "Matériel", "w": 975, "h": 148}, {"k": "signal_ferme", "label": "Signal de manœuvre fermé", "cat": "Signalisation", "w": 122, "h": 112}, {"k": "signal_ouvert", "label": "Signal de manœuvre ouvert", "cat": "Signalisation", "w": 134, "h": 112}, {"k": "signal_espacement_ferme", "label": "Signal d'espacement fermé", "cat": "Signalisation", "w": 108, "h": 154}, {"k": "signal_rouge", "label": "Signal rouge", "cat": "Signalisation", "w": 104, "h": 176}, {"k": "signal_vert", "label": "Signal vert", "cat": "Signalisation", "w": 106, "h": 152}, {"k": "signal_manoeuvre_triple", "label": "Signal de manœuvre (3 feux)", "cat": "Signalisation", "w": 172, "h": 104}, {"k": "signal_avertissement", "label": "Signal d'avertissement", "cat": "Signalisation", "w": 64, "h": 100}, {"k": "signal_reprise", "label": "Signal de reprise", "cat": "Signalisation", "w": 96, "h": 64}, {"k": "sp_clignotant", "label": "Indicateur SP clignotant", "cat": "Indicateurs SP", "w": 124, "h": 94}, {"k": "plaque_sp_apres", "label": "Plaque SP avant gare", "cat": "Indicateurs SP", "w": 86, "h": 66}, {"k": "plaque_sp_avant", "label": "Plaque SP après gare", "cat": "Indicateurs SP", "w": 88, "h": 66}, {"k": "depart", "label": "Indicateur « Départ »", "cat": "Indicateurs SP", "w": 82, "h": 82}, {"k": "quai1", "label": "Indicateur « Quai 1 »", "cat": "Indicateurs SP", "w": 86, "h": 80}, {"k": "limite_manoeuvre", "label": "Plaque limite de manœuvre", "cat": "Plaques", "w": 150, "h": 104}, {"k": "plm", "label": "Plaque PLM", "cat": "Plaques", "w": 116, "h": 74}, {"k": "tiv_jc15", "label": "TIV « JC 15 »", "cat": "Plaques", "w": 92, "h": 74}, {"k": "tiv_45", "label": "TIV « 45 »", "cat": "Plaques", "w": 102, "h": 66}, {"k": "lanterne_clignotante", "label": "Lanterne feu clignotant", "cat": "Chantier", "w": 122, "h": 86}, {"k": "lanterne_fixe", "label": "Lanterne feu fixe", "cat": "Chantier", "w": 82, "h": 56}, {"k": "agent", "label": "Agent en intervention", "cat": "Chantier", "w": 86, "h": 140}, {"k": "afficheur", "label": "Afficheur cabine", "cat": "Matériel", "w": 128, "h": 186}, {"k": "voie", "label": "Voie ferrée", "cat": "Matériel", "w": 1390, "h": 40}, {"k": "voie_courte", "label": "Voie ferrée (courte)", "cat": "Matériel", "w": 560, "h": 40}, {"k": "aiguillage_montant", "label": "Changement de voie (montant)", "cat": "Matériel", "w": 1100, "h": 300}, {"k": "aiguillage_descendant", "label": "Changement de voie (descendant)", "cat": "Matériel", "w": 1100, "h": 300}];
 let stickers=[],stkSel=-1,stkDrag=null,_cleanRender=false;
 const bankImgs={};
 function bankItem(k){return BANK.find(b=>b.k===k);}
@@ -2422,7 +2422,7 @@ document.addEventListener("keydown",e=>{
 });
 
 function lineGeometry(){const n=STATIONS.length;const u=W-240;const sp=Math.min(u/Math.max(n-1,1),200);return{n,sp,xS:(W-sp*(n-1))/2};}
-function drawStationMarker(x,y,isTerm){const r=isTerm?_mR*1.5:_mR;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle="#fff";ctx.fill();ctx.strokeStyle=LINE_COLOR;ctx.lineWidth=Math.max(2.5*SCALE,r*0.52);ctx.stroke();}
+function drawStationMarker(x,y,isTerm,col){const r=isTerm?_mR*1.5:_mR;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle="#fff";ctx.fill();ctx.strokeStyle=col||LINE_COLOR;ctx.lineWidth=Math.max(2.5*SCALE,r*0.52);ctx.stroke();}
 // Stations à afficher sur deux lignes (liste manuelle, ordre = [ligne du haut, ligne du bas])
 // Stations affichées sur plusieurs lignes (haut -> bas)
 const WRAP={
@@ -2611,7 +2611,7 @@ function draw(){
       edges.forEach(([u,v],ei)=>{if(redSet.has(ei)){const a=pos[u],b=pos[v];ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}});
     }
     const redDeg={};redSet.forEach(ei=>{const[u,v]=edges[ei];redDeg[u]=(redDeg[u]||0)+1;redDeg[v]=(redDeg[v]||0)+1;});
-    Object.keys(pos).forEach(name=>{const p=pos[name];drawStationMarker(p.x,p.y,p.isTerm);});
+    Object.keys(pos).forEach(name=>{const p=pos[name];drawStationMarker(p.x,p.y,p.isTerm,(redDeg[name]||0)>0?RED_SEG:null);});
     // croix rouges sur les stations sélectionnées (taille liée au marqueur)
     const xr=Math.max(5*SCALE,_mR*1.05);
     Object.keys(pos).forEach(name=>{const p=pos[name];
@@ -2620,8 +2620,9 @@ function draw(){
       if(isFerme&&isSel) drawX=true;
       if(isFerme20&&!isSel&&selectedStations.size>0) drawX=true;
       if((typeLow==="interruption de trafic")&&(redDeg[name]||0)>=2) drawX=true;
-      if(drawX){const x=p.x,y=p.y;ctx.strokeStyle="#E2001A";ctx.lineWidth=Math.max(3*SCALE,_mR*0.6);ctx.lineCap="round";
-        ctx.beginPath();ctx.moveTo(x-xr,y-xr);ctx.lineTo(x+xr,y+xr);ctx.moveTo(x-xr,y+xr);ctx.lineTo(x+xr,y-xr);ctx.stroke();}
+      if(drawX){const x=p.x,y=p.y,lw=Math.max(3*SCALE,_mR*0.6);ctx.lineCap="round";
+        const cr=()=>{ctx.beginPath();ctx.moveTo(x-xr,y-xr);ctx.lineTo(x+xr,y+xr);ctx.moveTo(x-xr,y+xr);ctx.lineTo(x+xr,y-xr);ctx.stroke();};
+        ctx.strokeStyle="#fff";ctx.lineWidth=lw+3*SCALE;cr();ctx.strokeStyle="#E2001A";ctx.lineWidth=lw;cr();}
       });
     Object.keys(pos).forEach(name=>{const p=pos[name];drawLabel(name,p.x,p.y,p.isTerm,p.below);});
     // « SP » (service provisoire) : stations encadrant le tronçon d'une interruption de trafic
