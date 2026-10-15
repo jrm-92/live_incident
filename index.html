@@ -1997,8 +1997,24 @@ function renderStep(){
   $("topTitle").textContent=(curModel()&&view==="app")?curModel().label:"";
   $("dockFoot").textContent="Aperçu réduit · fichier exporté : "+($("resSel").value==="fhd"?"1920 × 1080":"3840 × 2160")+" px";
 }
+// Titre proposé automatiquement (modifiable : il suffit de l'effacer ou de le réécrire)
+let lastAutoTitle="";
+function autoTitle(){
+  if(els.type.value!=="Interruption de trafic"||!modelChosen||selectedStations.size<2)return "";
+  const s=[...selectedStations].sort((x,y)=>STATIONS.indexOf(x)-STATIONS.indexOf(y));
+  return "Trafic interrompu entre "+s[0]+" et "+s[s.length-1];
+}
+function syncAutoTitle(){
+  const t=autoTitle(),cur=els.titre.value.trim();
+  if(cur===""||cur===lastAutoTitle){
+    if(t){els.titre.value=t;}else if(cur===lastAutoTitle&&lastAutoTitle){els.titre.value="";}
+    lastAutoTitle=t;
+    if(typeof updateTextHints==="function")updateTextHints();
+  }
+}
 function afterChange(){
   if(view!=="app")return;
+  syncAutoTitle();
   updateThermo();
   const v=validate(step);
   $("btnNext").disabled=v.block.length>0||exporting;
@@ -2072,7 +2088,7 @@ function resetEdits(){
 function newVisual(){
   flushDraft();
   resetEdits();
-  curDraftId=null;modelChosen=false;pickTouched=false;
+  curDraftId=null;modelChosen=false;pickTouched=false;lastAutoTitle="";
   els.type.value="";els.titre.value="";els.infos.value="";desiredInter="";
   currentLineId=null;STATIONS=[];selectedStations.clear();pendingStart=null;rows.clear();els.zlist.innerHTML="";
   els.titre.placeholder="Titre du visuel";
@@ -2093,7 +2109,7 @@ function loadSnapshot(s,draftId,startStep){
   els.type.value=m?m.v:"";modelChosen=true;pickTouched=false;
   setLine(s.lineId);
   (s.stations||[]).filter(n=>STATIONS.includes(n)).forEach(n=>selectedStations.add(n));
-  els.titre.value=s.titre||"";els.infos.value=s.infos||"";desiredInter=s.inter||"";
+  els.titre.value=s.titre||"";els.infos.value=s.infos||"";lastAutoTitle=autoTitle()===els.titre.value.trim()?els.titre.value.trim():"";desiredInter=s.inter||"";
   applyModelUI();updateStep1UI();updateTextHints();
   curDraftId=draftId;
   restoring=false;
@@ -2621,11 +2637,9 @@ function draw(){
   // === Titre : typographie pure, rouge RATP — description anthracite (retour à la ligne + réduction auto) ===
   const _ts=OFF.title.s||1,_tfs=30*SCALE*_ts,_tlh=52*SCALE*_ts,_maxTW=W-2*110*SCALE;
   textOver={titre:false,infos:false};
-  {const Zt=zoomWindow();if(typeLow==="interruption de trafic"&&Zt){ctx.font=`900 ${26*SCALE*_ts}px Lato, Arial`;ctx.fillStyle="#E2001A";ctx.textAlign="center";ctx.textBaseline="middle";
-    ctx.fillText(("Trafic interrompu entre "+STATIONS[Zt.first]+" et "+STATIONS[Zt.last]).toUpperCase(),W/2,yB);yB+=48*SCALE*_ts;}}
   const _tF=fitLines((titre||"").toUpperCase(),_maxTW,3,_tfs,_tfs*0.5,"900");
   if(_tF.lines.length){
-    ctx.font=`900 ${_tF.fs}px Lato, Arial`;ctx.fillStyle=(typeLow==="interruption de trafic"&&zoomWindow())?NAVY:"#E2001A";ctx.textAlign="center";ctx.textBaseline="middle";
+    ctx.font=`900 ${_tF.fs}px Lato, Arial`;ctx.fillStyle="#E2001A";ctx.textAlign="center";ctx.textBaseline="middle";
     const _lh=_tF.fs*1.28;_tF.lines.forEach((l,i)=>ctx.fillText(l,W/2,yB+i*_lh));
     yB+=(_tF.lines.length-1)*_lh+_tlh+10*SCALE;
     textOver.titre=_tF.over?"cut":(_tF.fs<_tfs*0.999?"small":false);
