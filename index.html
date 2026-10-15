@@ -2626,7 +2626,7 @@ function draw(){
   const _ts=OFF.title.s||1,_tfs=30*SCALE*_ts,_tlh=52*SCALE*_ts,_maxTW=W-2*110*SCALE;
   textOver={titre:false,infos:false};
   {const Zt=zoomWindow();if(typeLow==="interruption de trafic"&&Zt){ctx.font=`900 ${26*SCALE*_ts}px Lato, Arial`;ctx.fillStyle=NAVY;ctx.textAlign="center";ctx.textBaseline="middle";
-    ctx.fillText(("Entre "+STATIONS[Zt.first]+" et "+STATIONS[Zt.last]+" · voie 2").toUpperCase(),W/2,yB);yB+=48*SCALE*_ts;}}
+    ctx.fillText(("Trafic interrompu entre "+STATIONS[Zt.first]+" et "+STATIONS[Zt.last]).toUpperCase(),W/2,yB);yB+=48*SCALE*_ts;}}
   const _tF=fitLines((titre||"").toUpperCase(),_maxTW,3,_tfs,_tfs*0.5,"900");
   if(_tF.lines.length){
     ctx.font=`900 ${_tF.fs}px Lato, Arial`;ctx.fillStyle="#E2001A";ctx.textAlign="center";ctx.textBaseline="middle";
