@@ -759,7 +759,7 @@
         <details class="adv bank-box" id="bankBox">
           <summary>Schéma explicatif : ajouter des images<span id="bankCount" class="bank-count"></span></summary>
           <div class="adv-body">
-            <p class="note" style="margin-top:0">Touchez une image pour l'ajouter au visuel, puis déplacez-la avec le doigt sur l'aperçu. Le carré bleu en bas à droite permet de la redimensionner.</p>
+            <p class="note" style="margin-top:0">Touchez une image pour l'ajouter au visuel, puis déplacez-la avec le doigt sur l'aperçu. Le carré bleu en bas à droite permet de la redimensionner ; pour une voie, il l'allonge sans changer son épaisseur.</p>
             <div class="stk-list" id="stkList"></div>
             <div class="bank" id="bankGrid"></div>
           </div>
@@ -2300,6 +2300,8 @@ function initApp(){
 const BANK=[{"k": "rame", "label": "Rame de métro", "cat": "Matériel", "w": 386, "h": 148}, {"k": "rame_inverse", "label": "Rame de métro (autre sens)", "cat": "Matériel", "w": 386, "h": 148}, {"k": "rame_entiere", "label": "Rame entière", "cat": "Matériel", "w": 975, "h": 148}, {"k": "signal_ferme", "label": "Signal de manœuvre fermé", "cat": "Signalisation", "w": 122, "h": 112}, {"k": "signal_ouvert", "label": "Signal de manœuvre ouvert", "cat": "Signalisation", "w": 134, "h": 112}, {"k": "signal_espacement_ferme", "label": "Signal d'espacement fermé", "cat": "Signalisation", "w": 108, "h": 154}, {"k": "signal_rouge", "label": "Signal rouge", "cat": "Signalisation", "w": 104, "h": 176}, {"k": "signal_vert", "label": "Signal vert", "cat": "Signalisation", "w": 106, "h": 152}, {"k": "signal_manoeuvre_triple", "label": "Signal de manœuvre (3 feux)", "cat": "Signalisation", "w": 172, "h": 104}, {"k": "signal_avertissement", "label": "Signal d'avertissement", "cat": "Signalisation", "w": 64, "h": 100}, {"k": "signal_reprise", "label": "Signal de reprise", "cat": "Signalisation", "w": 96, "h": 64}, {"k": "sp_clignotant", "label": "Indicateur SP clignotant", "cat": "Indicateurs SP", "w": 124, "h": 94}, {"k": "plaque_sp_apres", "label": "Plaque SP avant gare", "cat": "Indicateurs SP", "w": 86, "h": 66}, {"k": "plaque_sp_avant", "label": "Plaque SP après gare", "cat": "Indicateurs SP", "w": 88, "h": 66}, {"k": "depart", "label": "Indicateur « Départ »", "cat": "Indicateurs SP", "w": 82, "h": 82}, {"k": "quai1", "label": "Indicateur « Quai 1 »", "cat": "Indicateurs SP", "w": 86, "h": 80}, {"k": "limite_manoeuvre", "label": "Plaque limite de manœuvre", "cat": "Plaques", "w": 150, "h": 104}, {"k": "plm", "label": "Plaque PLM", "cat": "Plaques", "w": 116, "h": 74}, {"k": "tiv_jc15", "label": "TIV « JC 15 »", "cat": "Plaques", "w": 92, "h": 74}, {"k": "tiv_45", "label": "TIV « 45 »", "cat": "Plaques", "w": 102, "h": 66}, {"k": "lanterne_clignotante", "label": "Lanterne feu clignotant", "cat": "Chantier", "w": 122, "h": 86}, {"k": "lanterne_fixe", "label": "Lanterne feu fixe", "cat": "Chantier", "w": 82, "h": 56}, {"k": "agent", "label": "Agent en intervention", "cat": "Chantier", "w": 86, "h": 140}, {"k": "afficheur", "label": "Afficheur cabine", "cat": "Matériel", "w": 128, "h": 186}, {"k": "voie", "label": "Voie ferrée", "cat": "Matériel", "w": 1390, "h": 40}, {"k": "voie_courte", "label": "Voie ferrée (courte)", "cat": "Matériel", "w": 560, "h": 40}, {"k": "aiguillage_montant", "label": "Changement de voie (montant)", "cat": "Matériel", "w": 1100, "h": 300}, {"k": "aiguillage_descendant", "label": "Changement de voie (descendant)", "cat": "Matériel", "w": 1100, "h": 300}];
 let stickers=[],stkSel=-1,stkDrag=null,_cleanRender=false;
 const bankImgs={};
+const TRACKS=new Set(["voie","voie_courte"]); // voies : s'allongent sans changer d'épaisseur
+const isTrack=k=>TRACKS.has(k);
 function bankItem(k){return BANK.find(b=>b.k===k);}
 function ensureBankImg(k){
   if(bankImgs[k])return;
@@ -2338,6 +2340,7 @@ function addSticker(k){
 function removeSticker(i){stickers.splice(i,1);if(stkSel===i)stkSel=-1;else if(stkSel>i)stkSel--;renderStkList();scheduleDraw();}
 function resizeSticker(i,f){
   const s=stickers[i];if(!s)return;
+  if(isTrack(s.k)){s.w=Math.max(60,Math.min(W*1.5,s.w*f));scheduleDraw();return;}
   const cx=s.x+s.w/2,cy=s.y+s.h/2;const nw=Math.max(40,Math.min(W,s.w*f)),nh=nw*s.h/s.w;
   s.w=nw;s.h=nh;s.x=cx-nw/2;s.y=cy-nh/2;scheduleDraw();
 }
@@ -2355,16 +2358,27 @@ function renderStkList(){
     nm.addEventListener("click",()=>{stkSel=i;renderStkList();scheduleDraw();});
     const mk=(t,lab,fn)=>{const x=el("button","btn small",t);x.type="button";x.setAttribute("aria-label",lab);x.addEventListener("click",fn);return x;};
     row.appendChild(im);row.appendChild(nm);
-    row.appendChild(mk("−","Réduire",()=>resizeSticker(i,1/1.2)));
-    row.appendChild(mk("+","Agrandir",()=>resizeSticker(i,1.2)));
+    const tr=isTrack(s.k);
+    row.appendChild(mk("−",tr?"Raccourcir":"Réduire",()=>resizeSticker(i,1/1.2)));
+    row.appendChild(mk("+",tr?"Allonger":"Agrandir",()=>resizeSticker(i,1.2)));
     row.appendChild(mk("✕","Retirer",()=>removeSticker(i)));
     box.appendChild(row);
   });
 }
 function drawStickers(){
   stickers.forEach((s,i)=>{
-    const img=bankImgs[s.k];
-    if(img&&img!=="loading")ctx.drawImage(img,s.x,s.y,s.w,s.h);
+    let img=bankImgs[s.k];
+    if(img&&img!=="loading"){
+      if(isTrack(s.k)){
+        // motif répété sur toute la longueur, épaisseur conservée
+        let m=bankImgs.voie_motif;if(!m){ensureBankImg("voie_motif");}
+        if(m&&m!=="loading")img=m;
+        const tw=img.width*(s.h/img.height);
+        ctx.save();ctx.beginPath();ctx.rect(s.x,s.y,s.w,s.h);ctx.clip();
+        for(let x=s.x;x<s.x+s.w;x+=tw)ctx.drawImage(img,x,s.y,tw,s.h);
+        ctx.restore();
+      }else ctx.drawImage(img,s.x,s.y,s.w,s.h);
+    }
     else ensureBankImg(s.k);
     if(i===stkSel&&!_cleanRender){
       ctx.save();ctx.strokeStyle="#1f5fd0";ctx.lineWidth=3*SCALE;ctx.setLineDash([10*SCALE,6*SCALE]);
@@ -2407,8 +2421,11 @@ els.canvas.addEventListener("pointermove",e=>{
     s.x=Math.max(-s.w*0.5,Math.min(W-s.w*0.5,stkDrag.ox+dx));
     s.y=Math.max(-s.h*0.5,Math.min(H-s.h*0.5,stkDrag.oy+dy));
   }else{
-    const f=Math.max(0.15,(stkDrag.ow+dx)/stkDrag.ow);
-    s.w=Math.min(W,stkDrag.ow*f);s.h=s.w*stkDrag.oh/stkDrag.ow;
+    if(isTrack(s.k)){s.w=Math.max(60,Math.min(W*1.5,stkDrag.ow+dx));}
+    else{
+      const f=Math.max(0.15,(stkDrag.ow+dx)/stkDrag.ow);
+      s.w=Math.min(W,stkDrag.ow*f);s.h=s.w*stkDrag.oh/stkDrag.ow;
+    }
   }
   if(_raf)cancelAnimationFrame(_raf);_raf=requestAnimationFrame(()=>{_raf=null;draw();});
 },{capture:true});
