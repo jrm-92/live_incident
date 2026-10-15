@@ -517,7 +517,7 @@
     <button class="home-act" id="actRecents" type="button"><span class="ico">⟳</span><span><b>Mes visuels récents</b><small>Dupliquer un visuel déjà généré</small></span><span class="count" id="cntRecents">0</span></button>
     </div>
     <details class="about" id="about">
-      <summary><span class="about-q">Qu'est-ce que Live Incident&nbsp;?</span><span class="about-hint">Présentation complète</span><span class="chev" aria-hidden="true">▾</span></summary>
+      <summary><span class="about-q">Qu'est-ce que Live Incident&nbsp;?</span><span class="chev" aria-hidden="true">▾</span></summary>
       <div class="about-body">
 
         <div class="about-grid">
@@ -2320,7 +2320,7 @@ function buildPlan(){
   const labelReach=Math.min(maxLabelW*0.7071+(_mR+22*SCALE),320*SCALE);
   const gap=fork?Math.max(30*SCALE,Math.min(labelReach*0.25,55*SCALE)):0;
   const yL=Math.round(HDR*SCALE+40*SCALE+labelReach+gap+(OFF.plan?.dy||0));
-  const planBottom=fork?(yL+gap+labelReach):(ZW?yL+150*SCALE:yL+_mR*1.5+12*SCALE);
+  const planBottom=fork?(yL+gap+labelReach):(yL+_mR*1.5+12*SCALE);
   // positions
   const planWidth=sp*Math.max(cols-1,1);
   const pos={},edges=[],termini=[];const xS=Math.round((W-planWidth)/2+(OFF.plan?.dx||0));
@@ -2446,21 +2446,6 @@ function draw(){
       edges.forEach(([u,v],ei)=>{if(redSet.has(ei)){const a=pos[u],b=pos[v];ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}});
     }
     const redDeg={};redSet.forEach(ei=>{const[u,v]=edges[ei];redDeg[u]=(redDeg[u]||0)+1;redDeg[v]=(redDeg[v]||0)+1;});
-    // voie 2 : contournement du tronçon barré (interruption de trafic)
-    const Zv=zoomWindow();
-    if(typeLow==="interruption de trafic"&&Zv){
-      const A=pos[STATIONS[Zv.first]],B=pos[STATIONS[Zv.last]];
-      const off=90*SCALE,dx=70*SCALE;
-      ctx.save();
-      ctx.strokeStyle="#5b7fb8";ctx.lineWidth=plan.lineW*0.8;ctx.lineCap="round";ctx.setLineDash([14*SCALE,9*SCALE]);
-      ctx.beginPath();ctx.moveTo(A.x,A.y);
-      ctx.bezierCurveTo(A.x+dx,A.y,A.x+dx,A.y+off,A.x+2*dx,A.y+off);
-      ctx.lineTo(B.x-2*dx,B.y+off);
-      ctx.bezierCurveTo(B.x-dx,B.y+off,B.x-dx,B.y,B.x,B.y);
-      ctx.stroke();ctx.setLineDash([]);ctx.restore();
-      ctx.fillStyle=NAVY;ctx.font=`900 ${28*SCALE}px Lato, Arial`;ctx.textAlign="center";ctx.textBaseline="middle";
-      ctx.fillText("VOIE 2",(A.x+B.x)/2,A.y+off+44*SCALE);
-    }
     Object.keys(pos).forEach(name=>{const p=pos[name];drawStationMarker(p.x,p.y,p.isTerm);});
     // croix rouges sur les stations sélectionnées (taille liée au marqueur)
     const xr=Math.max(5*SCALE,_mR*1.05);
