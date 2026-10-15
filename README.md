@@ -17,4 +17,5 @@ Settings → Pages → *Deploy from a branch* → `main` / `(root)`. Site : http
 ## Fichiers utilisés par le site
 - `live_incident.png` (fond blanc, utilisé dans le visuel exporté), `live_incident_clair.png` (transparent, texte clair pour fonds sombres : accueil et barre du haut), `live_incident_transparent.png` (transparent, couleurs d'origine, pour fonds clairs), `logo_ligne9.png` : logos.
 - `ralentissement_provisoire.png`, `service_securite.png`, `service_securite_sur_ordre.png`, `interruption_trafic.png`, `station_fermee.png` : images de consignes, chargées automatiquement.
+- `banque/*.png` : banque d'images (rame, signaux, indicateurs SP, plaques…) à ajouter au visuel à l'étape 3. Pour ajouter une image, la déposer dans ce dossier et l'ajouter à la liste `BANK` dans `index.html`.
 - `Interstations/*.png` : schémas d'interstation de la ligne 9, chargés automatiquement. **Si un schéma est ajouté ou renommé, mettre à jour la liste `INTER_FILES` dans `index.html`.**
