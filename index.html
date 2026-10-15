@@ -476,6 +476,8 @@
   .stk-name{flex:1;min-width:0;font-size:13px;font-weight:700;cursor:pointer;}
   .stk-row .btn.small{min-height:40px;min-width:40px;padding:4px 8px;}
   body.has-stk canvas#preview{touch-action:none;}
+  .stk-txt{width:64px;margin-left:8px;padding:8px;font-size:16px;font-weight:800;text-align:center;}
+  .stk-name:has(.stk-txt){display:flex;align-items:center;}
 </style>
 </head>
 <body>
@@ -2302,6 +2304,7 @@ let stickers=[],stkSel=-1,stkDrag=null,_cleanRender=false;
 const bankImgs={};
 const TRACKS=new Set(["voie","voie_courte"]); // voies : s'allongent sans changer d'épaisseur
 const isTrack=k=>TRACKS.has(k);
+const EDIT_TXT={tiv_45:"45"}; // images dont le texte se modifie (vitesse du TIV)
 function bankItem(k){return BANK.find(b=>b.k===k);}
 function ensureBankImg(k){
   if(bankImgs[k])return;
@@ -2332,7 +2335,8 @@ function addSticker(k){
   const last=stickers[stickers.length-1];
   if(last){x=last.x+last.w+gap;y=last.y+last.h-h;if(x+w>W-x0){x=x0;y=last.y+last.h+gap;}}
   if(y+h>H-110)y=Math.max(300,H-110-h);
-  stickers.push({k,x,y,w,h});
+  const st={k,x,y,w,h};if(EDIT_TXT[k]!=null)st.txt=EDIT_TXT[k];
+  stickers.push(st);
   stkSel=stickers.length-1;
   renderStkList();scheduleDraw();
   toast("« "+b.label+" » ajouté : déplacez-le sur l'aperçu.");
@@ -2355,6 +2359,14 @@ function renderStkList(){
     const row=el("div","stk-row"+(i===stkSel?" sel":""));
     const im=el("img");im.src="banque/"+s.k+".png";im.alt="";
     const nm=el("span","stk-name",b?b.label:s.k);
+    if(EDIT_TXT[s.k]!=null){
+      nm.textContent="TIV";
+      const inp=el("input","stk-txt");inp.type="text";inp.inputMode="numeric";inp.maxLength=3;inp.value=s.txt==null?EDIT_TXT[s.k]:s.txt;
+      inp.setAttribute("aria-label","Vitesse du TIV");
+      inp.addEventListener("input",()=>{s.txt=inp.value;scheduleDraw();touchDraft();});
+      inp.addEventListener("focus",()=>{stkSel=i;row.classList.add("sel");scheduleDraw();});
+      nm.appendChild(inp);
+    }
     nm.addEventListener("click",()=>{stkSel=i;renderStkList();scheduleDraw();});
     const mk=(t,lab,fn)=>{const x=el("button","btn small",t);x.type="button";x.setAttribute("aria-label",lab);x.addEventListener("click",fn);return x;};
     row.appendChild(im);row.appendChild(nm);
@@ -2368,7 +2380,16 @@ function renderStkList(){
 function drawStickers(){
   stickers.forEach((s,i)=>{
     let img=bankImgs[s.k];
-    if(img&&img!=="loading"){
+    if(EDIT_TXT[s.k]!=null){
+      // TIV : panneau noir, vitesse en blanc (modifiable)
+      const t=(s.txt==null?EDIT_TXT[s.k]:s.txt).toString().trim()||" ";
+      ctx.save();ctx.fillStyle="#000";ctx.fillRect(s.x,s.y,s.w,s.h);
+      ctx.strokeStyle="#1b2a5a";ctx.lineWidth=Math.max(2,s.h*0.04);ctx.strokeRect(s.x,s.y,s.w,s.h);
+      let fs=s.h*0.66;ctx.font=`900 ${fs}px Arial, sans-serif`;
+      const mw=s.w*0.84;const tw=ctx.measureText(t).width;if(tw>mw){fs*=mw/tw;ctx.font=`900 ${fs}px Arial, sans-serif`;}
+      ctx.fillStyle="#fff";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(t,s.x+s.w/2,s.y+s.h/2+fs*0.04);
+      ctx.restore();
+    }else if(img&&img!=="loading"){
       if(isTrack(s.k)){
         // motif répété sur toute la longueur, épaisseur conservée
         let m=bankImgs.voie_motif;if(!m){ensureBankImg("voie_motif");}
