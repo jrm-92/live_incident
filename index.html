@@ -913,6 +913,7 @@ let _mR=13,_lf=26,_lw=20;
 let editMode=false, selItem=null;
 let HIDDEN=new Set();
 const SHOW_HELP_BUBBLE=false; // bulle « Besoin d'aide ? » + QR retirés du visuel
+const SHOW_REFERENCE_IMAGE=false; // image de consignes sous le plan, retirée du visuel
 const DELETABLE=['bubble'];
 const OFF={logo:{dx:0,dy:0,s:1},badge:{dx:0,dy:0,s:1},plan:{dx:0,dy:0,s:1},title:{dx:0,dy:0,s:1},stations:{dx:0,dy:0,s:1},bubble:{dx:0,dy:0,s:0.65}};
 const BBOX={};
@@ -2543,7 +2544,7 @@ function draw(){
     "interruption de trafic":["interruption_trafic.png",1500,485],
     "station(s) fermée(s)":["station_fermee.png",1278,311],
     "station(s) fermée(s) > 20":["station_fermee.png",1278,311]}[typeLow];
-  if(pick&&A[pick[0]]){
+  if(SHOW_REFERENCE_IMAGE&&pick&&A[pick[0]]){
     const w0=pick[1]*SCALE,h0=pick[2]*SCALE;
     const availTop=yFlow+8*SCALE,availBottom=H-84*SCALE;
     const s=Math.max(0.4,Math.min(1,(availBottom-availTop)/h0));
