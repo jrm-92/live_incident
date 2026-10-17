@@ -2451,6 +2451,8 @@ function renderStkList(){
       inp.setAttribute("aria-label",isQ?"Nom de la station":"Vitesse du TIV");
       inp.addEventListener("input",()=>{s.txt=inp.value;scheduleDraw();touchDraft();});
       inp.addEventListener("focus",()=>{stkSel=i;row.classList.add("sel");scheduleDraw();});
+      // le clic dans la case ne doit pas reconstruire la liste (sinon la saisie est perdue)
+      ["click","pointerdown","mousedown","touchstart"].forEach(ev=>inp.addEventListener(ev,e=>e.stopPropagation()));
       nm.appendChild(inp);
     }
     nm.addEventListener("click",()=>{stkSel=i;renderStkList();scheduleDraw();});
