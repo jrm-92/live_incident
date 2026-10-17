@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="icon" href="live_incident.png">
-<meta name="theme-color" content="#0a1f44">
+<meta name="theme-color" content="#0A0082">
 <meta name="format-detection" content="telephone=no">
 <title>Live Incident — Console de génération de visuels</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;0,900;1,400;1,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;0,900;1,400;1,700&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
   .hero{position:relative;overflow:hidden;border-radius:0 0 24px 24px;margin:0 -24px 32px;
     min-height:260px;display:flex;align-items:center;justify-content:center;text-align:center;
@@ -80,8 +80,8 @@
   .fork-warn{display:flex;gap:10px;background:#fff8ec;border:1px solid #f4d49a;color:#7a4f00;
     font-size:12.5px;line-height:1.5;border-radius:10px;padding:11px 12px;margin-top:14px;}
   :root{
-    --night:#0a1f44; --night-2:#13306a;
-    --brand:#004f9e; --brand-strong:#003a78; --accent:#5ea4de; --teal:#4bc0ad;
+    --night:#0A0082; --night-2:#1d1aa0;
+    --brand:#0A0082; --brand-strong:#06005c; --accent:#00AA91; --teal:#00AA91;
     --ink:#1e2230; --muted:#566074; --faint:#7b8496;
     --bg:#eef2f8; --panel:#ffffff; --panel-2:#f5f8fc;
     --border:#dfe5ef; --border-strong:#bcc7da; --red:#c8102e; --ok:#0b7a4f; --warn:#8a5a00;
@@ -186,7 +186,7 @@
   .model .rad{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid var(--border-strong);display:inline-flex;align-items:center;justify-content:center;}
   .model b{display:block;font-size:16px;}
   .model small{display:block;font-size:13px;color:var(--muted);line-height:1.3;}
-  .model[aria-checked="true"]{border-color:var(--brand);background:#eef5ff;box-shadow:inset 0 0 0 1px var(--brand);}
+  .model[aria-checked="true"]{border-color:var(--brand);background:#ededfa;box-shadow:inset 0 0 0 1px var(--brand);}
   .model[aria-checked="true"] .rad{border-color:var(--brand);background:var(--brand);}
   .model[aria-checked="true"] .rad::after{content:"✓";color:#fff;font-size:14px;font-weight:900;line-height:1;}
   .model-group{font-size:12px;color:var(--faint);font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin:10px 0 2px;}
@@ -200,7 +200,7 @@
   .disc{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;flex:none;}
   .line-card .terms{font-size:14px;font-weight:700;line-height:1.25;min-width:0;}
   .line-card .terms small{display:block;font-weight:400;color:var(--muted);font-size:12px;}
-  .line-card[aria-checked="true"]{border-color:var(--brand);background:#eef5ff;box-shadow:inset 0 0 0 1px var(--brand);}
+  .line-card[aria-checked="true"]{border-color:var(--brand);background:#ededfa;box-shadow:inset 0 0 0 1px var(--brand);}
   .line-card[aria-checked="true"]::after{content:"✓";margin-left:auto;flex:none;width:24px;height:24px;border-radius:50%;background:var(--brand);color:#fff;font-weight:900;display:inline-flex;align-items:center;justify-content:center;}
 
   /* thermomètre */
@@ -208,7 +208,7 @@
   .seg button{flex:1;min-height:46px;border:0;background:transparent;font-size:15px;font-weight:700;color:var(--muted);cursor:pointer;}
   .seg button+button{border-left:1.5px solid var(--border-strong);}
   .seg button[aria-pressed="true"]{background:var(--night);color:#fff;}
-  .thermo-status{min-height:46px;display:flex;align-items:center;gap:8px;background:#eef5ff;border:1px solid #bcd3f0;color:var(--night);
+  .thermo-status{min-height:46px;display:flex;align-items:center;gap:8px;background:#ededfa;border:1px solid #c6c4ee;color:var(--night);
     border-radius:10px;padding:8px 12px;font-size:14px;font-weight:700;margin-bottom:10px;}
   .thermo-status.warn{background:#fff8ec;border-color:#f4d49a;color:var(--warn);}
   .thermo{background:#fff;border:1px solid var(--border);border-radius:12px;padding:6px 8px;}
@@ -330,7 +330,7 @@
   .sheet-card h3{margin:0 0 10px;font-size:20px;}
   .sheet-card img{width:100%;height:auto;border:1px solid var(--border-strong);border-radius:8px;display:block;background:#fff;-webkit-touch-callout:default;}
   .sheet-card .meta{font-size:13px;color:var(--muted);margin:8px 0;overflow-wrap:anywhere;}
-  .sheet-card .tip{font-size:14px;background:#eef5ff;border:1px solid #bcd3f0;border-radius:10px;padding:10px 12px;margin:8px 0;}
+  .sheet-card .tip{font-size:14px;background:#ededfa;border:1px solid #c6c4ee;border-radius:10px;padding:10px 12px;margin:8px 0;}
   .sheet-actions{display:grid;gap:8px;margin-top:12px;}
   .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(88px + var(--sab));z-index:120;background:var(--night);color:#fff;padding:12px 16px;border-radius:12px;font-size:14px;font-weight:700;max-width:92vw;box-shadow:var(--shadow-lg);}
 
@@ -359,7 +359,7 @@
   @media(prefers-reduced-motion:reduce){.trk{stroke-dashoffset:0 !important;}}
 
   /* bandeau : fond bleu nuit de la charte, sans halo ovale ; logo fondu dans le bandeau */
-  #home .hero{background:linear-gradient(180deg,#0a1f44 0%,#0d2a5c 100%);box-shadow:none;}
+  #home .hero{background:#0A0082;box-shadow:none;}
   #home .hero .logo-wrap{border-radius:18px;box-shadow:0 0 0 1px rgba(255,255,255,.35),0 0 36px rgba(94,164,222,.38);}
 
   /* logo transparent (version claire) directement sur le fond bleu nuit */
@@ -483,6 +483,24 @@
   .danger-ghost{color:#c8102e;border-color:#f3b4b4;background:#fff;}
   .danger-ghost:active{background:#fdecec;}
   #listClearAll[hidden]{display:none;}
+
+  /* ── Charte graphique RATP (modèle Groupe 2023) ──
+     Bleu RATP #0A0082 · vert d'eau #00AA91 · rose #EBA0C8 · vert anis #C8D741 · jaune #F0AA00 · framboise #D72864
+     Titres : Montserrat Bold ; texte : Parisine (police interne RATP, non diffusable) remplacée par Lato. */
+  :root{--ratp-pink:#EBA0C8;--ratp-lime:#C8D741;--ratp-yellow:#F0AA00;--ratp-raspberry:#D72864;
+    --title:"Montserrat","Lato","Arial",sans-serif;}
+  h1,h2,h3,.step-title,.top-title,.home-act b,.model b,.about-q,.list-head h1,.dock-head h2,.btn.primary,.stepper button,.flow-title,.about-h{font-family:var(--title);}
+  .step-title,.list-head h1,.about-q{color:var(--night);font-weight:800;}
+  /* trait vert d'eau sous les titres, comme sur les diapositives RATP */
+  .step-title::after,.list-head h1::after{content:"";display:block;width:56px;height:4px;border-radius:4px;background:var(--teal);margin-top:6px;}
+  h2.sec{color:var(--teal);}
+  .about-item h3{color:var(--teal);}
+  .home-act.primary{background:var(--night);border-color:var(--night);}
+  .stepper li.done .num{background:var(--teal);border-color:var(--teal);}
+  .dock-live::before{background:var(--teal);}
+  /* liseré coloré du bandeau : couleurs secondaires de la charte */
+  .hero::after{background:linear-gradient(90deg,#00AA91 0 20%,#C8D741 20% 40%,#F0AA00 40% 60%,#EBA0C8 60% 80%,#D72864 80% 100%) !important;height:5px !important;}
+  :focus-visible{outline-color:var(--ratp-yellow);}
 </style>
 </head>
 <body>
@@ -584,10 +602,10 @@
           </g>
           <!-- PCC -->
           <rect x="290" y="16" width="380" height="146" rx="14" fill="#fff" stroke="#bcc7da" stroke-width="1.5"/>
-          <circle cx="328" cy="52" r="22" fill="#0a1f44"/>
+          <circle cx="328" cy="52" r="22" fill="#0A0082"/>
           <path d="M318 47 h6 l12 -8 v26 l-12 -8 h-6 z M324 57 l3 8 h4 l-2 -8" fill="#fff"/>
           <path d="M340 45 q5 7 0 14" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/>
-          <text x="360" y="58" fill="#0a1f44" font-size="18" font-weight="900">Acteur : PCC</text>
+          <text x="360" y="58" fill="#0A0082" font-size="18" font-weight="900">Acteur : PCC</text>
           <g fill="#1e2230" font-size="12.5" font-style="italic">
             <text x="308" y="94">« Appel général du PCC pour vous signaler la mise</text>
             <text x="308" y="111">en place d'un ralentissement provisoire dans</text>
@@ -596,9 +614,9 @@
           </g>
           <!-- Manager -->
           <rect x="20" y="240" width="280" height="134" rx="14" fill="#fff" stroke="#bcc7da" stroke-width="1.5"/>
-          <circle cx="58" cy="276" r="22" fill="#0a1f44"/>
+          <circle cx="58" cy="276" r="22" fill="#0A0082"/>
           <circle cx="58" cy="269" r="7" fill="#fff"/><path d="M45 289 q13 -16 26 0 z" fill="#fff"/>
-          <text x="90" y="282" fill="#0a1f44" font-size="18" font-weight="900">Acteur : Manager</text>
+          <text x="90" y="282" fill="#0A0082" font-size="18" font-weight="900">Acteur : Manager</text>
           <g fill="#1e2230" font-size="12.5">
             <text x="38" y="318">Prise en compte de l'information et</text>
             <text x="38" y="335">création d'un support à diffuser sur les</text>
@@ -606,20 +624,20 @@
           </g>
           <!-- Conducteur -->
           <rect x="660" y="240" width="280" height="134" rx="14" fill="#fff" stroke="#bcc7da" stroke-width="1.5"/>
-          <circle cx="698" cy="276" r="22" fill="#0a1f44"/>
-          <rect x="686" y="264" width="24" height="20" rx="5" fill="#fff"/><rect x="690" y="268" width="16" height="7" rx="1.5" fill="#0a1f44"/><circle cx="692" cy="280" r="1.8" fill="#0a1f44"/><circle cx="704" cy="280" r="1.8" fill="#0a1f44"/><path d="M688 288 l-3 4 M708 288 l3 4" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-          <text x="730" y="282" fill="#0a1f44" font-size="18" font-weight="900">Acteur : Conducteur</text>
+          <circle cx="698" cy="276" r="22" fill="#0A0082"/>
+          <rect x="686" y="264" width="24" height="20" rx="5" fill="#fff"/><rect x="690" y="268" width="16" height="7" rx="1.5" fill="#0A0082"/><circle cx="692" cy="280" r="1.8" fill="#0A0082"/><circle cx="704" cy="280" r="1.8" fill="#0A0082"/><path d="M688 288 l-3 4 M708 288 l3 4" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+          <text x="730" y="282" fill="#0A0082" font-size="18" font-weight="900">Acteur : Conducteur</text>
           <g fill="#1e2230" font-size="12.5">
             <text x="678" y="318">Les conducteurs (hors trains)</text>
             <text x="678" y="335">bénéficient d'informations précises</text>
             <text x="678" y="352">sur les écrans des CDG.</text>
           </g>
           <!-- Écran Live Incident -->
-          <rect x="398" y="404" width="164" height="104" rx="9" fill="#0a1f44"/>
+          <rect x="398" y="404" width="164" height="104" rx="9" fill="#0A0082"/>
           <rect x="406" y="412" width="148" height="86" rx="4" fill="#fff"/>
           <image href="live_incident_transparent.png" x="425" y="422" width="110" height="60"/>
-          <rect x="471" y="508" width="18" height="14" fill="#0a1f44"/><rect x="448" y="522" width="64" height="7" rx="3" fill="#0a1f44"/>
-          <text x="480" y="550" text-anchor="middle" fill="#0a1f44" font-size="14" font-weight="900">Live Incident</text>
+          <rect x="471" y="508" width="18" height="14" fill="#0A0082"/><rect x="448" y="522" width="64" height="7" rx="3" fill="#0A0082"/>
+          <text x="480" y="550" text-anchor="middle" fill="#0A0082" font-size="14" font-weight="900">Live Incident</text>
         </svg>
         <!-- Schéma (téléphone) : même circulation, format vertical et compact -->
         <svg class="flow-svg-m" viewBox="0 0 400 640" role="img" aria-labelledby="flowMT flowMD">
@@ -635,9 +653,9 @@
           </g>
           <!-- PCC -->
           <rect x="90" y="60" width="220" height="168" rx="12" fill="#fff" stroke="#bcc7da" stroke-width="1.5"/>
-          <g transform="translate(116,92) scale(0.7) translate(-328,-52)"><circle cx="328" cy="52" r="22" fill="#0a1f44"/><path d="M318 47 h6 l12 -8 v26 l-12 -8 h-6 z M324 57 l3 8 h4 l-2 -8" fill="#fff"/><path d="M340 45 q5 7 0 14" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></g>
+          <g transform="translate(116,92) scale(0.7) translate(-328,-52)"><circle cx="328" cy="52" r="22" fill="#0A0082"/><path d="M318 47 h6 l12 -8 v26 l-12 -8 h-6 z M324 57 l3 8 h4 l-2 -8" fill="#fff"/><path d="M340 45 q5 7 0 14" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></g>
           <text x="142" y="80" fill="#5d6677" font-size="11" font-weight="800">Acteur :</text>
-          <text x="142" y="100" fill="#0a1f44" font-size="17" font-weight="900">PCC</text>
+          <text x="142" y="100" fill="#0A0082" font-size="17" font-weight="900">PCC</text>
           <g fill="#1e2230" font-size="12.5" font-style="italic">
             <text x="106" y="126">« Appel général du PCC pour</text>
             <text x="106" y="143">vous signaler la mise en</text>
@@ -653,9 +671,9 @@
           <text x="238" y="298" fill="#2f5fb3" font-size="12" font-weight="800" text-anchor="end">Appel général</text>
           <!-- Manager -->
           <rect x="10" y="330" width="180" height="160" rx="12" fill="#fff" stroke="#bcc7da" stroke-width="1.5"/>
-          <g transform="translate(46,362) scale(0.7) translate(-58,-276)"><circle cx="58" cy="276" r="22" fill="#0a1f44"/><circle cx="58" cy="269" r="7" fill="#fff"/><path d="M45 289 q13 -16 26 0 z" fill="#fff"/></g>
+          <g transform="translate(46,362) scale(0.7) translate(-58,-276)"><circle cx="58" cy="276" r="22" fill="#0A0082"/><circle cx="58" cy="269" r="7" fill="#fff"/><path d="M45 289 q13 -16 26 0 z" fill="#fff"/></g>
           <text x="72" y="352" fill="#5d6677" font-size="11" font-weight="800">Acteur :</text>
-          <text x="72" y="370" fill="#0a1f44" font-size="15" font-weight="900">Manager</text>
+          <text x="72" y="370" fill="#0A0082" font-size="15" font-weight="900">Manager</text>
           <g fill="#1e2230" font-size="12.5">
             <text x="24" y="394">Prise en compte de</text>
             <text x="24" y="411">l'information et création</text>
@@ -665,9 +683,9 @@
           </g>
           <!-- Conducteur -->
           <rect x="210" y="330" width="180" height="160" rx="12" fill="#fff" stroke="#bcc7da" stroke-width="1.5"/>
-          <g transform="translate(232,362) scale(0.7) translate(-698,-276)"><circle cx="698" cy="276" r="22" fill="#0a1f44"/><rect x="686" y="264" width="24" height="20" rx="5" fill="#fff"/><rect x="690" y="268" width="16" height="7" rx="1.5" fill="#0a1f44"/><circle cx="692" cy="280" r="1.8" fill="#0a1f44"/><circle cx="704" cy="280" r="1.8" fill="#0a1f44"/><path d="M688 288 l-3 4 M708 288 l3 4" stroke="#fff" stroke-width="2" stroke-linecap="round"/></g>
+          <g transform="translate(232,362) scale(0.7) translate(-698,-276)"><circle cx="698" cy="276" r="22" fill="#0A0082"/><rect x="686" y="264" width="24" height="20" rx="5" fill="#fff"/><rect x="690" y="268" width="16" height="7" rx="1.5" fill="#0A0082"/><circle cx="692" cy="280" r="1.8" fill="#0A0082"/><circle cx="704" cy="280" r="1.8" fill="#0A0082"/><path d="M688 288 l-3 4 M708 288 l3 4" stroke="#fff" stroke-width="2" stroke-linecap="round"/></g>
           <text x="262" y="352" fill="#5d6677" font-size="11" font-weight="800">Acteur :</text>
-          <text x="262" y="370" fill="#0a1f44" font-size="15" font-weight="900">Conducteur</text>
+          <text x="262" y="370" fill="#0A0082" font-size="15" font-weight="900">Conducteur</text>
           <g fill="#1e2230" font-size="12.5">
             <text x="224" y="394">Les conducteurs</text>
             <text x="224" y="411">(hors trains) bénéficient</text>
@@ -678,11 +696,11 @@
           <path d="M100 490 C 100 530, 120 552, 143 556" fill="none" stroke="#e2001a" stroke-width="3" marker-end="url(#arRm)"/>
           <path d="M257 556 C 282 552, 300 530, 300 492" fill="none" stroke="#e2001a" stroke-width="3" marker-end="url(#arRm)"/>
           <!-- écran Live Incident -->
-          <rect x="145" y="512" width="110" height="76" rx="8" fill="#0a1f44"/>
+          <rect x="145" y="512" width="110" height="76" rx="8" fill="#0A0082"/>
           <rect x="151" y="518" width="98" height="54" rx="3" fill="#fff"/>
           <image href="live_incident_transparent.png" x="160" y="524" width="80" height="44"/>
-          <rect x="190" y="588" width="30" height="8" fill="#0a1f44"/><rect x="170" y="596" width="70" height="6" rx="3" fill="#0a1f44"/>
-          <text x="200" y="622" text-anchor="middle" fill="#0a1f44" font-size="13" font-weight="900">Live Incident</text>
+          <rect x="190" y="588" width="30" height="8" fill="#0A0082"/><rect x="170" y="596" width="70" height="6" rx="3" fill="#0A0082"/>
+          <text x="200" y="622" text-anchor="middle" fill="#0A0082" font-size="13" font-weight="900">Live Incident</text>
           <!-- étiquettes des étapes -->
           <text x="12" y="612" fill="#c8102e" font-size="13" font-weight="900">1 · Création</text>
           <text x="12" y="628" fill="#9b0d24" font-size="11" font-weight="800">moins de 5 minutes</text>
@@ -2511,7 +2529,7 @@ const WRAP={
 const WRAP_SMALL={
   "Asnières–Gennevilliers–Les Courtilles":2
 };
-const TERM_BG="#1b3c84";
+const TERM_BG="#0A0082";
 function splitName(name){return WRAP[name]||[name];}
 function rrect(x,y,w,h,r){r=Math.min(r,w/2,h/2);ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
 function drawLabel(name,x,yLine,isTerm,below){
