@@ -502,6 +502,8 @@
   .hero::after{display:none !important;}
   :focus-visible{outline-color:var(--ratp-yellow);}
   .import-btn{width:100%;margin-bottom:6px;border-style:dashed;border-color:var(--brand);color:var(--brand);}
+  .stk-txt.wide{width:100%;flex:1 1 0;min-width:0;text-align:left;}
+  .stk-row .btn.small{flex:none;}
 </style>
 </head>
 <body>
@@ -2321,7 +2323,7 @@ function initApp(){
 }
 
 /* ── Banque d'images : éléments à placer sur le visuel (schéma explicatif) ── */
-const BANK=[{"k": "rame", "label": "Rame de métro", "cat": "Matériel", "w": 386, "h": 148}, {"k": "rame_inverse", "label": "Rame de métro (autre sens)", "cat": "Matériel", "w": 386, "h": 148}, {"k": "rame_entiere", "label": "Rame entière", "cat": "Matériel", "w": 975, "h": 148}, {"k": "signal_ferme", "label": "Signal de manœuvre fermé", "cat": "Signalisation", "w": 122, "h": 112}, {"k": "signal_ouvert", "label": "Signal de manœuvre ouvert", "cat": "Signalisation", "w": 134, "h": 112}, {"k": "signal_espacement_ferme", "label": "Signal d'espacement fermé", "cat": "Signalisation", "w": 108, "h": 154}, {"k": "signal_rouge", "label": "Signal rouge", "cat": "Signalisation", "w": 104, "h": 176}, {"k": "signal_vert", "label": "Signal vert", "cat": "Signalisation", "w": 106, "h": 152}, {"k": "signal_manoeuvre_triple", "label": "Signal de manœuvre (3 feux)", "cat": "Signalisation", "w": 172, "h": 104}, {"k": "signal_avertissement", "label": "Signal d'avertissement", "cat": "Signalisation", "w": 104, "h": 90}, {"k": "signal_reprise", "label": "Signal de reprise", "cat": "Signalisation", "w": 78, "h": 62}, {"k": "indicateur_croix", "label": "Indicateur croix allumée", "cat": "Signalisation", "w": 208, "h": 240}, {"k": "indicateur_barre", "label": "Indicateur barre horizontale allumée", "cat": "Signalisation", "w": 210, "h": 230}, {"k": "signal_manoeuvre_3feux_rouge", "label": "Signal de manœuvre 3 feux (rouge)", "cat": "Signalisation", "w": 222, "h": 126}, {"k": "signal_rouge_jaune", "label": "Signal rouge et jaune", "cat": "Signalisation", "w": 56, "h": 102}, {"k": "signal_manoeuvre_rouge", "label": "Signal de manœuvre (rouge)", "cat": "Signalisation", "w": 150, "h": 108}, {"k": "sp_clignotant", "label": "Indicateur SP clignotant", "cat": "Indicateurs SP", "w": 124, "h": 94}, {"k": "plaque_sp_apres", "label": "Plaque SP avant gare", "cat": "Indicateurs SP", "w": 86, "h": 66}, {"k": "plaque_sp_avant", "label": "Plaque SP après gare", "cat": "Indicateurs SP", "w": 88, "h": 66}, {"k": "depart", "label": "Indicateur « Départ »", "cat": "Indicateurs SP", "w": 82, "h": 82}, {"k": "quai1", "label": "Indicateur « Quai 1 »", "cat": "Indicateurs SP", "w": 86, "h": 80}, {"k": "limite_manoeuvre", "label": "Plaque limite de manœuvre", "cat": "Plaques", "w": 150, "h": 104}, {"k": "tiv_jc15", "label": "TIV « JC 15 »", "cat": "Plaques", "w": 92, "h": 74}, {"k": "tiv_45", "label": "TIV « 45 »", "cat": "Plaques", "w": 102, "h": 66}, {"k": "lanterne_clignotante", "label": "Lanterne feu clignotant", "cat": "Chantier", "w": 122, "h": 86}, {"k": "lanterne_fixe", "label": "Lanterne feu fixe", "cat": "Chantier", "w": 80, "h": 60}, {"k": "agent", "label": "Agent en intervention", "cat": "Chantier", "w": 86, "h": 140}, {"k": "afficheur", "label": "Afficheur cabine", "cat": "Matériel", "w": 128, "h": 186}, {"k": "voie", "label": "Voie ferrée", "cat": "Matériel", "w": 1390, "h": 40}, {"k": "voie_courte", "label": "Voie ferrée (courte)", "cat": "Matériel", "w": 560, "h": 40}, {"k": "aiguillage_montant", "label": "Changement de voie (montant)", "cat": "Matériel", "w": 1400, "h": 360}, {"k": "aiguillage_descendant", "label": "Changement de voie (descendant)", "cat": "Matériel", "w": 1400, "h": 360}];
+const BANK=[{"k": "rame", "label": "Rame de métro", "cat": "Matériel", "w": 386, "h": 148}, {"k": "rame_inverse", "label": "Rame de métro (autre sens)", "cat": "Matériel", "w": 386, "h": 148}, {"k": "rame_entiere", "label": "Rame entière", "cat": "Matériel", "w": 975, "h": 148}, {"k": "quai", "label": "Quai de station (nom modifiable)", "cat": "Matériel", "w": 900, "h": 300}, {"k": "signal_ferme", "label": "Signal de manœuvre fermé", "cat": "Signalisation", "w": 122, "h": 112}, {"k": "signal_ouvert", "label": "Signal de manœuvre ouvert", "cat": "Signalisation", "w": 134, "h": 112}, {"k": "signal_espacement_ferme", "label": "Signal d'espacement fermé", "cat": "Signalisation", "w": 108, "h": 154}, {"k": "signal_rouge", "label": "Signal rouge", "cat": "Signalisation", "w": 104, "h": 176}, {"k": "signal_vert", "label": "Signal vert", "cat": "Signalisation", "w": 106, "h": 152}, {"k": "signal_manoeuvre_triple", "label": "Signal de manœuvre (3 feux)", "cat": "Signalisation", "w": 172, "h": 104}, {"k": "signal_avertissement", "label": "Signal d'avertissement", "cat": "Signalisation", "w": 104, "h": 90}, {"k": "signal_reprise", "label": "Signal de reprise", "cat": "Signalisation", "w": 78, "h": 62}, {"k": "indicateur_croix", "label": "Indicateur croix allumée", "cat": "Signalisation", "w": 208, "h": 240}, {"k": "indicateur_barre", "label": "Indicateur barre horizontale allumée", "cat": "Signalisation", "w": 210, "h": 230}, {"k": "signal_manoeuvre_3feux_rouge", "label": "Signal de manœuvre 3 feux (rouge)", "cat": "Signalisation", "w": 222, "h": 126}, {"k": "signal_rouge_jaune", "label": "Signal rouge et jaune", "cat": "Signalisation", "w": 56, "h": 102}, {"k": "signal_manoeuvre_rouge", "label": "Signal de manœuvre (rouge)", "cat": "Signalisation", "w": 150, "h": 108}, {"k": "sp_clignotant", "label": "Indicateur SP clignotant", "cat": "Indicateurs SP", "w": 124, "h": 94}, {"k": "plaque_sp_apres", "label": "Plaque SP avant gare", "cat": "Indicateurs SP", "w": 86, "h": 66}, {"k": "plaque_sp_avant", "label": "Plaque SP après gare", "cat": "Indicateurs SP", "w": 88, "h": 66}, {"k": "depart", "label": "Indicateur « Départ »", "cat": "Indicateurs SP", "w": 82, "h": 82}, {"k": "quai1", "label": "Indicateur « Quai 1 »", "cat": "Indicateurs SP", "w": 86, "h": 80}, {"k": "limite_manoeuvre", "label": "Plaque limite de manœuvre", "cat": "Plaques", "w": 150, "h": 104}, {"k": "tiv_jc15", "label": "TIV « JC 15 »", "cat": "Plaques", "w": 92, "h": 74}, {"k": "tiv_45", "label": "TIV « 45 »", "cat": "Plaques", "w": 102, "h": 66}, {"k": "lanterne_clignotante", "label": "Lanterne feu clignotant", "cat": "Chantier", "w": 122, "h": 86}, {"k": "lanterne_fixe", "label": "Lanterne feu fixe", "cat": "Chantier", "w": 80, "h": 60}, {"k": "agent", "label": "Agent en intervention", "cat": "Chantier", "w": 86, "h": 140}, {"k": "afficheur", "label": "Afficheur cabine", "cat": "Matériel", "w": 128, "h": 186}, {"k": "voie", "label": "Voie ferrée", "cat": "Matériel", "w": 1390, "h": 40}, {"k": "voie_courte", "label": "Voie ferrée (courte)", "cat": "Matériel", "w": 560, "h": 40}, {"k": "aiguillage_montant", "label": "Changement de voie (montant)", "cat": "Matériel", "w": 1400, "h": 360}, {"k": "aiguillage_descendant", "label": "Changement de voie (descendant)", "cat": "Matériel", "w": 1400, "h": 360}];
 let stickers=[],stkSel=-1,stkDrag=null,_cleanRender=false;
 const bankImgs={};
 const TRACKS=new Set(["voie","voie_courte"]); // voies : s'allongent sans changer d'épaisseur
@@ -2338,7 +2340,37 @@ function drawTrackRun(x,y,w,th){
   for(let xx=x;xx<x+w;xx+=tw)ctx.drawImage(m,xx,y,tw,th);
   ctx.restore();
 }
-const EDIT_TXT={tiv_45:"45"}; // images dont le texte se modifie (vitesse du TIV)
+const EDIT_TXT={tiv_45:"45",quai:"Station"}; // images dont le texte se modifie (vitesse du TIV, nom de station)
+// Quai de station dessiné : mur carrelé, plaque nominative, bordure de quai
+function drawQuai(s){
+  const {x,y,w,h}=s,name=((s.txt==null?EDIT_TXT.quai:s.txt)||"").toString().trim()||" ";
+  const wallH=h*0.70,floorH=h-wallH;
+  ctx.save();ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();
+  // mur : carreaux blancs biseautés
+  ctx.fillStyle="#f6f4ee";ctx.fillRect(x,y,w,wallH);
+  const tw=h*0.09,th=tw*0.5;ctx.strokeStyle="#d6d1c4";ctx.lineWidth=Math.max(1,h*0.004);
+  for(let r=0,yy=y;yy<y+wallH;yy+=th,r++){
+    ctx.beginPath();ctx.moveTo(x,yy);ctx.lineTo(x+w,yy);ctx.stroke();
+    for(let xx=x+(r%2?tw/2:0);xx<x+w;xx+=tw){ctx.beginPath();ctx.moveTo(xx,yy);ctx.lineTo(xx,Math.min(yy+th,y+wallH));ctx.stroke();}
+  }
+  // plinthe
+  ctx.fillStyle="#3b3f4a";ctx.fillRect(x,y+wallH-h*0.03,w,h*0.03);
+  // plaque nominative (bleu émaillé, filet blanc, texte blanc)
+  let fs=h*0.13;ctx.font=`700 ${fs}px Lato, Arial, sans-serif`;
+  let tW=ctx.measureText(name).width;const maxT=w*0.78;if(tW>maxT){fs*=maxT/tW;ctx.font=`700 ${fs}px Lato, Arial, sans-serif`;tW=maxT;}
+  const pH=h*0.24,pW=Math.max(tW+pH*1.1,w*0.32),pX=x+(w-pW)/2,pY=y+wallH*0.30;
+  ctx.fillStyle="rgba(0,0,0,.18)";rrect(pX+h*0.012,pY+h*0.015,pW,pH,h*0.03);ctx.fill();
+  ctx.fillStyle="#0A0082";rrect(pX,pY,pW,pH,h*0.03);ctx.fill();
+  ctx.strokeStyle="#fff";ctx.lineWidth=Math.max(1.5,h*0.012);rrect(pX+h*0.02,pY+h*0.02,pW-h*0.04,pH-h*0.04,h*0.02);ctx.stroke();
+  ctx.fillStyle="#fff";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(name,pX+pW/2,pY+pH/2+fs*0.04);
+  // sol du quai
+  const fy=y+wallH;
+  ctx.fillStyle="#a7acb4";ctx.fillRect(x,fy,w,floorH*0.62);
+  ctx.fillStyle="#f2f2f2";ctx.fillRect(x,fy+floorH*0.42,w,floorH*0.08);       // bande blanche de sécurité
+  ctx.fillStyle="#6b7079";ctx.fillRect(x,fy+floorH*0.62,w,floorH*0.10);       // nez de quai
+  ctx.fillStyle="#2b2e35";ctx.fillRect(x,fy+floorH*0.72,w,floorH*0.28);       // face du quai
+  ctx.restore();
+}
 function bankItem(k){return BANK.find(b=>b.k===k);}
 // images importées par l'utilisateur (clé "custom", contenu dans s.src)
 function stkImg(s){
@@ -2386,7 +2418,8 @@ function addSticker(k){
   const last=stickers[stickers.length-1];
   if(last){x=last.x+last.w+gap;y=last.y+last.h-h;if(x+w>W-x0){x=x0;y=last.y+last.h+gap;}}
   if(y+h>H-110)y=Math.max(300,H-110-h);
-  const st={k,x,y,w,h};if(EDIT_TXT[k]!=null)st.txt=EDIT_TXT[k];if(isSwitch(k)){st.extL=0;st.extR=0;swFix(st);}
+  const st={k,x,y,w,h};if(EDIT_TXT[k]!=null)st.txt=EDIT_TXT[k];
+  if(k==="quai"){const sel=[...selectedStations].sort((p,q)=>STATIONS.indexOf(p)-STATIONS.indexOf(q));if(sel.length)st.txt=sel[0];}if(isSwitch(k)){st.extL=0;st.extR=0;swFix(st);}
   stickers.push(st);
   stkSel=stickers.length-1;
   renderStkList();scheduleDraw();
@@ -2412,9 +2445,10 @@ function renderStkList(){
     const im=el("img");im.src=s.k==="custom"?s.src:"banque/"+s.k+".png";im.alt="";
     const nm=el("span","stk-name",s.k==="custom"?(s.name||"Image importée"):(b?b.label:s.k));
     if(EDIT_TXT[s.k]!=null){
-      nm.textContent="TIV";
-      const inp=el("input","stk-txt");inp.type="text";inp.inputMode="numeric";inp.maxLength=3;inp.value=s.txt==null?EDIT_TXT[s.k]:s.txt;
-      inp.setAttribute("aria-label","Vitesse du TIV");
+      const isQ=s.k==="quai";
+      nm.textContent=isQ?"Quai":"TIV";
+      const inp=el("input","stk-txt"+(isQ?" wide":""));inp.type="text";inp.inputMode=isQ?"text":"numeric";inp.maxLength=isQ?40:3;inp.value=s.txt==null?EDIT_TXT[s.k]:s.txt;
+      inp.setAttribute("aria-label",isQ?"Nom de la station":"Vitesse du TIV");
       inp.addEventListener("input",()=>{s.txt=inp.value;scheduleDraw();touchDraft();});
       inp.addEventListener("focus",()=>{stkSel=i;row.classList.add("sel");scheduleDraw();});
       nm.appendChild(inp);
@@ -2432,7 +2466,8 @@ function renderStkList(){
 function drawStickers(){
   stickers.forEach((s,i)=>{
     let img=stkImg(s);
-    if(EDIT_TXT[s.k]!=null){
+    if(s.k==="quai"){drawQuai(s);}
+    else if(EDIT_TXT[s.k]!=null){
       // TIV : panneau noir, vitesse en blanc (modifiable)
       const t=(s.txt==null?EDIT_TXT[s.k]:s.txt).toString().trim()||" ";
       ctx.save();ctx.fillStyle="#000";ctx.fillRect(s.x,s.y,s.w,s.h);
