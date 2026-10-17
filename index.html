@@ -478,6 +478,11 @@
   body.has-stk canvas#preview{touch-action:none;}
   .stk-txt{width:64px;margin-left:8px;padding:8px;font-size:16px;font-weight:800;text-align:center;}
   .stk-name:has(.stk-txt){display:flex;align-items:center;}
+  .list-head{flex-wrap:wrap;}
+  .list-head .btn{margin-left:auto;}
+  .danger-ghost{color:#c8102e;border-color:#f3b4b4;background:#fff;}
+  .danger-ghost:active{background:#fdecec;}
+  #listClearAll[hidden]{display:none;}
 </style>
 </head>
 <body>
@@ -698,7 +703,7 @@
 
 <!-- ── LISTES ── -->
 <section id="listView" class="hidden" aria-live="polite">
-  <div class="list-head"><h1 id="listTitle"></h1></div>
+  <div class="list-head"><h1 id="listTitle"></h1><button class="btn small danger-ghost" id="listClearAll" type="button" hidden>Tout supprimer</button></div>
   <p class="list-note" id="listNote"></p>
   <div class="items" id="listItems"></div>
 </section>
@@ -2128,6 +2133,15 @@ function renderList(kind){
     :"Les 12 derniers visuels générés sont mémorisés avec leurs réglages (pas l'image elle-même). Utilisez « Dupliquer » pour en créer une variante.";
   const list=LS.get(drafts?K_DR:K_RC,[]).slice().sort((a,b)=>((b.updated||b.exported||0)-(a.updated||a.exported||0)));
   const box=$("listItems");box.innerHTML="";
+  const ca=$("listClearAll");ca.hidden=!list.length;
+  ca.onclick=()=>{
+    const n=list.length,what=drafts?"brouillon":"visuel récent";
+    if(!confirm("Supprimer définitivement les "+n+" "+what+(n>1?"s":"")+" ? Cette action est irréversible."))return;
+    LS.set(drafts?K_DR:K_RC,[]);
+    if(drafts)curDraftId=null;
+    renderList(kind);updateCounts();
+    toast(n+" "+what+(n>1?"s supprimés.":" supprimé."));
+  };
   if(!list.length){box.appendChild(el("div","empty",drafts?"Aucun brouillon pour le moment.":"Aucun visuel récent pour le moment."));return;}
   list.forEach(s=>{
     const m=MODELS.find(x=>x.v===s.type);
