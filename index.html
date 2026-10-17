@@ -512,6 +512,10 @@
   .stk-ico{width:44px;height:30px;flex:none;display:inline-flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;}
   .stk-color{width:auto;padding:6px 26px 6px 8px;font-size:13px;margin-left:8px;flex:none;}
   .stk-name:has(.stk-color){display:flex;align-items:center;gap:4px;}
+  .stk-tools{display:flex;flex-wrap:wrap;gap:6px;}
+  .stk-tools .btn.small{min-height:40px;padding:6px 10px;font-size:13px;}
+  .stk-selinfo{margin:0;font-size:13px;color:#1f5fd0;font-weight:700;}
+  .stk-check{width:22px;height:22px;flex:none;accent-color:#1f5fd0;margin:0;}
 </style>
 </head>
 <body>
@@ -2112,7 +2116,7 @@ function saveRecent(name,thumb){
 function updateCounts(){$("cntDrafts").textContent=String(LS.get(K_DR,[]).length);$("cntRecents").textContent=String(LS.get(K_RC,[]).length);}
 function resetEdits(){
   ["logo","badge","plan","title","stations"].forEach(k=>{OFF[k]={dx:0,dy:0,s:1};});OFF.bubble={dx:0,dy:0,s:0.65};
-  HIDDEN.clear();textBoxes=[];strokes.length=0;_history.length=0;stickers=[];stkSel=-1;stkDrag=null;if(typeof renderStkList==='function')renderStkList();
+  HIDDEN.clear();textBoxes=[];strokes.length=0;_history.length=0;stickers=[];stkSel=-1;selIdx.clear();stkDrag=null;if(typeof renderStkList==='function')renderStkList();
   selItem=null;_selType=null;_selIdx=-1;_tbIdx=-1;_tbState='idle';_drag=null;_drawStroke=null;
   $("textBoxOverlay").style.display="none";hideFloatTextPanel();$("floatDrawPanel").style.display="none";
   if(editMode)$("masterQuitBtn").click();
@@ -2136,7 +2140,7 @@ function loadSnapshot(s,draftId,startStep){
   (s.hidden||[]).forEach(h=>HIDDEN.add(h));
   textBoxes=(s.textBoxes||[]).map(b=>({...b}));
   (s.strokes||[]).forEach(x=>strokes.push(x));
-  stickers=(s.stickers||[]).filter(x=>x.k==="custom"?!!x.src:(isDrawn(x.k)||bankItem(x.k))).map(x=>({...x}));stickers.forEach(x=>ensureBankImg(x.k));stkSel=-1;renderStkList();
+  stickers=(s.stickers||[]).filter(x=>x.k==="custom"?!!x.src:(isDrawn(x.k)||bankItem(x.k))).map(x=>({...x}));stickers.forEach(x=>ensureBankImg(x.k));stkSel=-1;selIdx.clear();renderStkList();
   const m=MODELS.find(x=>x.v===s.type);
   els.type.value=m?m.v:"";modelChosen=true;pickTouched=false;
   setLine(s.lineId);
@@ -2362,6 +2366,24 @@ function initApp(){
 /* ── Banque d'images : éléments à placer sur le visuel (schéma explicatif) ── */
 const BANK=[{"k": "rame", "label": "Rame de métro", "cat": "Matériel", "w": 386, "h": 148}, {"k": "rame_inverse", "label": "Rame de métro (autre sens)", "cat": "Matériel", "w": 386, "h": 148}, {"k": "rame_entiere", "label": "Rame entière", "cat": "Matériel", "w": 975, "h": 148}, {"k": "quai", "label": "Quai de station (nom modifiable)", "cat": "Matériel", "w": 900, "h": 300}, {"k": "signal_ferme", "label": "Signal de manœuvre fermé", "cat": "Signalisation", "w": 122, "h": 112}, {"k": "signal_ouvert", "label": "Signal de manœuvre ouvert", "cat": "Signalisation", "w": 134, "h": 112}, {"k": "signal_espacement_ferme", "label": "Signal d'espacement fermé", "cat": "Signalisation", "w": 108, "h": 154}, {"k": "signal_rouge", "label": "Signal rouge", "cat": "Signalisation", "w": 104, "h": 176}, {"k": "signal_vert", "label": "Signal vert", "cat": "Signalisation", "w": 106, "h": 152}, {"k": "signal_manoeuvre_triple", "label": "Signal de manœuvre (3 feux)", "cat": "Signalisation", "w": 172, "h": 104}, {"k": "signal_avertissement", "label": "Signal d'avertissement", "cat": "Signalisation", "w": 104, "h": 90}, {"k": "signal_reprise", "label": "Signal de reprise", "cat": "Signalisation", "w": 78, "h": 62}, {"k": "indicateur_croix", "label": "Indicateur croix allumée", "cat": "Signalisation", "w": 208, "h": 240}, {"k": "indicateur_barre", "label": "Indicateur barre horizontale allumée", "cat": "Signalisation", "w": 210, "h": 230}, {"k": "signal_manoeuvre_3feux_rouge", "label": "Signal de manœuvre 3 feux (rouge)", "cat": "Signalisation", "w": 222, "h": 126}, {"k": "signal_rouge_jaune", "label": "Signal rouge et jaune", "cat": "Signalisation", "w": 56, "h": 102}, {"k": "signal_manoeuvre_rouge", "label": "Signal de manœuvre (rouge)", "cat": "Signalisation", "w": 150, "h": 108}, {"k": "sp_clignotant", "label": "Indicateur SP clignotant", "cat": "Indicateurs SP", "w": 124, "h": 94}, {"k": "plaque_sp_apres", "label": "Plaque SP avant gare", "cat": "Indicateurs SP", "w": 86, "h": 66}, {"k": "plaque_sp_avant", "label": "Plaque SP après gare", "cat": "Indicateurs SP", "w": 88, "h": 66}, {"k": "depart", "label": "Indicateur « Départ »", "cat": "Indicateurs SP", "w": 82, "h": 82}, {"k": "quai1", "label": "Indicateur « Quai 1 »", "cat": "Indicateurs SP", "w": 86, "h": 80}, {"k": "limite_manoeuvre", "label": "Plaque limite de manœuvre", "cat": "Plaques", "w": 150, "h": 104}, {"k": "tiv_jc15", "label": "TIV « JC 15 »", "cat": "Plaques", "w": 92, "h": 74}, {"k": "tiv_45", "label": "TIV « 45 »", "cat": "Plaques", "w": 102, "h": 66}, {"k": "lanterne_clignotante", "label": "Lanterne feu clignotant", "cat": "Chantier", "w": 122, "h": 86}, {"k": "lanterne_fixe", "label": "Lanterne feu fixe", "cat": "Chantier", "w": 80, "h": 60}, {"k": "agent", "label": "Agent en intervention", "cat": "Chantier", "w": 86, "h": 140}, {"k": "afficheur", "label": "Afficheur cabine", "cat": "Matériel", "w": 128, "h": 186}, {"k": "voie", "label": "Voie ferrée", "cat": "Matériel", "w": 1390, "h": 40}, {"k": "voie_courte", "label": "Voie ferrée (courte)", "cat": "Matériel", "w": 560, "h": 40}, {"k": "aiguillage_montant", "label": "Changement de voie (montant)", "cat": "Matériel", "w": 1400, "h": 360}, {"k": "aiguillage_descendant", "label": "Changement de voie (descendant)", "cat": "Matériel", "w": 1400, "h": 360}];
 let stickers=[],stkSel=-1,stkDrag=null,_cleanRender=false;
+/* Sélection multiple : selIdx contient les éléments sélectionnés quand il y en a au moins 2 ;
+   sinon la sélection simple est stkSel (avec poignées de redimensionnement). */
+let selIdx=new Set(),stkClip=[],pasteN=0;
+function selList(){if(selIdx.size)return [...selIdx].filter(i=>i<stickers.length).sort((p,q)=>p-q);return stkSel>=0&&stkSel<stickers.length?[stkSel]:[];}
+function isSelIdx(i){return selIdx.size?selIdx.has(i):i===stkSel;}
+function setSel(arr){const s=[...new Set(arr)].filter(i=>i>=0&&i<stickers.length);selIdx.clear();stkSel=-1;if(s.length===1)stkSel=s[0];else s.forEach(i=>selIdx.add(i));}
+function toggleSel(i){const cur=new Set(selList());cur.has(i)?cur.delete(i):cur.add(i);setSel([...cur]);}
+function selectAllStk(){setSel(stickers.map((_,i)=>i));renderStkList();scheduleDraw();}
+function copySel(){const L=selList();if(!L.length){toast("Sélectionnez d'abord un élément.");return false;}stkClip=JSON.parse(JSON.stringify(L.map(i=>stickers[i])));pasteN=0;renderStkList();toast(L.length>1?L.length+" éléments copiés.":"Élément copié.");return true;}
+function pasteClip(){
+  if(!stkClip.length){toast("Rien à coller : copiez d'abord un élément.");return;}
+  pasteN++;const off=50*pasteN,start=stickers.length;
+  stkClip.forEach(o=>{const c=JSON.parse(JSON.stringify(o));c.x+=off;c.y+=off;if(c.k==="custom")c.id=uid();stickers.push(c);});
+  setSel(stkClip.map((_,j)=>start+j));renderStkList();scheduleDraw();touchDraft();
+}
+function duplicateSel(){if(copySel())pasteClip();}
+function deleteSel(){const L=selList();if(!L.length)return;L.sort((p,q)=>q-p).forEach(i=>stickers.splice(i,1));setSel([]);renderStkList();scheduleDraw();touchDraft();}
+function nudgeSel(dx,dy){const L=selList();if(!L.length)return false;L.forEach(i=>{stickers[i].x+=dx;stickers[i].y+=dy;});scheduleDraw();touchDraft();return true;}
 const bankImgs={};
 const TRACKS=new Set(["voie","voie_courte"]); // voies : s'allongent sans changer d'épaisseur
 const isTrack=k=>TRACKS.has(k);
@@ -2423,7 +2445,7 @@ function addCustomSticker(src,w0,h0,name){
   if(last){x=last.x+last.w+gap;y=last.y+last.h-h;if(x+w>W-x0){x=x0;y=last.y+last.h+gap;}}
   if(y+h>H-110)y=Math.max(300,H-110-h);
   stickers.push({k:"custom",id:uid(),src,name:name||"Image importée",x,y,w,h});
-  stkSel=stickers.length-1;renderStkList();scheduleDraw();touchDraft();
+  selIdx.clear();stkSel=stickers.length-1;renderStkList();scheduleDraw();touchDraft();
 }
 function ensureBankImg(k){
   if(k==="custom"||isDrawn(k))return;
@@ -2458,11 +2480,11 @@ function addSticker(k){
   const st={k,x,y,w,h};if(EDIT_TXT[k]!=null)st.txt=EDIT_TXT[k];
   if(k==="quai"){const sel=[...selectedStations].sort((p,q)=>STATIONS.indexOf(p)-STATIONS.indexOf(q));if(sel.length)st.txt=sel[0];}if(isSwitch(k)){st.extL=0;st.extR=0;swFix(st);}
   stickers.push(st);
-  stkSel=stickers.length-1;
+  selIdx.clear();stkSel=stickers.length-1;
   renderStkList();scheduleDraw();
   toast("« "+b.label+" » ajouté : déplacez-le sur l'aperçu.");
 }
-function removeSticker(i){stickers.splice(i,1);if(stkSel===i)stkSel=-1;else if(stkSel>i)stkSel--;renderStkList();scheduleDraw();}
+function removeSticker(i){stickers.splice(i,1);selIdx.clear();if(stkSel===i)stkSel=-1;else if(stkSel>i)stkSel--;renderStkList();scheduleDraw();touchDraft();}
 function resizeSticker(i,f){
   const s=stickers[i];if(!s)return;
   if(isTrack(s.k)){s.w=Math.max(60,Math.min(W*1.5,s.w*f));scheduleDraw();return;}
@@ -2476,9 +2498,21 @@ function renderStkList(){
   $("bankCount").textContent=stickers.length?" · "+stickers.length+" ajoutée(s)":"";
   if(!stickers.length)return;
   box.appendChild(el("div","stk-head","Images ajoutées"));
+  const tb=el("div","stk-tools");const n=selList().length;
+  const tbtn=(t,lab,fn,dis)=>{const x=el("button","btn small",t);x.type="button";x.title=lab;x.setAttribute("aria-label",lab);x.disabled=!!dis;x.addEventListener("click",fn);tb.appendChild(x);};
+  tbtn(n===stickers.length?"Désélectionner":"Tout sélectionner",n===stickers.length?"Désélectionner tout":"Tout sélectionner (Ctrl+A)",()=>{n===stickers.length?setSel([]):setSel(stickers.map((_,j)=>j));renderStkList();scheduleDraw();});
+  tbtn("Copier","Copier la sélection (Ctrl+C)",copySel,!n);
+  tbtn("Coller","Coller (Ctrl+V)",pasteClip,!stkClip.length);
+  tbtn("Dupliquer","Dupliquer la sélection (Ctrl+D)",duplicateSel,!n);
+  tbtn("Supprimer","Supprimer la sélection (Suppr)",deleteSel,!n);
+  box.appendChild(tb);
+  if(n>1)box.appendChild(el("p","stk-selinfo",n+" éléments sélectionnés : faites glisser l'un d'eux sur l'aperçu pour tous les déplacer."));
   stickers.forEach((s,i)=>{
     const b=bankItem(s.k);
-    const row=el("div","stk-row"+(i===stkSel?" sel":""));
+    const row=el("div","stk-row"+(isSelIdx(i)?" sel":""));
+    const ck=el("input","stk-check");ck.type="checkbox";ck.checked=isSelIdx(i);ck.setAttribute("aria-label","Sélectionner");
+    ck.addEventListener("change",()=>{toggleSel(i);renderStkList();scheduleDraw();});
+    row.appendChild(ck);
     let im;
     if(isDrawn(s.k)){im=el("span","stk-ico",DRAWN_ICON[s.k]);im.style.color=s.color||"#0A0082";}
     else{im=el("img");im.src=s.k==="custom"?s.src:"banque/"+s.k+".png";im.alt="";}
@@ -2489,7 +2523,7 @@ function renderStkList(){
       const inp=el("input","stk-txt"+(isQ?" wide":""));inp.type="text";inp.inputMode=isQ?"text":"numeric";inp.maxLength=s.k==="text"?80:(isQ?40:3);inp.value=s.txt==null?EDIT_TXT[s.k]:s.txt;
       inp.setAttribute("aria-label",s.k==="quai"?"Nom de la station":(s.k==="text"?"Texte":"Vitesse du TIV"));
       inp.addEventListener("input",()=>{s.txt=inp.value;scheduleDraw();touchDraft();});
-      inp.addEventListener("focus",()=>{stkSel=i;row.classList.add("sel");scheduleDraw();});
+      inp.addEventListener("focus",()=>{setSel([i]);row.classList.add("sel");scheduleDraw();});
       // le clic dans la case ne doit pas reconstruire la liste (sinon la saisie est perdue)
       ["click","pointerdown","mousedown","touchstart"].forEach(ev=>inp.addEventListener(ev,e=>e.stopPropagation()));
       nm.appendChild(inp);
@@ -2502,7 +2536,7 @@ function renderStkList(){
       sel.addEventListener("change",()=>{s.color=sel.value;im.style.color=s.color;scheduleDraw();touchDraft();});
       nm.appendChild(sel);
     }
-    nm.addEventListener("click",()=>{stkSel=i;renderStkList();scheduleDraw();});
+    nm.addEventListener("click",e=>{(e.shiftKey||e.ctrlKey||e.metaKey)?toggleSel(i):setSel([i]);renderStkList();scheduleDraw();});
     const mk=(t,lab,fn)=>{const x=el("button","btn small",t);x.type="button";x.setAttribute("aria-label",lab);x.addEventListener("click",fn);return x;};
     row.appendChild(im);row.appendChild(nm);
     const tr=isTrack(s.k);
@@ -2546,12 +2580,13 @@ function drawStickers(){
       }else ctx.drawImage(img,s.x,s.y,s.w,s.h);
     }
     else ensureBankImg(s.k);
-    if(i===stkSel&&!_cleanRender){
+    if(isSelIdx(i)&&!_cleanRender){
+      const single=!selIdx.size;
       ctx.save();ctx.strokeStyle="#1f5fd0";ctx.lineWidth=3*SCALE;ctx.setLineDash([10*SCALE,6*SCALE]);
       ctx.strokeRect(s.x-4,s.y-4,s.w+8,s.h+8);ctx.setLineDash([]);
       const hs=26*SCALE;const hd=(hx,hy)=>{ctx.fillStyle="#1f5fd0";ctx.fillRect(hx-hs/2,hy-hs/2,hs,hs);ctx.strokeStyle="#fff";ctx.lineWidth=2*SCALE;ctx.strokeRect(hx-hs/2,hy-hs/2,hs,hs);};
-      if(isSwitch(s.k)){hd(s.x,s.y+s.h/2);hd(s.x+s.w,s.y+s.h/2);}
-      else hd(s.x+s.w,s.y+s.h);
+      if(single){if(isSwitch(s.k)){hd(s.x,s.y+s.h/2);hd(s.x+s.w,s.y+s.h/2);}
+      else hd(s.x+s.w,s.y+s.h);}
       ctx.restore();
     }
   });
@@ -2656,7 +2691,7 @@ $("drawCancel").addEventListener("click",()=>setDrawTool(drawTool));
 $("dtText").addEventListener("click",()=>{
   const h=110,x=W/2-200,y=Math.round(H*0.55);
   stickers.push({k:"text",txt:"Texte",color:"#0A0082",x,y,w:400,h});
-  stkSel=stickers.length-1;renderStkList();scheduleDraw();touchDraft();
+  selIdx.clear();stkSel=stickers.length-1;renderStkList();scheduleDraw();touchDraft();
   setTimeout(()=>{const ins=$("stkList").querySelectorAll(".stk-txt");const inp=ins[ins.length-1];if(inp){inp.focus();inp.select();}},50);
 });
 els.canvas.addEventListener("pointerdown",e=>{
@@ -2682,7 +2717,7 @@ function endDraw(e){
   else if(t==="track_path"&&P.length>2){
     const S=chaikin(P,3);stickers.push(pathSticker("track_path",S,50,{th:46}));
   }else{toast(t==="arrow"?"Flèche trop courte : glissez plus loin.":"Tracé trop court : dessinez un peu plus.");draw();return;}
-  stkSel=stickers.length-1;setDrawTool(t);renderStkList();draw();touchDraft();
+  selIdx.clear();stkSel=stickers.length-1;setDrawTool(t);renderStkList();draw();touchDraft();
 }
 els.canvas.addEventListener("pointerup",endDraw,{capture:true});
 els.canvas.addEventListener("pointercancel",endDraw,{capture:true});
@@ -2690,11 +2725,15 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&drawTool)setDrawToo
 els.canvas.addEventListener("pointerdown",e=>{
   if(!stickers.length||(editMode&&_mode!=="select"))return;
   const p=cvPt(e),h=hitSticker(p);
-  if(!h){if(stkSel>=0){stkSel=-1;renderStkList();scheduleDraw();}return;}
+  if(!h){if(selList().length&&!(e.shiftKey||e.ctrlKey||e.metaKey)){setSel([]);renderStkList();scheduleDraw();}return;}
   e.preventDefault();e.stopImmediatePropagation();
   try{els.canvas.setPointerCapture(e.pointerId);}catch(err){}
-  stkSel=h.i;const s=stickers[h.i];
-  stkDrag={type:h.type,i:h.i,sx:p.x,sy:p.y,ox:s.x,oy:s.y,ow:s.w,oh:s.h,oL:s.extL||0,oR:s.extR||0};
+  if(e.shiftKey||e.ctrlKey||e.metaKey)toggleSel(h.i);
+  else if(!(selIdx.size&&selIdx.has(h.i)))setSel([h.i]);
+  const s=stickers[h.i];
+  if(selIdx.size&&selIdx.has(h.i)){
+    stkDrag={type:"group",i:h.i,sx:p.x,sy:p.y,items:[...selIdx].map(j=>({j,ox:stickers[j].x,oy:stickers[j].y}))};
+  }else stkDrag={type:h.type,i:h.i,sx:p.x,sy:p.y,ox:s.x,oy:s.y,ow:s.w,oh:s.h,oL:s.extL||0,oR:s.extR||0};
   renderStkList();draw();
 },{capture:true});
 els.canvas.addEventListener("pointermove",e=>{
@@ -2702,7 +2741,8 @@ els.canvas.addEventListener("pointermove",e=>{
   e.preventDefault();e.stopImmediatePropagation();
   const p=cvPt(e),s=stickers[stkDrag.i];if(!s)return;
   const dx=p.x-stkDrag.sx,dy=p.y-stkDrag.sy;
-  if(stkDrag.type==="extR"){s.extR=Math.max(0,stkDrag.oR+dx);swFix(s);}
+  if(stkDrag.type==="group"){stkDrag.items.forEach(o=>{const t=stickers[o.j];if(t){t.x=o.ox+dx;t.y=o.oy+dy;}});}
+  else if(stkDrag.type==="extR"){s.extR=Math.max(0,stkDrag.oR+dx);swFix(s);}
   else if(stkDrag.type==="extL"){s.extL=Math.max(0,stkDrag.oL-dx);s.x=stkDrag.ox+stkDrag.oL-s.extL;swFix(s);}
   else if(stkDrag.type==="move"){
     s.x=Math.max(-s.w*0.5,Math.min(W-s.w*0.5,stkDrag.ox+dx));
@@ -2720,9 +2760,17 @@ function endStkDrag(e){if(!stkDrag)return;e.stopImmediatePropagation();stkDrag=n
 els.canvas.addEventListener("pointerup",endStkDrag,{capture:true});
 els.canvas.addEventListener("pointercancel",endStkDrag,{capture:true});
 document.addEventListener("keydown",e=>{
-  if(stkSel<0||view!=="app")return;
-  const t=e.target.tagName;if(t==="INPUT"||t==="TEXTAREA"||e.target.isContentEditable)return;
-  if(e.key==="Delete"||e.key==="Backspace"){e.preventDefault();removeSticker(stkSel);}
+  if(view!=="app"||step<3)return;
+  const t=e.target.tagName;if(t==="INPUT"||t==="TEXTAREA"||t==="SELECT"||e.target.isContentEditable)return;
+  if(editMode&&_mode!=="select")return;
+  const mod=e.ctrlKey||e.metaKey,k=e.key.toLowerCase();
+  if(mod&&k==="a"&&stickers.length){e.preventDefault();selectAllStk();return;}
+  if(mod&&k==="c"&&selList().length){e.preventDefault();copySel();return;}
+  if(mod&&k==="v"&&stkClip.length){e.preventDefault();pasteClip();return;}
+  if(mod&&k==="d"&&selList().length){e.preventDefault();duplicateSel();return;}
+  if((e.key==="Delete"||e.key==="Backspace")&&selList().length){e.preventDefault();deleteSel();return;}
+  const st=e.shiftKey?40:8,mv={ArrowLeft:[-st,0],ArrowRight:[st,0],ArrowUp:[0,-st],ArrowDown:[0,st]}[e.key];
+  if(mv&&nudgeSel(mv[0]*2,mv[1]*2))e.preventDefault();
 });
 
 function lineGeometry(){const n=STATIONS.length;const u=W-240;const sp=Math.min(u/Math.max(n-1,1),200);return{n,sp,xS:(W-sp*(n-1))/2};}
