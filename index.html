@@ -2654,6 +2654,87 @@ function drawTrackShape(P,th){
   });
   ctx.restore();
 }
+/* ── Voie à main levée « propre » : le tracé est redressé façon voie ferrée ──
+   1) simplification (Douglas-Peucker) ; 2) angles calés sur des pas de 15° (horizontales nettes) ;
+   3) extrémités calées sur l'axe des voies voisines (raccord net) ; 4) virages arrondis ;
+   5) rendu avec le même motif que les voies de la banque (rails + traverses), épaisseur identique. */
+function rdp(P,eps){
+  if(P.length<3)return P.slice();
+  const a=P[0],b=P[P.length-1],dx=b.x-a.x,dy=b.y-a.y,L=Math.hypot(dx,dy)||1;
+  let md=-1,mi=0;for(let i=1;i<P.length-1;i++){const d=Math.abs(dy*P[i].x-dx*P[i].y+b.x*a.y-b.y*a.x)/L;if(d>md){md=d;mi=i;}}
+  if(md>eps){const l=rdp(P.slice(0,mi+1),eps),r=rdp(P.slice(mi),eps);return l.slice(0,-1).concat(r);}
+  return [a,b];
+}
+function trackAxes(){
+  const A=[];
+  stickers.forEach(s=>{
+    if(s.k==="voie"||s.k==="voie_courte")A.push({y:s.y+s.h/2,x0:s.x,x1:s.x+s.w,th:s.h});
+    else if(isSwitch(s.k)){swFix(s);const th=s.h*SW_TH;A.push({y:s.y+s.h*(2/360)+th/2,x0:s.x,x1:s.x+s.w,th},{y:s.y+s.h-s.h*(2/360)-th/2,x0:s.x,x1:s.x+s.w,th});}
+  });
+  return A;
+}
+function snapEnd(p,A){
+  let best=null;A.forEach(a=>{const dy=Math.abs(p.y-a.y);if(dy<70&&p.x>a.x0-80&&p.x<a.x1+80&&(!best||dy<best.d))best={d:dy,a};});
+  return best?best.a:null;
+}
+function cleanTrack(raw){
+  if(raw.length<2)return null;
+  let len=0;for(let i=1;i<raw.length;i++)len+=Math.hypot(raw[i].x-raw[i-1].x,raw[i].y-raw[i-1].y);
+  if(len<60)return null;
+  const A=trackAxes(),S0=raw[0],E0=raw[raw.length-1],sA=snapEnd(S0,A),eA=snapEnd(E0,A);
+  const S={x:S0.x,y:sA?sA.y:S0.y},E={x:E0.x,y:eA?eA.y:E0.y};
+  // 1) simplification forte (le tremblement de la main disparaît)
+  const P=rdp(raw,Math.max(60,len*0.07));
+  // 2) segments à angle calé (pas de 15°), fusion des segments alignés
+  const STEP=Math.PI/12;let segs=[];
+  for(let i=1;i<P.length;i++){const dx=P[i].x-P[i-1].x,dy=P[i].y-P[i-1].y,L=Math.hypot(dx,dy);if(L<1)continue;
+    const ang=Math.round(Math.atan2(dy,dx)/STEP)*STEP;
+    if(segs.length&&Math.abs(segs[segs.length-1].a-ang)<1e-6)segs[segs.length-1].L+=L;else segs.push({a:ang,L});}
+  segs=segs.filter(s=>s.L>=70||segs.length===1);
+  if(!segs.length)return null;
+  // 3) raccord horizontal aux voies existantes
+  const dir=Math.sign(E.x-S.x)||1,H0=dir>0?0:Math.PI,isH=a=>Math.abs(Math.sin(a))<1e-6;
+  if(sA&&!isH(segs[0].a))segs.unshift({a:H0,L:110});
+  if(eA&&!isH(segs[segs.length-1].a))segs.push({a:H0,L:110});
+  // 4) longueurs ajustées au plus juste pour arriver exactement au point visé (angles conservés)
+  const n=segs.length,dx=E.x-S.x,dy=E.y-S.y;
+  let sx=0,sy=0;segs.forEach(s=>{sx+=Math.cos(s.a)*s.L;sy+=Math.sin(s.a)*s.L;});
+  let a11=0,a12=0,a22=0;segs.forEach(s=>{const c=Math.cos(s.a),si=Math.sin(s.a);a11+=c*c;a12+=c*si;a22+=si*si;});
+  const det=a11*a22-a12*a12,rx=dx-sx,ry=dy-sy;
+  if(Math.abs(det)>1e-6){
+    const l1=(a22*rx-a12*ry)/det,l2=(-a12*rx+a11*ry)/det;
+    segs.forEach(s=>{s.L=Math.max(30,s.L+Math.cos(s.a)*l1+Math.sin(s.a)*l2);});
+  }
+  const Q=[S];segs.forEach(s=>{const p=Q[Q.length-1];Q.push({x:p.x+Math.cos(s.a)*s.L,y:p.y+Math.sin(s.a)*s.L});});
+  if(Math.abs(det)<=1e-6)Q[Q.length-1]=E;
+  // 5) virages arrondis (Bézier tangentes)
+  const out=[Q[0]];
+  for(let i=1;i<Q.length-1;i++){
+    const a=Q[i-1],v=Q[i],b=Q[i+1],l1=Math.hypot(v.x-a.x,v.y-a.y),l2=Math.hypot(b.x-v.x,b.y-v.y);
+    if(l1<1||l2<1)continue;
+    const d=Math.min(240,l1*0.48,l2*0.48);
+    const p1={x:v.x+(a.x-v.x)/l1*d,y:v.y+(a.y-v.y)/l1*d},p2={x:v.x+(b.x-v.x)/l2*d,y:v.y+(b.y-v.y)/l2*d};
+    out.push(p1);for(let k=1;k<16;k++){const t=k/16,u=1-t;out.push({x:u*u*p1.x+2*u*t*v.x+t*t*p2.x,y:u*u*p1.y+2*u*t*v.y+t*t*p2.y});}out.push(p2);
+  }
+  out.push(Q[Q.length-1]);
+  return {pts:resample(out,6),th:(sA||eA||{th:64}).th};
+}
+// rendu : motif de la voie déroulé le long du tracé (même aspect que les voies droites)
+function drawTrackBand(P,th){
+  const m=bankImgs.voie_motif;
+  if(!m||m==="loading"){ensureBankImg("voie_motif");drawTrackShape(P,th*0.7);return;}
+  const R=resample(P,2),sc=th/m.height,colW=2/sc;let u=0;
+  ctx.save();ctx.imageSmoothingQuality="high";
+  for(let i=0;i<R.length-1;i++){
+    const a=R[i],b=R[i+1],ang=Math.atan2(b.y-a.y,b.x-a.x),seg=Math.hypot(b.x-a.x,b.y-a.y);
+    const sx=u%m.width;
+    ctx.setTransform(1,0,0,1,0,0);ctx.translate(a.x,a.y);ctx.rotate(ang);
+    const w=Math.min(colW,m.width-sx);
+    ctx.drawImage(m,sx,0,w,m.height,-0.6,-th/2,seg+1.2,th);
+    u+=seg/sc;
+  }
+  ctx.restore();
+}
 function drawTextSticker(s){
   const t=((s.txt==null?"Texte":s.txt)||"").toString()||" ";
   const fs=s.h*0.78;ctx.save();ctx.font=`800 ${fs}px Lato, Arial, sans-serif`;
@@ -2664,12 +2745,14 @@ function drawDrawnSticker(s){
   if(s.k==="text"){drawTextSticker(s);return;}
   const P=s.pts.map(p=>({x:s.x+p[0]*s.w,y:s.y+p[1]*s.h}));
   if(s.k==="arrow")drawArrowShape(P[0],P[P.length-1],s.color||"#E2001A",s.lw||18);
+  else if(s.v===2)drawTrackBand(P,s.th||64);
   else drawTrackShape(P,s.th||46);
 }
 function drawDrawPreview(){
   if(!drawTool||!drawPts||drawPts.length<2)return;
   if(drawTool==="arrow")drawArrowShape(drawPts[0],drawPts[drawPts.length-1],"#E2001A",18);
-  else drawTrackShape(chaikin(drawPts,2),46);
+  else{ctx.save();ctx.strokeStyle="rgba(10,0,130,.55)";ctx.lineWidth=10;ctx.setLineDash([24,16]);ctx.lineCap="round";ctx.lineJoin="round";
+    ctx.beginPath();drawPts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke();ctx.restore();}
 }
 function pathSticker(k,P,pad,extra){
   let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;P.forEach(p=>{x0=Math.min(x0,p.x);y0=Math.min(y0,p.y);x1=Math.max(x1,p.x);y1=Math.max(y1,p.y);});
@@ -2715,7 +2798,8 @@ function endDraw(e){
   const a=P[0],b=P[P.length-1],len=Math.hypot(b.x-a.x,b.y-a.y);
   if(t==="arrow"&&len>40)stickers.push(pathSticker("arrow",[a,b],60,{color:"#E2001A",lw:18}));
   else if(t==="track_path"&&P.length>2){
-    const S=chaikin(P,3);stickers.push(pathSticker("track_path",S,50,{th:46}));
+    const C=cleanTrack(P);if(!C){toast("Tracé trop court : dessinez un peu plus.");draw();return;}
+    stickers.push(pathSticker("track_path",C.pts,Math.ceil(C.th/2)+4,{th:C.th,v:2}));
   }else{toast(t==="arrow"?"Flèche trop courte : glissez plus loin.":"Tracé trop court : dessinez un peu plus.");draw();return;}
   selIdx.clear();stkSel=stickers.length-1;setDrawTool(t);renderStkList();draw();touchDraft();
 }
