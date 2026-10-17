@@ -501,6 +501,7 @@
   /* pas de liseré entre le bandeau bleu et le fond */
   .hero::after{display:none !important;}
   :focus-visible{outline-color:var(--ratp-yellow);}
+  .import-btn{width:100%;margin-bottom:6px;border-style:dashed;border-color:var(--brand);color:var(--brand);}
 </style>
 </head>
 <body>
@@ -782,26 +783,17 @@
           <div class="field-hint"><span id="interMsg"></span></div>
         </div>
         <details class="adv bank-box" id="bankBox">
-          <summary>Schéma explicatif : ajouter des images<span id="bankCount" class="bank-count"></span></summary>
+          <summary>Images et QR codes : schéma explicatif<span id="bankCount" class="bank-count"></span></summary>
           <div class="adv-body">
             <p class="note" style="margin-top:0">Touchez une image pour l'ajouter au visuel, puis déplacez-la avec le doigt sur l'aperçu. Le carré bleu en bas à droite permet de la redimensionner ; pour une voie, il l'allonge sans changer son épaisseur ; un changement de voie a un carré à chaque extrémité pour prolonger ses voies.</p>
+            <label class="btn import-btn" for="userImgInput">＋ Importer mes images (QR code, schéma, photo…)</label>
+            <input type="file" id="userImgInput" accept="image/*" multiple class="sr-only">
+            <p class="note" style="margin-top:6px">Les images importées restent sur cet appareil (dans le brouillon) et ne sont envoyées nulle part.</p>
             <div class="stk-list" id="stkList"></div>
             <div class="bank" id="bankGrid"></div>
           </div>
         </details>
         <p class="note">La date et l'heure du visuel sont ajoutées automatiquement au moment du téléchargement.</p>
-        <details class="adv" id="assetsPanel">
-          <summary>Options avancées : QR code, images</summary>
-          <div class="adv-body">
-            <div class="asset-status" id="assetStatus" role="status"></div>
-            <div class="file-line"><strong>Importer le dossier d'images</strong> (si les images ne se chargent pas seules)
-              <input type="file" id="folderInput" webkitdirectory directory multiple>
-            </div>
-            <div class="file-line"><strong>Importer des schémas d'interstation</strong>
-              <input type="file" id="interInput" accept="image/*" multiple>
-            </div>
-          </div>
-        </details>
       </div>
 
       <!-- Étape 4 : aperçu final + téléchargement -->
@@ -1577,7 +1569,7 @@ const MODELS=[
 ];
 MODELS.forEach(m=>{if(!m.label)m.label=m.v;});
 const IMG_FOR={"Ralentissement provisoire":"ralentissement_provisoire.png","Service de sécurité":"service_securite.png","Service de sécurité sur ordre":"service_securite_sur_ordre.png","Interruption de trafic":"interruption_trafic.png","Station(s) fermée(s)":"station_fermee.png","Station(s) fermée(s) > 20":"station_fermee.png"};
-const INTER_FILES=["voie2-10_voltaire_saint-ambroise.png", "voie2-11_saint-ambroise-oberkampf.png", "voie2-12_oberkampf_republique.png", "voie2-13_republique_strasbourg-saint-denis.png", "voie2-14_strasbourg-saint-denis_bonne-nouvelle.png", "voie2-15_bonne-nouvelle_grands-boulevards.png", "voie2-16_grands-boulevards_richelieu-drouot.png", "voie2-17_richelieu-drouot_chaussee-dantin.png", "voie2-18_chausse-dantin_havre-caumartin.png", "voie2-19_havre-caumartin_saint-augustin.png", "voie2-1_mairie_chavaux.png", "voie2-20_saint-augustin_miromesnil.png", "voie2-21_miromesnil_saint-philippe-du-roule.png", "voie2-22_saint-philippe-du-roule_franklin-roosevelt.png", "voie2-23_franklin-roosevelt_alma-marceau.png", "voie2-24_alma-marceau_iena.png", "voie2-25_iena_trocadero.png", "voie2-26_trocadero-rue-de-la-pompe.png", "voie2-27_rue-de-la-pompe_la-muette.png", "voie2-29_la-muette_ranelagh.png", "voie2-2_chavaux_robespierre.png", "voie2-30_ranelagh_jasmin.png", "voie2-31_jasmin_michel-ange-auteuil.png", "voie2-32_michel-ange-auteuil_michel-ange-molitor.png", "voie2-33_michel-ange-molitor_exelmans.png", "voie2-34_exelmans_porte-de-saint-cloud.png", "voie2-35_porte-de-saint-cloud_marcel-sembat.png", "voie2-36_marcel-sembat_billancourt.png", "voie2-37_billancourt_pont-de-sevres.png", "voie2-3_robespierre_porte-montreuil.png", "voie2-4_porte-montreuil_maraichers.png", "voie2-5_maraichers_buzenval.png", "voie2-6_buzenval_nation.png", "voie2-7_nation_rue-des-boulets.png", "voie2-8_rue-des-boulets_charonne.png", "voie2-9_charonne_voltaire.png"];
+const INTER_FILES=[];
 const INTER_LINE="9";
 const K_DR="li.drafts.v1",K_RC="li.recents.v1",K_DOCK="li.dock.v1";
 const STEPS=["Modèle","Stations","Infos","Aperçu"];
@@ -1697,7 +1689,6 @@ function setLine(id){
   selectedStations.clear();pendingStart=null;
   if(LINES[id].forkNote){els.forkWarnText.textContent=LINES[id].forkNote;els.forkWarn.classList.remove("hidden");}else els.forkWarn.classList.add("hidden");
   buildThermo();
-  if(id===INTER_LINE)loadInterstations();
   refreshInterDropdown();
   updateTopCtx();
   scheduleDraw();
@@ -1847,7 +1838,7 @@ function loadImg(url){
 }
 function fileToImage(file){return new Promise((res,rej)=>{const u=URL.createObjectURL(file);const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=u;});}
 function renderAssetStatus(){
-  const a=assetInfo,box=$("assetStatus");box.innerHTML="";
+  const a=assetInfo,box=$("assetStatus");if(!box)return;box.innerHTML="";
   const line=(label,ok,total,err)=>{const d=el("div");d.appendChild(document.createTextNode(label+" : "));
     const s=el("span",err?"ko":"ok",(ok+"/"+total)+(err?" · indisponible(s)":" · chargé(es)"));d.appendChild(s);box.appendChild(d);};
   line("Images de consignes",a.known.ok,a.known.total,a.known.err);
@@ -1908,27 +1899,29 @@ function refreshInterDropdown(){
     const o=document.createElement("option");o.value=String(i);o.textContent=it.label||it.name;els.interSel.appendChild(o);n++;
     if(it.name===want)els.interSel.value=String(i);
   });
-  const show=TYPES_AVEC_INTER.includes(els.type.value)&&modelChosen;
+  const show=TYPES_AVEC_INTER.includes(els.type.value)&&modelChosen&&n>0;
   els.interRow.classList.toggle("hidden",!show);
   els.interSel.disabled=!n;
   const loading=currentLineId===INTER_LINE&&assetInfo.inter.started&&(assetInfo.inter.ok+assetInfo.inter.err<assetInfo.inter.total);
   $("interMsg").textContent=n?"":(loading?"Chargement des schémas…":"Aucun schéma disponible pour cette ligne. Vous pouvez en importer dans les options avancées.");
 }
-$("folderInput").addEventListener("change",async e=>{
-  const files=[...e.target.files];
-  for(const f of files){const path=f.webkitRelativePath||f.name,base=f.name,lower=base.toLowerCase();
-    if(!/\.(png|jpe?g|gif|bmp|webp)$/.test(lower))continue;
-    try{
-      if(/interstations/i.test(path)){const img=await fileToImage(f);const info=interLabel(base);const i=interstations.findIndex(it=>it.name===base);
-        const rec={name:base,label:info.label,num:info.num,line:null,img};if(i>=0)interstations[i]=rec;else interstations.push(rec);}
-      else if(KNOWN.includes(base)){assets[base]=await fileToImage(f);}
-    }catch(err){}
-  }
-  sortInter();refreshInterDropdown();renderAssetStatus();toast("Images importées");scheduleDraw();
-});
-$("interInput").addEventListener("change",async e=>{
-  for(const f of[...e.target.files]){try{const img=await fileToImage(f);const info=interLabel(f.name);interstations.push({name:f.name,label:info.label,num:info.num,line:null,img});}catch(err){}}
-  sortInter();refreshInterDropdown();toast("Schémas importés");scheduleDraw();
+// Import d'images personnelles (QR code, schéma, photo…) : ajoutées comme les images de la banque
+function readAsDataURL(f){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);});}
+async function importUserImage(f){
+  const url=await readAsDataURL(f);
+  const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=url;});
+  // réduite si besoin (stockage des brouillons sur l'appareil)
+  const max=1400,sc=Math.min(1,max/Math.max(img.width,img.height));
+  const c=document.createElement("canvas");c.width=Math.round(img.width*sc);c.height=Math.round(img.height*sc);
+  c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+  const src=c.toDataURL("image/png");
+  addCustomSticker(src,c.width,c.height,f.name);
+}
+$("userImgInput").addEventListener("change",async e=>{
+  const files=[...e.target.files];let ok=0;
+  for(const f of files){try{await importUserImage(f);ok++;}catch(err){}}
+  e.target.value="";
+  toast(ok?(ok+" image(s) ajoutée(s) : déplacez-les sur l'aperçu."):"Image illisible : choisissez un fichier JPG ou PNG.",4000);
 });
 
 /* ── Validation ───────────────────────────────────────────────────────── */
@@ -1948,8 +1941,6 @@ function validate(n){
     if(!els.titre.value.trim())r.block.push("Renseignez le titre de l'incident.");
     if(textOver.titre)r.warn.push(textOver.titre==="cut"?"Le titre est trop long : la fin est coupée sur le visuel.":"Le titre est long : sa taille est réduite sur le visuel.");
     if(textOver.infos)r.warn.push(textOver.infos==="cut"?"Les informations complémentaires sont trop longues : la fin est coupée.":"Les informations complémentaires sont longues : leur taille est réduite.");
-    const img=IMG_FOR[els.type.value];
-    if(m&&img&&!assets[img])r.warn.push("L'image de consigne de ce modèle n'est pas chargée : elle sera absente du visuel (voir options avancées).");
   }
   return r;
 }
@@ -2129,7 +2120,7 @@ function loadSnapshot(s,draftId,startStep){
   (s.hidden||[]).forEach(h=>HIDDEN.add(h));
   textBoxes=(s.textBoxes||[]).map(b=>({...b}));
   (s.strokes||[]).forEach(x=>strokes.push(x));
-  stickers=(s.stickers||[]).filter(x=>bankItem(x.k)).map(x=>({...x}));stickers.forEach(x=>ensureBankImg(x.k));stkSel=-1;renderStkList();
+  stickers=(s.stickers||[]).filter(x=>x.k==="custom"?!!x.src:bankItem(x.k)).map(x=>({...x}));stickers.forEach(x=>ensureBankImg(x.k));stkSel=-1;renderStkList();
   const m=MODELS.find(x=>x.v===s.type);
   els.type.value=m?m.v:"";modelChosen=true;pickTouched=false;
   setLine(s.lineId);
@@ -2324,7 +2315,6 @@ function initApp(){
   try{history.replaceState({d:0,v:"home",s:1},"");}catch(e){}
   buildModelList();buildLineList();buildBank();renderStkList();
   if(LS.get(K_DOCK,false)){$("dockBody").classList.add("collapsed");$("dockToggle").textContent="Afficher";$("dockToggle").setAttribute("aria-expanded","false");}
-  loadKnownAssets();renderAssetStatus();
   updateCounts();updateTextHints();
   try{if(window.matchMedia("(prefers-reduced-motion: reduce)").matches){const sv=document.querySelector(".hero-svg");if(sv&&sv.pauseAnimations)sv.pauseAnimations();}}catch(e){}
   showView("home",{noPush:true});
@@ -2350,7 +2340,24 @@ function drawTrackRun(x,y,w,th){
 }
 const EDIT_TXT={tiv_45:"45"}; // images dont le texte se modifie (vitesse du TIV)
 function bankItem(k){return BANK.find(b=>b.k===k);}
+// images importées par l'utilisateur (clé "custom", contenu dans s.src)
+function stkImg(s){
+  if(s.k!=="custom")return bankImgs[s.k];
+  const key="custom:"+s.id;
+  if(!bankImgs[key]){bankImgs[key]="loading";const i=new Image();i.onload=()=>{bankImgs[key]=i;scheduleDraw();};i.src=s.src;}
+  return bankImgs[key];
+}
+function addCustomSticker(src,w0,h0,name){
+  let h=Math.min(500,h0),w=h*w0/h0;if(w>1400){w=1400;h=w*h0/w0;}
+  const gap=60,x0=220;let x=x0,y=Math.round(H*0.62);
+  const last=stickers[stickers.length-1];
+  if(last){x=last.x+last.w+gap;y=last.y+last.h-h;if(x+w>W-x0){x=x0;y=last.y+last.h+gap;}}
+  if(y+h>H-110)y=Math.max(300,H-110-h);
+  stickers.push({k:"custom",id:uid(),src,name:name||"Image importée",x,y,w,h});
+  stkSel=stickers.length-1;renderStkList();scheduleDraw();touchDraft();
+}
 function ensureBankImg(k){
+  if(k==="custom")return;
   if(bankImgs[k])return;
   bankImgs[k]="loading";
   loadImg("banque/"+k+".png").then(img=>{bankImgs[k]=img;scheduleDraw();}).catch(()=>{delete bankImgs[k];});
@@ -2402,8 +2409,8 @@ function renderStkList(){
   stickers.forEach((s,i)=>{
     const b=bankItem(s.k);
     const row=el("div","stk-row"+(i===stkSel?" sel":""));
-    const im=el("img");im.src="banque/"+s.k+".png";im.alt="";
-    const nm=el("span","stk-name",b?b.label:s.k);
+    const im=el("img");im.src=s.k==="custom"?s.src:"banque/"+s.k+".png";im.alt="";
+    const nm=el("span","stk-name",s.k==="custom"?(s.name||"Image importée"):(b?b.label:s.k));
     if(EDIT_TXT[s.k]!=null){
       nm.textContent="TIV";
       const inp=el("input","stk-txt");inp.type="text";inp.inputMode="numeric";inp.maxLength=3;inp.value=s.txt==null?EDIT_TXT[s.k]:s.txt;
@@ -2424,7 +2431,7 @@ function renderStkList(){
 }
 function drawStickers(){
   stickers.forEach((s,i)=>{
-    let img=bankImgs[s.k];
+    let img=stkImg(s);
     if(EDIT_TXT[s.k]!=null){
       // TIV : panneau noir, vitesse en blanc (modifiable)
       const t=(s.txt==null?EDIT_TXT[s.k]:s.txt).toString().trim()||" ";
