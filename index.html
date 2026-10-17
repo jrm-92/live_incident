@@ -504,6 +504,14 @@
   .import-btn{width:100%;margin-bottom:6px;border-style:dashed;border-color:var(--brand);color:var(--brand);}
   .stk-txt.wide{width:100%;flex:1 1 0;min-width:0;text-align:left;}
   .stk-row .btn.small{flex:none;}
+  .draw-tools{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px;}
+  .draw-tools .btn[aria-pressed="true"]{background:var(--night);border-color:var(--night);color:#fff;}
+  .draw-hint{display:flex;align-items:center;gap:10px;background:#fff8e1;border:1px solid #f1dc8a;border-radius:10px;padding:8px 10px;font-size:14px;font-weight:700;color:#6b5300;margin-bottom:8px;}
+  .draw-hint span{flex:1;}
+  body.drawing canvas#preview{touch-action:none;cursor:crosshair;}
+  .stk-ico{width:44px;height:30px;flex:none;display:inline-flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;}
+  .stk-color{width:auto;padding:6px 26px 6px 8px;font-size:13px;margin-left:8px;flex:none;}
+  .stk-name:has(.stk-color){display:flex;align-items:center;gap:4px;}
 </style>
 </head>
 <body>
@@ -788,6 +796,12 @@
           <summary>Images et QR codes : schéma explicatif<span id="bankCount" class="bank-count"></span></summary>
           <div class="adv-body">
             <p class="note" style="margin-top:0">Touchez une image pour l'ajouter au visuel, puis déplacez-la avec le doigt sur l'aperçu. Le carré bleu en bas à droite permet de la redimensionner ; pour une voie, il l'allonge sans changer son épaisseur ; un changement de voie a un carré à chaque extrémité pour prolonger ses voies.</p>
+            <div class="draw-tools" role="group" aria-label="Outils de dessin">
+              <button class="btn small" id="dtArrow" data-t="arrow" type="button" aria-pressed="false">➜ Flèche</button>
+              <button class="btn small" id="dtTrack" data-t="track_path" type="button" aria-pressed="false">〰 Voie à main levée</button>
+              <button class="btn small" id="dtText" type="button">T Texte</button>
+            </div>
+            <div class="draw-hint hidden" id="drawHint" role="status"><span id="drawHintTxt"></span><button class="btn small" id="drawCancel" type="button">Terminer</button></div>
             <label class="btn import-btn" for="userImgInput">＋ Importer mes images (QR code, schéma, photo…)</label>
             <input type="file" id="userImgInput" accept="image/*" multiple class="sr-only">
             <p class="note" style="margin-top:6px">Les images importées restent sur cet appareil (dans le brouillon) et ne sont envoyées nulle part.</p>
@@ -2122,7 +2136,7 @@ function loadSnapshot(s,draftId,startStep){
   (s.hidden||[]).forEach(h=>HIDDEN.add(h));
   textBoxes=(s.textBoxes||[]).map(b=>({...b}));
   (s.strokes||[]).forEach(x=>strokes.push(x));
-  stickers=(s.stickers||[]).filter(x=>x.k==="custom"?!!x.src:bankItem(x.k)).map(x=>({...x}));stickers.forEach(x=>ensureBankImg(x.k));stkSel=-1;renderStkList();
+  stickers=(s.stickers||[]).filter(x=>x.k==="custom"?!!x.src:(isDrawn(x.k)||bankItem(x.k))).map(x=>({...x}));stickers.forEach(x=>ensureBankImg(x.k));stkSel=-1;renderStkList();
   const m=MODELS.find(x=>x.v===s.type);
   els.type.value=m?m.v:"";modelChosen=true;pickTouched=false;
   setLine(s.lineId);
@@ -2340,7 +2354,7 @@ function drawTrackRun(x,y,w,th){
   for(let xx=x;xx<x+w;xx+=tw)ctx.drawImage(m,xx,y,tw,th);
   ctx.restore();
 }
-const EDIT_TXT={tiv_45:"45",quai:"Station"}; // images dont le texte se modifie (vitesse du TIV, nom de station)
+const EDIT_TXT={tiv_45:"45",quai:"Station",text:"Texte"}; // images dont le texte se modifie (vitesse du TIV, nom de station)
 // Quai de station dessiné : mur carrelé, plaque nominative, bordure de quai
 function drawQuai(s){
   const {x,y,w,h}=s,name=((s.txt==null?EDIT_TXT.quai:s.txt)||"").toString().trim()||" ";
@@ -2389,7 +2403,7 @@ function addCustomSticker(src,w0,h0,name){
   stkSel=stickers.length-1;renderStkList();scheduleDraw();touchDraft();
 }
 function ensureBankImg(k){
-  if(k==="custom")return;
+  if(k==="custom"||isDrawn(k))return;
   if(bankImgs[k])return;
   bankImgs[k]="loading";
   loadImg("banque/"+k+".png").then(img=>{bankImgs[k]=img;scheduleDraw();}).catch(()=>{delete bankImgs[k];});
@@ -2442,18 +2456,28 @@ function renderStkList(){
   stickers.forEach((s,i)=>{
     const b=bankItem(s.k);
     const row=el("div","stk-row"+(i===stkSel?" sel":""));
-    const im=el("img");im.src=s.k==="custom"?s.src:"banque/"+s.k+".png";im.alt="";
-    const nm=el("span","stk-name",s.k==="custom"?(s.name||"Image importée"):(b?b.label:s.k));
+    let im;
+    if(isDrawn(s.k)){im=el("span","stk-ico",DRAWN_ICON[s.k]);im.style.color=s.color||"#0A0082";}
+    else{im=el("img");im.src=s.k==="custom"?s.src:"banque/"+s.k+".png";im.alt="";}
+    const nm=el("span","stk-name",s.k==="custom"?(s.name||"Image importée"):(isDrawn(s.k)?DRAWN_LABEL[s.k]:(b?b.label:s.k)));
     if(EDIT_TXT[s.k]!=null){
-      const isQ=s.k==="quai";
-      nm.textContent=isQ?"Quai":"TIV";
-      const inp=el("input","stk-txt"+(isQ?" wide":""));inp.type="text";inp.inputMode=isQ?"text":"numeric";inp.maxLength=isQ?40:3;inp.value=s.txt==null?EDIT_TXT[s.k]:s.txt;
-      inp.setAttribute("aria-label",isQ?"Nom de la station":"Vitesse du TIV");
+      const isQ=s.k==="quai"||s.k==="text";
+      nm.textContent=s.k==="quai"?"Quai":(s.k==="text"?"":"TIV");
+      const inp=el("input","stk-txt"+(isQ?" wide":""));inp.type="text";inp.inputMode=isQ?"text":"numeric";inp.maxLength=s.k==="text"?80:(isQ?40:3);inp.value=s.txt==null?EDIT_TXT[s.k]:s.txt;
+      inp.setAttribute("aria-label",s.k==="quai"?"Nom de la station":(s.k==="text"?"Texte":"Vitesse du TIV"));
       inp.addEventListener("input",()=>{s.txt=inp.value;scheduleDraw();touchDraft();});
       inp.addEventListener("focus",()=>{stkSel=i;row.classList.add("sel");scheduleDraw();});
       // le clic dans la case ne doit pas reconstruire la liste (sinon la saisie est perdue)
       ["click","pointerdown","mousedown","touchstart"].forEach(ev=>inp.addEventListener(ev,e=>e.stopPropagation()));
       nm.appendChild(inp);
+    }
+    if(s.k==="arrow"||s.k==="text"){
+      const sel=el("select","stk-color");sel.setAttribute("aria-label","Couleur");
+      DRAW_COLORS.forEach(([v,l])=>{const o=document.createElement("option");o.value=v;o.textContent=l;sel.appendChild(o);});
+      sel.value=s.color||(s.k==="arrow"?"#E2001A":"#0A0082");
+      ["click","pointerdown","mousedown","touchstart"].forEach(ev=>sel.addEventListener(ev,e=>e.stopPropagation()));
+      sel.addEventListener("change",()=>{s.color=sel.value;im.style.color=s.color;scheduleDraw();touchDraft();});
+      nm.appendChild(sel);
     }
     nm.addEventListener("click",()=>{stkSel=i;renderStkList();scheduleDraw();});
     const mk=(t,lab,fn)=>{const x=el("button","btn small",t);x.type="button";x.setAttribute("aria-label",lab);x.addEventListener("click",fn);return x;};
@@ -2466,9 +2490,11 @@ function renderStkList(){
   });
 }
 function drawStickers(){
+  if(typeof drawDrawPreview==="function"&&!_cleanRender)drawDrawPreview();
   stickers.forEach((s,i)=>{
     let img=stkImg(s);
-    if(s.k==="quai"){drawQuai(s);}
+    if(isDrawn(s.k)){drawDrawnSticker(s);}
+    else if(s.k==="quai"){drawQuai(s);}
     else if(EDIT_TXT[s.k]!=null){
       // TIV : panneau noir, vitesse en blanc (modifiable)
       const t=(s.txt==null?EDIT_TXT[s.k]:s.txt).toString().trim()||" ";
@@ -2524,6 +2550,120 @@ function hitSticker(p){
   }
   return null;
 }
+/* ── Outils de dessin : flèche, voie tracée à main levée, texte ──────────
+   Ces éléments sont des « images » comme les autres (déplacer, redimensionner, retirer).
+   Les points sont stockés relativement au cadre (0..1) : déplacer/redimensionner reste simple. */
+const DRAWN=new Set(["arrow","track_path","text"]);
+const isDrawn=k=>DRAWN.has(k);
+const DRAW_COLORS=[["#E2001A","Rouge"],["#0A0082","Bleu RATP"],["#1e2230","Noir"],["#00AA91","Vert"],["#F0AA00","Jaune"]];
+const DRAWN_LABEL={arrow:"Flèche",track_path:"Voie tracée",text:"Texte"};
+const DRAWN_ICON={arrow:"➜",track_path:"〰",text:"T"};
+let drawTool=null,drawPts=null;
+function chaikin(P,n){for(let k=0;k<n;k++){if(P.length<3)return P;const Q=[P[0]];for(let i=0;i<P.length-1;i++){const a=P[i],b=P[i+1];Q.push({x:a.x*.75+b.x*.25,y:a.y*.75+b.y*.25},{x:a.x*.25+b.x*.75,y:a.y*.25+b.y*.75});}Q.push(P[P.length-1]);P=Q;}return P;}
+function resample(P,step){
+  const out=[];if(P.length<2)return P.slice();
+  let acc=0;out.push({...P[0]});
+  for(let i=1;i<P.length;i++){let a=P[i-1],b=P[i];let d=Math.hypot(b.x-a.x,b.y-a.y);
+    while(acc+d>=step){const t=(step-acc)/d;const q={x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t};out.push(q);a=q;d=Math.hypot(b.x-a.x,b.y-a.y);acc=0;}
+    acc+=d;}
+  out.push({...P[P.length-1]});return out;
+}
+function drawArrowShape(a,b,color,lw){
+  const ang=Math.atan2(b.y-a.y,b.x-a.x),hl=lw*3.6,hw=lw*2.4;
+  const bx=b.x-Math.cos(ang)*hl*0.9,by=b.y-Math.sin(ang)*hl*0.9;
+  ctx.save();ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=lw;ctx.lineCap="round";
+  ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(bx,by);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(b.x,b.y);
+  ctx.lineTo(b.x-Math.cos(ang)*hl+Math.cos(ang+Math.PI/2)*hw,b.y-Math.sin(ang)*hl+Math.sin(ang+Math.PI/2)*hw);
+  ctx.lineTo(b.x-Math.cos(ang)*hl-Math.cos(ang+Math.PI/2)*hw,b.y-Math.sin(ang)*hl-Math.sin(ang+Math.PI/2)*hw);
+  ctx.closePath();ctx.fill();ctx.restore();
+}
+function drawTrackShape(P,th){
+  if(P.length<2)return;
+  const R=resample(P,3);
+  const nrm=i=>{const a=R[Math.max(0,i-3)],b=R[Math.min(R.length-1,i+3)];const dx=b.x-a.x,dy=b.y-a.y,l=Math.hypot(dx,dy)||1;return{x:-dy/l,y:dx/l};};
+  ctx.save();ctx.lineCap="butt";
+  // traverses
+  const sp=th*0.62,every=Math.max(1,Math.round(sp/3));
+  ctx.strokeStyle="#8a6c52";ctx.lineWidth=th*0.26;
+  for(let i=Math.floor(every/2);i<R.length;i+=every){const n=nrm(i),p=R[i];ctx.beginPath();ctx.moveTo(p.x-n.x*th*0.78,p.y-n.y*th*0.78);ctx.lineTo(p.x+n.x*th*0.78,p.y+n.y*th*0.78);ctx.stroke();}
+  // rails
+  [-1,1].forEach(sg=>{
+    ctx.beginPath();
+    R.forEach((p,i)=>{const n=nrm(i),x=p.x+n.x*th*0.5*sg,y=p.y+n.y*th*0.5*sg;i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
+    ctx.strokeStyle="#1b2a5a";ctx.lineWidth=th*0.2;ctx.lineJoin="round";ctx.stroke();
+    ctx.strokeStyle="#aab1bc";ctx.lineWidth=th*0.1;ctx.stroke();
+  });
+  ctx.restore();
+}
+function drawTextSticker(s){
+  const t=((s.txt==null?"Texte":s.txt)||"").toString()||" ";
+  const fs=s.h*0.78;ctx.save();ctx.font=`800 ${fs}px Lato, Arial, sans-serif`;
+  const tw=ctx.measureText(t).width;s.w=Math.max(s.h*0.6,tw+s.h*0.2);
+  ctx.fillStyle=s.color||"#0A0082";ctx.textAlign="left";ctx.textBaseline="middle";ctx.fillText(t,s.x+s.h*0.1,s.y+s.h/2);ctx.restore();
+}
+function drawDrawnSticker(s){
+  if(s.k==="text"){drawTextSticker(s);return;}
+  const P=s.pts.map(p=>({x:s.x+p[0]*s.w,y:s.y+p[1]*s.h}));
+  if(s.k==="arrow")drawArrowShape(P[0],P[P.length-1],s.color||"#E2001A",s.lw||18);
+  else drawTrackShape(P,s.th||46);
+}
+function drawDrawPreview(){
+  if(!drawTool||!drawPts||drawPts.length<2)return;
+  if(drawTool==="arrow")drawArrowShape(drawPts[0],drawPts[drawPts.length-1],"#E2001A",18);
+  else drawTrackShape(chaikin(drawPts,2),46);
+}
+function pathSticker(k,P,pad,extra){
+  let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;P.forEach(p=>{x0=Math.min(x0,p.x);y0=Math.min(y0,p.y);x1=Math.max(x1,p.x);y1=Math.max(y1,p.y);});
+  x0-=pad;y0-=pad;x1+=pad;y1+=pad;const w=Math.max(1,x1-x0),h=Math.max(1,y1-y0);
+  return {k,x:x0,y:y0,w,h,pts:P.map(p=>[(p.x-x0)/w,(p.y-y0)/h]),...extra};
+}
+function setDrawTool(t){
+  drawTool=drawTool===t?null:t;drawPts=null;
+  document.body.classList.toggle("drawing",!!drawTool);
+  ["dtArrow","dtTrack"].forEach(id=>$(id).setAttribute("aria-pressed",String(($(id).dataset.t)===drawTool)));
+  $("drawHint").classList.toggle("hidden",!drawTool);
+  $("drawHintTxt").textContent=drawTool==="arrow"?"Tracez la flèche sur l'aperçu : appuyez au départ et glissez jusqu'à la pointe.":"Dessinez la voie sur l'aperçu avec le doigt ou la souris.";
+  if(drawTool){const d=$("dockBody");if(d.classList.contains("collapsed"))$("dockToggle").click();$("previewDock").scrollIntoView({behavior:"smooth",block:"start"});}
+  scheduleDraw();
+}
+$("dtArrow").addEventListener("click",()=>setDrawTool("arrow"));
+$("dtTrack").addEventListener("click",()=>setDrawTool("track_path"));
+$("drawCancel").addEventListener("click",()=>setDrawTool(drawTool));
+$("dtText").addEventListener("click",()=>{
+  const h=110,x=W/2-200,y=Math.round(H*0.55);
+  stickers.push({k:"text",txt:"Texte",color:"#0A0082",x,y,w:400,h});
+  stkSel=stickers.length-1;renderStkList();scheduleDraw();touchDraft();
+  setTimeout(()=>{const ins=$("stkList").querySelectorAll(".stk-txt");const inp=ins[ins.length-1];if(inp){inp.focus();inp.select();}},50);
+});
+els.canvas.addEventListener("pointerdown",e=>{
+  if(!drawTool)return;
+  e.preventDefault();e.stopImmediatePropagation();
+  try{els.canvas.setPointerCapture(e.pointerId);}catch(err){}
+  drawPts=[cvPt(e)];
+},{capture:true});
+els.canvas.addEventListener("pointermove",e=>{
+  if(!drawTool||!drawPts)return;
+  e.preventDefault();e.stopImmediatePropagation();
+  const p=cvPt(e),l=drawPts[drawPts.length-1];
+  if(drawTool==="arrow"){drawPts=[drawPts[0],p];}
+  else if(Math.hypot(p.x-l.x,p.y-l.y)>10)drawPts.push(p);
+  if(_raf)cancelAnimationFrame(_raf);_raf=requestAnimationFrame(()=>{_raf=null;draw();});
+},{capture:true});
+function endDraw(e){
+  if(!drawTool||!drawPts)return;
+  e.stopImmediatePropagation();
+  const P=drawPts,t=drawTool;drawPts=null;
+  const a=P[0],b=P[P.length-1],len=Math.hypot(b.x-a.x,b.y-a.y);
+  if(t==="arrow"&&len>40)stickers.push(pathSticker("arrow",[a,b],60,{color:"#E2001A",lw:18}));
+  else if(t==="track_path"&&P.length>2){
+    const S=chaikin(P,3);stickers.push(pathSticker("track_path",S,50,{th:46}));
+  }else{toast(t==="arrow"?"Flèche trop courte : glissez plus loin.":"Tracé trop court : dessinez un peu plus.");draw();return;}
+  stkSel=stickers.length-1;setDrawTool(t);renderStkList();draw();touchDraft();
+}
+els.canvas.addEventListener("pointerup",endDraw,{capture:true});
+els.canvas.addEventListener("pointercancel",endDraw,{capture:true});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&drawTool)setDrawTool(drawTool);});
 els.canvas.addEventListener("pointerdown",e=>{
   if(!stickers.length||(editMode&&_mode!=="select"))return;
   const p=cvPt(e),h=hitSticker(p);
