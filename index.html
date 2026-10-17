@@ -498,8 +498,8 @@
   .home-act.primary{background:var(--night);border-color:var(--night);}
   .stepper li.done .num{background:var(--teal);border-color:var(--teal);}
   .dock-live::before{background:var(--teal);}
-  /* liseré coloré du bandeau : couleurs secondaires de la charte */
-  .hero::after{background:linear-gradient(90deg,#00AA91 0 20%,#C8D741 20% 40%,#F0AA00 40% 60%,#EBA0C8 60% 80%,#D72864 80% 100%) !important;height:5px !important;}
+  /* pas de liseré entre le bandeau bleu et le fond */
+  .hero::after{display:none !important;}
   :focus-visible{outline-color:var(--ratp-yellow);}
 </style>
 </head>
