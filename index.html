@@ -3163,13 +3163,13 @@ function drawStructTitle(titre,yB,ts,maxW){
   let k=ts*SCALE;
   const INK="#0b1533",RED="#FF0000";
   const M=()=>{
-    const o={hf:54*k,sf:31*k,vf:30*k,pad:34*k,ic:30*k,gap:30*k,arW:52*k,arG:16*k,hg:18*k};
+    const o={px:22*k,hf:54*k,sf:31*k,vf:30*k,pad:34*k,ic:30*k,gap:30*k,arW:52*k,arG:16*k,hg:18*k};
     ctx.font=`900 ${o.hf}px Lato, Arial`;o.hw=head?ctx.measureText(head).width:0;
     o.r1w=head?o.ic*2+o.hg+o.hw:0;
     ctx.font=`500 ${o.sf}px Lato, Arial`;o.preW=ctx.measureText("Entre ").width;
-    o.segW=segs.map(l=>{const {names}=splitSep(l);ctx.font=`700 ${o.sf}px Lato, Arial`;let w=0;names.forEach((x,i)=>{w+=ctx.measureText(x).width;if(i<names.length-1)w+=o.arW+2*o.arG;});return w;});
+    o.segW=segs.map(l=>{const {names}=splitSep(l);ctx.font=`700 ${o.sf}px Lato, Arial`;let w=0;names.forEach((x,i)=>{w+=ctx.measureText(x).width+2*o.px;if(i<names.length-1)w+=o.arW+2*o.arG;});return w;});
     o.lw=Math.max(...o.segW,0);
-    o.ent=segs.some(l=>splitSep(l).names.length>1);o.eh=o.ent?o.sf*1.25:0;o.lh=segs.length*o.sf*1.45;
+    o.ent=segs.some(l=>splitSep(l).names.length>1);o.eh=o.ent?o.sf*1.25:0;o.lh=segs.length*o.sf*2.05;
     if(vRow){ctx.font=`800 ${o.vf}px Lato, Arial`;o.tagW=ctx.measureText(vTag).width+o.vf*1.1;ctx.font=`500 ${o.vf}px Lato, Arial`;o.restW=vRest?ctx.measureText(vRest).width+o.vf*0.7:0;o.rw=o.gap*2+3*k+o.tagW+o.restW;}else o.rw=0;
     o.r2w=o.lw+o.rw;
     o.w=o.pad*2+Math.max(o.r1w,o.r2w);
@@ -3192,13 +3192,19 @@ function drawStructTitle(titre,yB,ts,maxW){
   const lx=W/2-o.r2w/2;let ly=y;
   ctx.textAlign="left";
   segs.forEach((l,si)=>{
-    const {names,seps}=splitSep(l);let x=lx+(o.lw-o.segW[si])/2;const yy=ly+o.sf*0.72;
+    const {names,seps}=splitSep(l);let x=lx+(o.lw-o.segW[si])/2;const yy=ly+o.sf*1.02;
     ctx.font=`700 ${o.sf}px Lato, Arial`;
-    names.forEach((part,i)=>{ctx.fillStyle=INK;ctx.fillText(part,x,yy);x+=ctx.measureText(part).width;
+    names.forEach((part,i)=>{
+      // plaque nominative de station : bleu RATP, liseré clair, texte blanc
+      const tw=ctx.measureText(part).width,pw=tw+2*o.px,ph=o.sf*1.6;
+      ctx.fillStyle="rgba(0,0,0,.18)";rrect(x+2*k,yy-ph/2+3*k,pw,ph,4*k);ctx.fill();
+      ctx.fillStyle="#0A0082";rrect(x,yy-ph/2,pw,ph,4*k);ctx.fill();
+      ctx.strokeStyle="rgba(255,255,255,.55)";ctx.lineWidth=1.5*k;rrect(x+3*k,yy-ph/2+3*k,pw-6*k,ph-6*k,3*k);ctx.stroke();
+      ctx.fillStyle="#fff";ctx.fillText(part,x+o.px,yy+o.sf*0.04);x+=pw;
       if(i<names.length-1){x+=o.arG;const sp=seps[i];
         if(sp==="→")drawOneArrow(x,yy,o.arW,o.sf*0.85,RED,1);else if(sp==="←")drawOneArrow(x,yy,o.arW,o.sf*0.85,RED,-1);else drawDblArrow(x,yy,o.arW,o.sf*0.85,RED);
         x+=o.arW+o.arG;}});
-    ly+=o.sf*1.45;
+    ly+=o.sf*2.05;
   });
   if(vRow){
     const cy=y+o.lh/2;let rx=lx+o.lw+o.gap;
