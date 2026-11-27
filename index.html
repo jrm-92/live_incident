@@ -305,6 +305,15 @@
   .dock-live::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--ok);}
   .dock-body.collapsed{display:none;}
   .dock-foot{font-size:12px;color:var(--muted);margin-top:6px;}
+  .img-strip{display:flex;gap:8px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;padding:10px 2px 8px;margin-top:8px;border-top:1px solid var(--border);}
+  .img-strip.hidden{display:none;}
+  .img-strip::-webkit-scrollbar{height:4px;}
+  .strip-item{flex:0 0 auto;width:82px;height:82px;scroll-snap-align:start;border:1.5px solid var(--border-strong);border-radius:10px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px 4px;font-size:10px;font-weight:700;color:var(--ink);text-align:center;line-height:1.1;cursor:pointer;}
+  .strip-item:active{background:var(--panel-2);border-color:var(--brand);}
+  .strip-item img{max-width:100%;max-height:40px;object-fit:contain;}
+  .strip-item span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .strip-item.imp{border-style:dashed;color:var(--brand);font-size:11px;}
+  .strip-item.imp b{font-size:24px;line-height:1;}
   .viewport{border-radius:10px;overflow:hidden;position:relative;}
   .frame{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--border-strong);background:#fff;}
   canvas#preview{width:100%;height:auto;display:block;touch-action:auto;}
@@ -897,6 +906,7 @@
   <button class="fp-btn fp-del" id="fdClear" title="Effacer tout le dessin">🗑</button>
 </div><button type="button" id="bubbleDelOverlay" onclick="removeElement('bubble')" title="Supprimer la bulle" style="display:none;position:absolute;pointer-events:auto;width:28px;height:28px;background:#e2001a;color:#fff;border:none;border-radius:50%;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.5);align-items:center;justify-content:center;line-height:1;padding:0;transform:translate(-50%,-50%);z-index:30;">✕</button></div></div>
           </div>
+          <div class="img-strip hidden" id="imgStrip" aria-label="Images à ajouter au visuel"></div>
           <div class="dock-foot" id="dockFoot">Aperçu réduit · fichier exporté : 3840 × 2160 px</div>
         </div>
       </div>
@@ -2090,6 +2100,7 @@ function renderStep(){
   setHint(v.block[0]||"");
   if(step===2)updateStep2Texts();
   if(step===3){updateTextHints();refreshInterDropdown();}
+  {const st=$("imgStrip");if(st)st.classList.toggle("hidden",step!==3);}
   if(step===4)renderRecap();
   updateStep1UI();updateTopCtx();
   $("topTitle").textContent=(curModel()&&view==="app")?curModel().label:"";
@@ -2530,11 +2541,25 @@ function ensureBankImg(k){
   loadImg("banque/"+k+".png").then(img=>{bankImgs[k]=img;scheduleDraw();}).catch(()=>{delete bankImgs[k];});
 }
 function buildBank(){
+  buildStrip();
   const g=$("bankGrid");if(!g)return;g.innerHTML="";
   let cat=null;
   BANK.forEach(b=>{
     if(b.cat!==cat){cat=b.cat;g.appendChild(el("div","bank-cat",cat));}
     const bt=el("button","bank-item");bt.type="button";bt.title="Ajouter : "+b.label;
+    const im=el("img");im.src="banque/"+b.k+".png";im.alt="";im.loading="lazy";
+    bt.appendChild(im);bt.appendChild(el("span",null,b.label));
+    bt.addEventListener("click",()=>addSticker(b.k));
+    g.appendChild(bt);
+  });
+}
+// Bande d'images défilante sous l'aperçu (étape 3) : un toucher = image ajoutée
+function buildStrip(){
+  const g=$("imgStrip");if(!g)return;g.innerHTML="";
+  const imp=el("label","strip-item imp");imp.setAttribute("for","userImgInput");
+  imp.appendChild(el("b",null,"＋"));imp.appendChild(el("span",null,"Mes images"));g.appendChild(imp);
+  BANK.forEach(b=>{
+    const bt=el("button","strip-item");bt.type="button";bt.title="Ajouter : "+b.label;bt.setAttribute("aria-label","Ajouter : "+b.label);
     const im=el("img");im.src="banque/"+b.k+".png";im.alt="";im.loading="lazy";
     bt.appendChild(im);bt.appendChild(el("span",null,b.label));
     bt.addEventListener("click",()=>addSticker(b.k));
