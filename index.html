@@ -3055,7 +3055,7 @@ function drawSPBadge(name,x,yLine,isTerm,below){
   let cx=x,cy;
   cy=below?yLine-gap-bh/2:yLine+gap+bh/2;
   ctx.save();
-  rrect(cx-bw/2,cy-bh/2,bw,bh,7*SCALE);ctx.fillStyle="#1f5fd0";ctx.fill();
+  rrect(cx-bw/2,cy-bh/2,bw,bh,7*SCALE);ctx.fillStyle="#0A0082";ctx.fill();
   ctx.lineWidth=1.6*SCALE;ctx.strokeStyle="#fff";ctx.stroke();
   ctx.fillStyle="#fff";ctx.font=`900 ${20*SCALE}px Lato, Arial`;ctx.textAlign="center";ctx.textBaseline="middle";
   ctx.fillText("SP",cx,cy+1*SCALE);
