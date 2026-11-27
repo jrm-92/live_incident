@@ -519,6 +519,11 @@
   .stk-tools .btn.small{min-height:40px;padding:6px 10px;font-size:13px;}
   .stk-selinfo{margin:0;font-size:13px;color:#1f5fd0;font-weight:700;}
   .stk-check{width:22px;height:22px;flex:none;accent-color:#1f5fd0;margin:0;}
+  .voie-box{margin:4px 0 12px;}
+  .voie-lbl{display:block;font-size:14px;font-weight:800;color:var(--night);margin-bottom:6px;}
+  #voiePick button b{color:#E2001A;font-size:18px;margin-left:4px;}
+  #voiePick button[aria-pressed="true"] b{color:#fff;}
+  .voie-help{margin:6px 0 0;font-size:13px;color:var(--muted);}
 </style>
 </head>
 <body>
@@ -769,6 +774,15 @@
             <button type="button" data-mode="stations" aria-pressed="false">Stations une à une</button>
           </div>
           <div class="thermo-status" id="thermoStatus" role="status" aria-live="polite"></div>
+          <div class="voie-box hidden" id="voieBox">
+            <span class="voie-lbl">Voie concernée</span>
+            <div class="seg" id="voiePick" role="group" aria-label="Voie concernée">
+              <button type="button" data-v="1" aria-pressed="false">Voie 1 <b>→</b></button>
+              <button type="button" data-v="2" aria-pressed="false">Voie 2 <b>←</b></button>
+              <button type="button" data-v="both" aria-pressed="true">Les deux <b>↔</b></button>
+            </div>
+            <p class="voie-help" id="voieHelp"></p>
+          </div>
           <div class="thermo" id="zlist"></div>
           <div class="tools-row">
             <button class="btn small" id="selNone" type="button">Réinitialiser la sélection</button>
@@ -967,7 +981,7 @@ const SCALE=2,W=1920*SCALE,H=1080*SCALE,NAVY="#000082",RED_SEG="#E2001A",HDR=124
 const TYPES_AVEC_INTER=["Service de sécurité","Service de sécurité sur ordre","Ralentissement provisoire"];
 const KNOWN=["ralentissement_provisoire.png","service_securite.png","service_securite_sur_ordre.png","interruption_trafic.png","station_fermee.png"];
 let currentLineId=null,STATIONS=[],LINE_COLOR="#B7E600";
-const assets={};let interstations=[];const selectedStations=new Set();let trafficSegs=[];
+const assets={};let interstations=[];const selectedStations=new Set();let trafficSegs=[];let trafficVoie="both"; // "1" (gauche → droite), "2" (droite → gauche), "both"
 
 function hexToRgb(h){const m=h.replace("#","");return{r:parseInt(m.substr(0,2),16),g:parseInt(m.substr(2,2),16),b:parseInt(m.substr(4,2),16)};}
 function lighten(hex,a){const c=hexToRgb(hex);const f=v=>Math.round(v+(255-v)*a);return`rgb(${f(c.r)},${f(c.g)},${f(c.b)})`;}
@@ -1707,6 +1721,7 @@ function applyModelUI(){
   if(!pickTouched)setPickMode(k==="traffic"?"troncon":"stations");
   refreshInterDropdown();
   updateStep2Texts();
+  updateVoieUI();
 }
 function setLine(id){
   currentLineId=id;STATIONS=LINES[id].stations;LINE_COLOR=LINES[id].color;
@@ -1855,6 +1870,17 @@ function updateStep2Texts(){
   $("thermoBox").classList.toggle("hidden",k==="free");
   $("freeNote").classList.toggle("hidden",k!=="free");
 }
+// Voie concernée (incidents de trafic) : 1 = de gauche à droite sur le plan, 2 = de droite à gauche
+function lineEnds(){const L=LINES[currentLineId];if(!L||L.fork)return null;const a=L.stations[0],b=L.stations[L.stations.length-1];return L.forkLeft?[b,a]:[a,b];}
+function updateVoieUI(){
+  const m=curModel(),show=!!(m&&m.kind==="traffic");
+  $("voieBox").classList.toggle("hidden",!show);if(!show)return;
+  $("voiePick").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===trafficVoie)));
+  const e=lineEnds();
+  $("voieHelp").textContent=trafficVoie==="1"?"Voie 1 : sens de circulation de gauche à droite"+(e?" (direction "+e[1]+")":"")+".":
+    trafficVoie==="2"?"Voie 2 : sens de circulation de droite à gauche"+(e?" (direction "+e[0]+")":"")+".":"Les deux voies sont concernées.";
+}
+$("voiePick").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;trafficVoie=b.dataset.v;updateVoieUI();afterChange();touchDraft();});
 $("pickMode").addEventListener("click",e=>{
   const b=e.target.closest("button");if(!b)return;
   pickTouched=true;setPickMode(b.dataset.mode);updateStep2Texts();updateThermo();
@@ -2066,10 +2092,14 @@ function autoTitle(){
   const m=curModel();
   if(!m||m.kind!=="traffic"||selectedStations.size<2)return "";
   const head=m.v==="Interruption de trafic"?"Trafic interrompu":m.label;
-  const L=sortedSegs().filter(([a,b])=>a!==b);
-  if(L.length)return head+"\n"+L.map(([a,b])=>a+" ↔ "+b).join("\n");
-  const s=[...selectedStations].sort((x,y)=>STATIONS.indexOf(x)-STATIONS.indexOf(y));
-  return head+"\n"+s[0]+" ↔ "+s[s.length-1];
+  const arr=trafficVoie==="1"?" → ":trafficVoie==="2"?" ← ":" ↔ ";
+  const flip=!!LINES[currentLineId].forkLeft; // plan inversé : on écrit les stations dans l'ordre affiché
+  const pair=([a,b])=>(flip?b+arr+a:a+arr+b);
+  let L=sortedSegs().filter(([a,b])=>a!==b);
+  if(!L.length){const s=[...selectedStations].sort((x,y)=>STATIONS.indexOf(x)-STATIONS.indexOf(y));L=[[s[0],s[s.length-1]]];}
+  const e=lineEnds();
+  const vl=trafficVoie==="1"?"Voie 1"+(e?" · direction "+e[1]:""):trafficVoie==="2"?"Voie 2"+(e?" · direction "+e[0]:""):"";
+  return head+"\n"+L.map(pair).join("\n")+(vl?"\n"+vl:"");
 }
 function syncAutoTitle(){
   const t=autoTitle(),cur=els.titre.value.trim();
@@ -2097,6 +2127,7 @@ function renderRecap(){
   const add=(k,v)=>{dl.appendChild(el("dt",null,k));dl.appendChild(el("dd",null,v));};
   add("Modèle",m?m.label:"—");add("Ligne","Ligne "+currentLineId);
   const sorted=[...selectedStations].sort((a,b)=>STATIONS.indexOf(a)-STATIONS.indexOf(b));
+  if(m&&m.kind==="traffic")add("Voie",trafficVoie==="1"?"Voie 1 (→)":trafficVoie==="2"?"Voie 2 (←)":"Les deux voies");
   if(m&&m.kind==="traffic"&&trafficSegs.length>1)add("Tronçons",sortedSegs().map(([a,b])=>a===b?a:a+" → "+b).join(" ; "));
   else if(m&&m.kind!=="free")add(m.kind==="served"?"Desservies":"Stations",sorted.length?(sorted.length>6?sorted.slice(0,6).join(", ")+" … (+"+(sorted.length-6)+")":sorted.join(", ")):"Aucune");
   add("Titre",els.titre.value.trim()||"—");
@@ -2114,7 +2145,7 @@ function renderRecap(){
 
 /* ── Brouillons et visuels récents (stockage local de l'appareil) ─────── */
 function snapshot(){
-  return{lineId:currentLineId,type:els.type.value,titre:els.titre.value,infos:els.infos.value,stations:[...selectedStations],segs:trafficSegs.map(x=>[...x]),inter:currentInterName()||desiredInter,
+  return{lineId:currentLineId,type:els.type.value,titre:els.titre.value,infos:els.infos.value,stations:[...selectedStations],segs:trafficSegs.map(x=>[...x]),voie:trafficVoie,inter:currentInterName()||desiredInter,
     off:JSON.parse(JSON.stringify(OFF)),hidden:[...HIDDEN],textBoxes:textBoxes.map(b=>({...b})),
     strokes:strokes.map(s=>({color:s.color,w:s.w,pts:s.pts.map(p=>({x:Math.round(p.x),y:Math.round(p.y)}))})),stickers:stickers.map(s=>({...s})),step};
 }
@@ -2156,7 +2187,7 @@ function resetEdits(){
 function newVisual(){
   flushDraft();
   resetEdits();
-  curDraftId=null;modelChosen=false;pickTouched=false;lastAutoTitle="";
+  curDraftId=null;modelChosen=false;pickTouched=false;lastAutoTitle="";trafficVoie="both";
   els.type.value="";els.titre.value="";els.infos.value="";desiredInter="";
   currentLineId=null;STATIONS=[];clearSegs();rows.clear();els.zlist.innerHTML="";
   els.titre.placeholder="Titre du visuel";
@@ -2180,6 +2211,7 @@ function loadSnapshot(s,draftId,startStep){
   trafficSegs=(s.segs||[]).filter(x=>Array.isArray(x)&&STATIONS.includes(x[0])&&STATIONS.includes(x[1])).map(x=>[x[0],x[1]]);
   if(!trafficSegs.length&&m&&m.kind==="traffic"&&selectedStations.size===2)trafficSegs=[[...selectedStations]];
   if(trafficSegs.length)syncSelFromSegs();
+  trafficVoie=["1","2","both"].includes(s.voie)?s.voie:"both";
   els.titre.value=s.titre||"";els.infos.value=s.infos||"";lastAutoTitle=autoTitle()===els.titre.value.trim()?els.titre.value.trim():"";desiredInter=s.inter||"";
   applyModelUI();updateStep1UI();updateTextHints();
   curDraftId=draftId;
@@ -3026,14 +3058,25 @@ function drawDblArrow(x,cy,w,fs,color){
   ctx.closePath();ctx.fill();ctx.restore();
 }
 // Titre structuré : 1re ligne en rouge, puis une ligne par tronçon « A ↔ B » (noms en bleu RATP, flèche rouge)
+function drawOneArrow(x,cy,w,fs,color,dir){
+  const t=Math.max(3,fs*0.13),hl=fs*0.42,hh=fs*0.36;
+  ctx.save();ctx.translate(x+w/2,cy);if(dir<0)ctx.scale(-1,1);ctx.translate(-w/2,0);
+  ctx.fillStyle=color;ctx.beginPath();
+  ctx.moveTo(0,-t/2);ctx.lineTo(w-hl,-t/2);ctx.lineTo(w-hl,-hh);ctx.lineTo(w,0);ctx.lineTo(w-hl,hh);ctx.lineTo(w-hl,t/2);ctx.lineTo(0,t/2);
+  ctx.closePath();ctx.fill();ctx.restore();
+}
+const SEP_RE=/\s*(↔|→|←)\s*/;
+function splitSep(l){const parts=l.split(SEP_RE);const names=[],seps=[];parts.forEach((x,i)=>i%2?seps.push(x):names.push(x.trim()));return{names,seps};}
 function drawStructTitle(titre,yB,ts,maxW){
   const rows=titre.split("\n").map(l=>l.replace(/\s+/g," ").trim()).filter(Boolean);
   if(!rows.length)return yB;
-  const head=rows[0].includes("↔")?null:rows[0];
-  const segs=(head?rows.slice(1):rows);
+  const head=SEP_RE.test(rows[0])?null:rows[0];
+  let segs=(head?rows.slice(1):rows);
+  const vRow=segs.length>1&&/^voies?\b/i.test(segs[segs.length-1])&&!SEP_RE.test(segs[segs.length-1])?segs[segs.length-1]:null;
+  if(vRow)segs=segs.slice(0,-1);
   let hfs=50*SCALE*ts,sfs=42*SCALE*ts;
   const gapA=()=>sfs*0.45,arW=()=>sfs*1.7;
-  const widthOf=(l,fs,w8)=>{ctx.font=`${w8} ${fs}px Lato, Arial`;const p=l.toUpperCase().split("↔").map(x=>x.trim());
+  const widthOf=(l,fs,w8)=>{ctx.font=`${w8} ${fs}px Lato, Arial`;const p=splitSep(l.toUpperCase()).names;
     let w=0;p.forEach((x,i)=>{w+=ctx.measureText(x).width;if(i<p.length-1)w+=arW()+2*gapA();});return w;};
   for(let k=0;k<40;k++){
     const wMax=Math.max(head?widthOf(head,hfs,900):0,...segs.map(l=>widthOf(l,sfs,800)));
@@ -3043,13 +3086,26 @@ function drawStructTitle(titre,yB,ts,maxW){
   yB+=hfs*0.55; // marge sous la ligne de métro
   if(head){ctx.font=`900 ${hfs}px Lato, Arial`;ctx.fillStyle="#E2001A";ctx.textAlign="center";ctx.fillText(head.toUpperCase(),W/2,yB);yB+=hfs*1.05+sfs*0.55;}
   segs.forEach(l=>{
-    const p=l.toUpperCase().split("↔").map(x=>x.trim());
+    const {names:p,seps}=splitSep(l.toUpperCase());
     const tw=widthOf(l,sfs,800);let x=W/2-tw/2;
     ctx.font=`800 ${sfs}px Lato, Arial`;ctx.textAlign="left";
     p.forEach((part,i)=>{ctx.fillStyle="#0A0082";ctx.fillText(part,x,yB);x+=ctx.measureText(part).width;
-      if(i<p.length-1){x+=gapA();drawDblArrow(x,yB,arW(),sfs,"#E2001A");x+=arW()+gapA();}});
+      if(i<p.length-1){x+=gapA();const sp=seps[i];
+        if(sp==="→")drawOneArrow(x,yB,arW(),sfs,"#E2001A",1);else if(sp==="←")drawOneArrow(x,yB,arW(),sfs,"#E2001A",-1);else drawDblArrow(x,yB,arW(),sfs,"#E2001A");
+        x+=arW()+gapA();}});
     yB+=sfs*1.35;
   });
+  if(vRow){
+    // pastille « VOIE 1 / VOIE 2 » + direction
+    const vfs=sfs*0.72;ctx.font=`800 ${vfs}px Lato, Arial`;
+    const m=vRow.match(/^(voies?\s*[0-9]+(?:\s*et\s*[0-9]+)?)(.*)$/i),tag=(m?m[1]:vRow).toUpperCase(),rest=(m?m[2]:"").replace(/^\s*·\s*/,"").toUpperCase();
+    const tagW=ctx.measureText(tag).width+vfs*0.9,restW=rest?ctx.measureText(rest).width+vfs*0.6:0,tot=tagW+restW;
+    let x=W/2-tot/2;const h=vfs*1.45;
+    rrect(x,yB-h/2,tagW,h,h*0.22);ctx.fillStyle="#0A0082";ctx.fill();
+    ctx.fillStyle="#fff";ctx.textAlign="center";ctx.fillText(tag,x+tagW/2,yB+vfs*0.04);
+    if(rest){ctx.fillStyle="#0A0082";ctx.textAlign="left";ctx.fillText(rest,x+tagW+vfs*0.6,yB+vfs*0.04);}
+    yB+=h*1.25;
+  }
   ctx.textAlign="center";
   return yB+22*SCALE*ts;
 }
