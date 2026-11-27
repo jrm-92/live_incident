@@ -2059,7 +2059,7 @@ let lastAutoTitle="";
 function autoTitle(){
   if(els.type.value!=="Interruption de trafic"||!modelChosen||selectedStations.size<2)return "";
   const L=sortedSegs().filter(([a,b])=>a!==b);
-  if(L.length>1){const parts=L.map(([a,b])=>"entre "+a+" et "+b);return "Trafic interrompu "+parts.slice(0,-1).join(", ")+" ainsi qu'"+parts[parts.length-1];}
+  if(L.length>1)return "Trafic interrompu\n"+L.map(([a,b])=>a+" ↔ "+b).join("\n");
   const s=[...selectedStations].sort((x,y)=>STATIONS.indexOf(x)-STATIONS.indexOf(y));
   return "Trafic interrompu entre "+s[0]+" et "+s[s.length-1];
 }
@@ -3009,6 +3009,41 @@ function fitLines(text,maxW,maxLines,baseFs,minFs,weight){
     fs=Math.max(minFs,fs*0.94);
   }
 }
+// Double flèche (style signalétique RATP) : trait épais, pointes pleines
+function drawDblArrow(x,cy,w,fs,color){
+  const t=Math.max(3,fs*0.13),hl=fs*0.42,hh=fs*0.36;
+  ctx.save();ctx.fillStyle=color;ctx.beginPath();
+  ctx.moveTo(x,cy);ctx.lineTo(x+hl,cy-hh);ctx.lineTo(x+hl,cy-t/2);ctx.lineTo(x+w-hl,cy-t/2);ctx.lineTo(x+w-hl,cy-hh);
+  ctx.lineTo(x+w,cy);ctx.lineTo(x+w-hl,cy+hh);ctx.lineTo(x+w-hl,cy+t/2);ctx.lineTo(x+hl,cy+t/2);ctx.lineTo(x+hl,cy+hh);
+  ctx.closePath();ctx.fill();ctx.restore();
+}
+// Titre structuré : 1re ligne en rouge, puis une ligne par tronçon « A ↔ B » (noms en bleu RATP, flèche rouge)
+function drawStructTitle(titre,yB,ts,maxW){
+  const rows=titre.split("\n").map(l=>l.replace(/\s+/g," ").trim()).filter(Boolean);
+  if(!rows.length)return yB;
+  const head=rows[0].includes("↔")?null:rows[0];
+  const segs=(head?rows.slice(1):rows);
+  let hfs=50*SCALE*ts,sfs=42*SCALE*ts;
+  const gapA=()=>sfs*0.45,arW=()=>sfs*1.7;
+  const widthOf=(l,fs,w8)=>{ctx.font=`${w8} ${fs}px Lato, Arial`;const p=l.toUpperCase().split("↔").map(x=>x.trim());
+    let w=0;p.forEach((x,i)=>{w+=ctx.measureText(x).width;if(i<p.length-1)w+=arW()+2*gapA();});return w;};
+  for(let k=0;k<40;k++){
+    const wMax=Math.max(head?widthOf(head,hfs,900):0,...segs.map(l=>widthOf(l,sfs,800)));
+    if(wMax<=maxW)break;hfs*=0.94;sfs*=0.94;
+  }
+  ctx.textBaseline="middle";
+  if(head){ctx.font=`900 ${hfs}px Lato, Arial`;ctx.fillStyle="#E2001A";ctx.textAlign="center";ctx.fillText(head.toUpperCase(),W/2,yB);yB+=hfs*1.05+sfs*0.55;}
+  segs.forEach(l=>{
+    const p=l.toUpperCase().split("↔").map(x=>x.trim());
+    const tw=widthOf(l,sfs,800);let x=W/2-tw/2;
+    ctx.font=`800 ${sfs}px Lato, Arial`;ctx.textAlign="left";
+    p.forEach((part,i)=>{ctx.fillStyle="#0A0082";ctx.fillText(part,x,yB);x+=ctx.measureText(part).width;
+      if(i<p.length-1){x+=gapA();drawDblArrow(x,yB,arW(),sfs,"#E2001A");x+=arW()+gapA();}});
+    yB+=sfs*1.35;
+  });
+  ctx.textAlign="center";
+  return yB+22*SCALE*ts;
+}
 // Pastille « SP » sous les stations limites du tronçon
 function drawSPBadge(name,x,yLine,isTerm,below){
   const bw=52*SCALE,bh=30*SCALE;
@@ -3097,11 +3132,13 @@ function draw(){
   }
 
   yB+=(OFF.title.dy||0);
-  regBox('title',W*0.15,yB-8*SCALE,W*0.7,90*SCALE);
+  regBox('title',W*0.15,yB-8*SCALE,W*0.7,(/\n|↔/.test(titre||"")?Math.max(1,titre.trim().split("\n").length)*62:90)*SCALE);
   // === Titre : typographie pure, rouge RATP — description anthracite (retour à la ligne + réduction auto) ===
   const _ts=OFF.title.s||1,_tfs=30*SCALE*_ts,_tlh=52*SCALE*_ts,_maxTW=W-2*110*SCALE;
   textOver={titre:false,infos:false};
-  const _tF=fitLines((titre||"").toUpperCase(),_maxTW,3,_tfs,_tfs*0.5,"900");
+  const _struct=/\n|↔/.test(titre||"");
+  if(_struct){yB=drawStructTitle(titre,yB,_ts,_maxTW);}
+  const _tF=_struct?{lines:[]}:fitLines((titre||"").toUpperCase(),_maxTW,3,_tfs,_tfs*0.5,"900");
   if(_tF.lines.length){
     ctx.font=`900 ${_tF.fs}px Lato, Arial`;ctx.fillStyle="#E2001A";ctx.textAlign="center";ctx.textBaseline="middle";
     const _lh=_tF.fs*1.28;_tF.lines.forEach((l,i)=>ctx.fillText(l,W/2,yB+i*_lh));
