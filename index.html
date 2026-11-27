@@ -93,6 +93,7 @@
     --sal:env(safe-area-inset-left,0px); --sar:env(safe-area-inset-right,0px);
   }
   *{box-sizing:border-box;}
+  body{font-variant-ligatures:no-common-ligatures;}
   html{-webkit-text-size-adjust:100%;}
   html,body{margin:0;padding:0;}
   body{font-family:var(--sans);color:var(--ink);background:var(--bg);font-size:16px;line-height:1.4;
@@ -1149,6 +1150,12 @@ const els={
   zlist:$("zlist"),canvas:$("preview"),forkWarn:$("forkWarn"),forkWarnText:$("forkWarnText"),counter:$("counter"),
 };
 const ctx=els.canvas.getContext("2d");
+// Pas de ligatures « fi », « fl » (le point du i disparaît avec Lato) : sur tous les canevas
+(function(){const P=CanvasRenderingContext2D.prototype,noLig=t=>typeof t==="string"?t.replace(/f(?=[ilf])/g,"f\u200C"):t;
+  const ft=P.fillText,st=P.strokeText,mt=P.measureText;
+  P.fillText=function(t,...a){return ft.call(this,noLig(t),...a);};
+  P.strokeText=function(t,...a){return st.call(this,noLig(t),...a);};
+  P.measureText=function(t){return mt.call(this,noLig(t));};})();
 
 // Grille d'accueil
 
@@ -3084,7 +3091,8 @@ function drawStructTitle(titre,yB,ts,maxW){
   const M=()=>{ // mesures pour l'échelle k
     const o={hf:46*k,sf:31*k,vf:30*k,pad:34*k,ic:42*k,gap:30*k,arW:52*k,arG:16*k};
     ctx.font=`800 ${o.hf}px Lato, Arial`;o.hw=head?ctx.measureText(head).width:0;
-    o.segW=segs.map(l=>{const {names}=splitSep(l);ctx.font=`700 ${o.sf}px Lato, Arial`;let w=0;names.forEach((x,i)=>{w+=ctx.measureText(x).width;if(i<names.length-1)w+=o.arW+2*o.arG;});return w;});
+    ctx.font=`500 ${o.sf}px Lato, Arial`;o.preW=ctx.measureText("Entre ").width;
+    o.segW=segs.map(l=>{const {names}=splitSep(l);ctx.font=`700 ${o.sf}px Lato, Arial`;let w=names.length>1?o.preW:0;names.forEach((x,i)=>{w+=ctx.measureText(x).width;if(i<names.length-1)w+=o.arW+2*o.arG;});return w;});
     o.lw=Math.max(o.hw,...o.segW,0);
     o.lh=(head?o.hf*1.15:0)+segs.length*o.sf*1.45;
     if(vRow){ctx.font=`800 ${o.vf}px Lato, Arial`;o.tagW=ctx.measureText(vTag).width+o.vf*1.1;ctx.font=`500 ${o.vf}px Lato, Arial`;o.restW=vRest?ctx.measureText(vRest).width+o.vf*0.7:0;o.rw=o.gap*2+3*k+o.tagW+o.restW;}else o.rw=0;
@@ -3104,6 +3112,7 @@ function drawStructTitle(titre,yB,ts,maxW){
   if(head){ctx.font=`800 ${o.hf}px Lato, Arial`;ctx.fillStyle=INK;ctx.fillText(head,lx,ly+o.hf*0.55);ly+=o.hf*1.15;}
   segs.forEach(l=>{
     const {names,seps}=splitSep(l);let x=lx;const y=ly+o.sf*0.72;
+    if(names.length>1){ctx.font=`500 ${o.sf}px Lato, Arial`;ctx.fillStyle=INK;ctx.fillText("Entre ",x,y);x+=o.preW;}
     ctx.font=`700 ${o.sf}px Lato, Arial`;
     names.forEach((part,i)=>{ctx.fillStyle=INK;ctx.fillText(part,x,y);x+=ctx.measureText(part).width;
       if(i<names.length-1){x+=o.arG;const sp=seps[i];
