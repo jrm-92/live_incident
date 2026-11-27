@@ -1688,6 +1688,9 @@ function pickModel(v){
   els.type.value=v;modelChosen=true;
   if(changed){pickTouched=false;pendingStart=null;}
   applyModelUI();updateStep1UI();afterChange();
+  // le bandeau du haut et la barre d'étapes reflètent tout de suite le nouveau modèle
+  if(view==="app")renderStep();
+  if(changed&&!first){const m=curModel();toast("Modèle changé : "+(m?m.label:"")+".");}
   if(first&&currentLineId)goStep(2);
   else if(first)$("lineSec").scrollIntoView({behavior:"smooth",block:"start"});
 }
@@ -2060,11 +2063,13 @@ function renderStep(){
 // Titre proposé automatiquement (modifiable : il suffit de l'effacer ou de le réécrire)
 let lastAutoTitle="";
 function autoTitle(){
-  if(els.type.value!=="Interruption de trafic"||!modelChosen||selectedStations.size<2)return "";
+  const m=curModel();
+  if(!m||m.kind!=="traffic"||selectedStations.size<2)return "";
+  const head=m.v==="Interruption de trafic"?"Trafic interrompu":m.label;
   const L=sortedSegs().filter(([a,b])=>a!==b);
-  if(L.length)return "Trafic interrompu\n"+L.map(([a,b])=>a+" ↔ "+b).join("\n");
+  if(L.length)return head+"\n"+L.map(([a,b])=>a+" ↔ "+b).join("\n");
   const s=[...selectedStations].sort((x,y)=>STATIONS.indexOf(x)-STATIONS.indexOf(y));
-  return "Trafic interrompu\n"+s[0]+" ↔ "+s[s.length-1];
+  return head+"\n"+s[0]+" ↔ "+s[s.length-1];
 }
 function syncAutoTitle(){
   const t=autoTitle(),cur=els.titre.value.trim();
