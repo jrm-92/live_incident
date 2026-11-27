@@ -3068,46 +3068,57 @@ function drawOneArrow(x,cy,w,fs,color,dir){
 const SEP_RE=/\s*(↔|→|←)\s*/;
 function splitSep(l){const parts=l.split(SEP_RE);const names=[],seps=[];parts.forEach((x,i)=>i%2?seps.push(x):names.push(x.trim()));return{names,seps};}
 function drawStructTitle(titre,yB,ts,maxW){
+  // Encart d'alerte : pastille « ! » · titre + tronçon(s) | pastille de voie + direction
   const rows=titre.split("\n").map(l=>l.replace(/\s+/g," ").trim()).filter(Boolean);
   if(!rows.length)return yB;
   const head=SEP_RE.test(rows[0])?null:rows[0];
   let segs=(head?rows.slice(1):rows);
   const vRow=segs.length>1&&/^voies?\b/i.test(segs[segs.length-1])&&!SEP_RE.test(segs[segs.length-1])?segs[segs.length-1]:null;
   if(vRow)segs=segs.slice(0,-1);
-  let hfs=50*SCALE*ts,sfs=42*SCALE*ts;
-  const gapA=()=>sfs*0.45,arW=()=>sfs*1.7;
-  const widthOf=(l,fs,w8)=>{ctx.font=`${w8} ${fs}px Lato, Arial`;const p=splitSep(l.toUpperCase()).names;
-    let w=0;p.forEach((x,i)=>{w+=ctx.measureText(x).width;if(i<p.length-1)w+=arW()+2*gapA();});return w;};
-  for(let k=0;k<40;k++){
-    const wMax=Math.max(head?widthOf(head,hfs,900):0,...segs.map(l=>widthOf(l,sfs,800)));
-    if(wMax<=maxW)break;hfs*=0.94;sfs*=0.94;
-  }
-  ctx.textBaseline="middle";
-  yB+=hfs*0.55; // marge sous la ligne de métro
-  if(head){ctx.font=`900 ${hfs}px Lato, Arial`;ctx.fillStyle="#E2001A";ctx.textAlign="center";ctx.fillText(head.toUpperCase(),W/2,yB);yB+=hfs*1.05+sfs*0.55;}
+  let vTag="",vRest="";
+  if(vRow){const m=vRow.match(/^(voies?\s*[0-9]+(?:\s*et\s*[0-9]+)?)(.*)$/i);vTag=m?m[1]:vRow;vRest=(m?m[2]:"").replace(/^\s*·\s*/,"");vRest=vRest?vRest.charAt(0).toUpperCase()+vRest.slice(1):"";}
+  let k=ts*SCALE;
+  const INK="#0b1533",RED="#E2001A";
+  const M=()=>{ // mesures pour l'échelle k
+    const o={hf:46*k,sf:31*k,vf:30*k,pad:34*k,ic:42*k,gap:30*k,arW:52*k,arG:16*k};
+    ctx.font=`800 ${o.hf}px Lato, Arial`;o.hw=head?ctx.measureText(head).width:0;
+    o.segW=segs.map(l=>{const {names}=splitSep(l);ctx.font=`700 ${o.sf}px Lato, Arial`;let w=0;names.forEach((x,i)=>{w+=ctx.measureText(x).width;if(i<names.length-1)w+=o.arW+2*o.arG;});return w;});
+    o.lw=Math.max(o.hw,...o.segW,0);
+    o.lh=(head?o.hf*1.15:0)+segs.length*o.sf*1.45;
+    if(vRow){ctx.font=`800 ${o.vf}px Lato, Arial`;o.tagW=ctx.measureText(vTag).width+o.vf*1.1;ctx.font=`500 ${o.vf}px Lato, Arial`;o.restW=vRest?ctx.measureText(vRest).width+o.vf*0.7:0;o.rw=o.gap*2+3*k+o.tagW+o.restW;}else o.rw=0;
+    o.w=o.pad+o.ic*2+o.gap+o.lw+o.rw+o.pad;o.h=Math.max(o.lh,o.ic*2)+o.pad*1.3;return o;};
+  let o=M();for(let n=0;n<40&&o.w>maxW;n++){k*=0.94;o=M();}
+  const x0=W/2-o.w/2,y0=yB+12*k;
+  ctx.save();
+  // fond et bordure
+  rrect(x0,y0,o.w,o.h,22*k);ctx.fillStyle="#fde3e6";ctx.fill();ctx.lineWidth=3*k;ctx.strokeStyle=RED;ctx.stroke();
+  // pastille « ! »
+  const cx=x0+o.pad+o.ic,cy=y0+o.h/2;
+  ctx.beginPath();ctx.arc(cx,cy,o.ic,0,Math.PI*2);ctx.fillStyle=RED;ctx.fill();
+  ctx.fillStyle="#fff";ctx.beginPath();rrect(cx-4.5*k,cy-23*k,9*k,30*k,4.5*k);ctx.fill();ctx.beginPath();ctx.arc(cx,cy+16*k,5.5*k,0,Math.PI*2);ctx.fill();
+  // colonne gauche : titre + tronçons
+  let lx=cx+o.ic+o.gap,ly=y0+(o.h-o.lh)/2;
+  ctx.textAlign="left";ctx.textBaseline="middle";
+  if(head){ctx.font=`800 ${o.hf}px Lato, Arial`;ctx.fillStyle=INK;ctx.fillText(head,lx,ly+o.hf*0.55);ly+=o.hf*1.15;}
   segs.forEach(l=>{
-    const {names:p,seps}=splitSep(l.toUpperCase());
-    const tw=widthOf(l,sfs,800);let x=W/2-tw/2;
-    ctx.font=`800 ${sfs}px Lato, Arial`;ctx.textAlign="left";
-    p.forEach((part,i)=>{ctx.fillStyle="#0A0082";ctx.fillText(part,x,yB);x+=ctx.measureText(part).width;
-      if(i<p.length-1){x+=gapA();const sp=seps[i];
-        if(sp==="→")drawOneArrow(x,yB,arW(),sfs,"#E2001A",1);else if(sp==="←")drawOneArrow(x,yB,arW(),sfs,"#E2001A",-1);else drawDblArrow(x,yB,arW(),sfs,"#E2001A");
-        x+=arW()+gapA();}});
-    yB+=sfs*1.35;
+    const {names,seps}=splitSep(l);let x=lx;const y=ly+o.sf*0.72;
+    ctx.font=`700 ${o.sf}px Lato, Arial`;
+    names.forEach((part,i)=>{ctx.fillStyle=INK;ctx.fillText(part,x,y);x+=ctx.measureText(part).width;
+      if(i<names.length-1){x+=o.arG;const sp=seps[i];
+        if(sp==="→")drawOneArrow(x,y,o.arW,o.sf*0.85,RED,1);else if(sp==="←")drawOneArrow(x,y,o.arW,o.sf*0.85,RED,-1);else drawDblArrow(x,y,o.arW,o.sf*0.85,RED);
+        x+=o.arW+o.arG;}});
+    ly+=o.sf*1.45;
   });
+  // colonne droite : séparateur, pastille de voie, direction
   if(vRow){
-    // pastille « VOIE 1 / VOIE 2 » + direction
-    const vfs=sfs*0.72;ctx.font=`800 ${vfs}px Lato, Arial`;
-    const m=vRow.match(/^(voies?\s*[0-9]+(?:\s*et\s*[0-9]+)?)(.*)$/i),tag=(m?m[1]:vRow).toUpperCase(),rest=(m?m[2]:"").replace(/^\s*·\s*/,"").toUpperCase();
-    const tagW=ctx.measureText(tag).width+vfs*0.9,restW=rest?ctx.measureText(rest).width+vfs*0.6:0,tot=tagW+restW;
-    let x=W/2-tot/2;const h=vfs*1.45;
-    rrect(x,yB-h/2,tagW,h,h*0.22);ctx.fillStyle="#0A0082";ctx.fill();
-    ctx.fillStyle="#fff";ctx.textAlign="center";ctx.fillText(tag,x+tagW/2,yB+vfs*0.04);
-    if(rest){ctx.fillStyle="#0A0082";ctx.textAlign="left";ctx.fillText(rest,x+tagW+vfs*0.6,yB+vfs*0.04);}
-    yB+=h*1.25;
+    let rx=lx+o.lw+o.gap;
+    ctx.fillStyle="rgba(11,21,51,.35)";ctx.fillRect(rx,y0+o.h*0.2,3*k,o.h*0.6);rx+=3*k+o.gap;
+    const ph=o.vf*1.55;rrect(rx,cy-ph/2,o.tagW,ph,ph*0.22);ctx.fillStyle=INK;ctx.fill();
+    ctx.font=`800 ${o.vf}px Lato, Arial`;ctx.fillStyle="#fff";ctx.textAlign="center";ctx.fillText(vTag,rx+o.tagW/2,cy+o.vf*0.04);
+    if(vRest){ctx.font=`500 ${o.vf}px Lato, Arial`;ctx.fillStyle=INK;ctx.textAlign="left";ctx.fillText(vRest,rx+o.tagW+o.vf*0.7,cy+o.vf*0.04);}
   }
-  ctx.textAlign="center";
-  return yB+22*SCALE*ts;
+  ctx.restore();ctx.textAlign="center";
+  return y0+o.h+34*k;
 }
 // Pastille « SP » sous les stations limites du tronçon
 function drawSPBadge(name,x,yLine,isTerm,below){
