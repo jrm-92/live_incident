@@ -1871,9 +1871,11 @@ function updateStep2Texts(){
   $("freeNote").classList.toggle("hidden",k!=="free");
 }
 // Voie concernée (incidents de trafic) : 1 = de gauche à droite sur le plan, 2 = de droite à gauche
+// L'interruption de trafic concerne toujours les deux sens
+function effVoie(){return els.type.value==="Interruption de trafic"?"both":trafficVoie;}
 function lineEnds(){const L=LINES[currentLineId];if(!L||L.fork)return null;const a=L.stations[0],b=L.stations[L.stations.length-1];return L.forkLeft?[b,a]:[a,b];}
 function updateVoieUI(){
-  const m=curModel(),show=!!(m&&m.kind==="traffic");
+  const m=curModel(),show=!!(m&&m.kind==="traffic"&&m.v!=="Interruption de trafic");
   $("voieBox").classList.toggle("hidden",!show);if(!show)return;
   $("voiePick").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===trafficVoie)));
   const e=lineEnds();
@@ -2092,13 +2094,13 @@ function autoTitle(){
   const m=curModel();
   if(!m||m.kind!=="traffic"||selectedStations.size<2)return "";
   const head=m.v==="Interruption de trafic"?"Trafic interrompu":m.label;
-  const arr=trafficVoie==="1"?" → ":trafficVoie==="2"?" ← ":" ↔ ";
+  const tv=effVoie(),arr=tv==="1"?" → ":tv==="2"?" ← ":" ↔ ";
   const flip=!!LINES[currentLineId].forkLeft; // plan inversé : on écrit les stations dans l'ordre affiché
   const pair=([a,b])=>(flip?b+arr+a:a+arr+b);
   let L=sortedSegs().filter(([a,b])=>a!==b);
   if(!L.length){const s=[...selectedStations].sort((x,y)=>STATIONS.indexOf(x)-STATIONS.indexOf(y));L=[[s[0],s[s.length-1]]];}
   const e=lineEnds();
-  const vl=trafficVoie==="1"?"Voie 1"+(e?" · direction "+e[1]:""):trafficVoie==="2"?"Voie 2"+(e?" · direction "+e[0]:""):"";
+  const vl=tv==="1"?"Voie 1"+(e?" · direction "+e[1]:""):tv==="2"?"Voie 2"+(e?" · direction "+e[0]:""):"";
   return head+"\n"+L.map(pair).join("\n")+(vl?"\n"+vl:"");
 }
 function syncAutoTitle(){
@@ -2127,7 +2129,7 @@ function renderRecap(){
   const add=(k,v)=>{dl.appendChild(el("dt",null,k));dl.appendChild(el("dd",null,v));};
   add("Modèle",m?m.label:"—");add("Ligne","Ligne "+currentLineId);
   const sorted=[...selectedStations].sort((a,b)=>STATIONS.indexOf(a)-STATIONS.indexOf(b));
-  if(m&&m.kind==="traffic")add("Voie",trafficVoie==="1"?"Voie 1 (→)":trafficVoie==="2"?"Voie 2 (←)":"Les deux voies");
+  if(m&&m.kind==="traffic")add("Voie",effVoie()==="1"?"Voie 1 (→)":effVoie()==="2"?"Voie 2 (←)":"Les deux voies");
   if(m&&m.kind==="traffic"&&trafficSegs.length>1)add("Tronçons",sortedSegs().map(([a,b])=>a===b?a:a+" → "+b).join(" ; "));
   else if(m&&m.kind!=="free")add(m.kind==="served"?"Desservies":"Stations",sorted.length?(sorted.length>6?sorted.slice(0,6).join(", ")+" … (+"+(sorted.length-6)+")":sorted.join(", ")):"Aucune");
   add("Titre",els.titre.value.trim()||"—");
