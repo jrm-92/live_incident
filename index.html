@@ -3035,6 +3035,7 @@ function drawStructTitle(titre,yB,ts,maxW){
     if(wMax<=maxW)break;hfs*=0.94;sfs*=0.94;
   }
   ctx.textBaseline="middle";
+  yB+=hfs*0.55; // marge sous la ligne de métro
   if(head){ctx.font=`900 ${hfs}px Lato, Arial`;ctx.fillStyle="#E2001A";ctx.textAlign="center";ctx.fillText(head.toUpperCase(),W/2,yB);yB+=hfs*1.05+sfs*0.55;}
   segs.forEach(l=>{
     const p=l.toUpperCase().split("↔").map(x=>x.trim());
