@@ -9,7 +9,7 @@
 <title>Live Incident — Console de génération de visuels</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;0,900;1,400;1,700&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;0,900;1,400;1,700&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
   .hero{position:relative;overflow:hidden;border-radius:0 0 24px 24px;margin:0 -24px 32px;
     min-height:260px;display:flex;align-items:center;justify-content:center;text-align:center;
@@ -557,6 +557,12 @@
     /* l'aperçu remplit la hauteur disponible sans dépasser l'écran */
     #app:not([data-step="1"]) .viewport{max-width:calc((100vh - 220px) * 16 / 9);margin:0 auto;}
   }
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media(max-width:420px){.field-row{grid-template-columns:1fr;}}
+  .time-row{display:flex;gap:8px;align-items:center;}
+  .time-row input[type=time]{flex:1;min-width:0;min-height:48px;padding:10px 12px;font-size:18px;font-weight:700;border:1.5px solid var(--border-strong);border-radius:10px;background:#fff;color:var(--ink);font-family:inherit;}
+  .seg-sm button{min-height:44px;font-size:14px;}
+  body.vis-dark .frame{background:#0A0F1F;border-color:#2A3458;}
 </style>
 </head>
 <body>
@@ -837,9 +843,31 @@
           <div class="field-hint" id="titreHint"><span id="titreMsg"></span><span id="titreCount">0 / 500</span></div>
         </div>
         <div class="field" id="infosField">
-          <label class="fld" for="infos">Informations complémentaires <span class="opt">(facultatif)</span></label>
-          <textarea id="infos" maxlength="500" rows="2" autocomplete="off" placeholder="Ex : Reprise estimée à …"></textarea>
+          <label class="fld" for="infos">Consigne conducteurs <span class="opt">(facultatif)</span></label>
+          <textarea id="infos" maxlength="500" rows="2" autocomplete="off" placeholder="Ex : Départ direct à Trocadéro, respecter la plaque limite de manœuvre."></textarea>
           <div class="field-hint" id="infosHint"><span id="infosMsg"></span><span id="infosCount">0 / 500</span></div>
+        </div>
+        <div class="field">
+          <label class="fld" for="annonce">Info voyageurs / annonce <span class="opt">(facultatif)</span></label>
+          <textarea id="annonce" maxlength="300" rows="2" autocomplete="off" placeholder="Ex : Faites des annonces : trafic interrompu, prendre le bus 22."></textarea>
+        </div>
+        <div class="field-row">
+          <div class="field"><label class="fld" for="majTime">Heure de mise à jour (MAJ)</label>
+            <div class="time-row"><input type="time" id="majTime" aria-describedby="majHelp"><button class="btn small" type="button" id="majNow">Maintenant</button></div>
+            <p class="field-hint" id="majHelp">Vide = heure actuelle au moment du téléchargement.</p></div>
+          <div class="field"><label class="fld" for="repriseTime">Reprise estimée <span class="opt">(facultatif)</span></label>
+            <div class="time-row"><input type="time" id="repriseTime"><button class="btn small" type="button" id="repriseClear">Effacer</button></div></div>
+        </div>
+        <div class="field">
+          <span class="fld">Apparence du visuel</span>
+          <div class="seg seg-sm" id="themePick" role="group" aria-label="Thème du visuel">
+            <button type="button" data-v="clair" aria-pressed="true">☀ Clair</button>
+            <button type="button" data-v="sombre" aria-pressed="false">☾ Sombre (nuit)</button>
+          </div>
+          <div class="seg seg-sm" id="layoutPick" role="group" aria-label="Mise en page" style="margin-top:8px">
+            <button type="button" data-v="v2" aria-pressed="true">Opérationnelle</button>
+            <button type="button" data-v="classique" aria-pressed="false">Classique</button>
+          </div>
         </div>
         <div class="field hidden" id="interRow">
           <label class="fld" for="interSel">Schéma d'interstation <span class="opt">(facultatif)</span></label>
@@ -1951,7 +1979,23 @@ function updateTextHints(){
 }
 function onDrawn(){updateTextHints();}
 els.titre.addEventListener("input",()=>{$("titreField").classList.remove("invalid");$("titreMsg").textContent="";afterChange();});
+const THEMES={
+  clair:{bg:"#F3F5FA",card:"#FFFFFF",ink:"#0B1533",muted:"#5B6478",border:"#D8DEEA",head:"#0A0082",headInk:"#FFFFFF",
+    stFill:"#FFFFFF",label:"#0A0082",over:"#C9CFDC",chip:"#E9ECF5"},
+  sombre:{bg:"#0A0F1F",card:"#141B33",ink:"#EEF2FF",muted:"#A3ADCB",border:"#2A3458",head:"#050818",headInk:"#FFFFFF",
+    stFill:"#141B33",label:"#E3E8FF",over:"#3A4466",chip:"#1E2747"}
+};
+let visTheme="clair",visLayout="v2";
 els.infos.addEventListener("input",afterChange);
+["annonce","majTime","repriseTime"].forEach(id=>$(id).addEventListener("input",()=>{afterChange();touchDraft();}));
+$("majNow").addEventListener("click",()=>{$("majTime").value=hhmm(new Date());afterChange();touchDraft();});
+$("repriseClear").addEventListener("click",()=>{$("repriseTime").value="";afterChange();touchDraft();});
+function syncLookUI(){["themePick","layoutPick"].forEach(id=>$(id).querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===(id==="themePick"?visTheme:visLayout)))));
+  document.body.classList.toggle("vis-dark",visTheme==="sombre");}
+$("themePick").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;visTheme=b.dataset.v;try{localStorage.setItem("li.theme",visTheme);}catch(_){}syncLookUI();afterChange();touchDraft();});
+$("layoutPick").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;visLayout=b.dataset.v;syncLookUI();afterChange();touchDraft();});
+try{const t=localStorage.getItem("li.theme");if(t&&THEMES[t])visTheme=t;}catch(_){}
+syncLookUI();
 els.interSel.addEventListener("change",()=>{desiredInter=currentInterName();afterChange();});
 function currentInterName(){const it=interstations[parseInt(els.interSel.value,10)];return it?it.name:"";}
 
@@ -2179,6 +2223,9 @@ function renderRecap(){
   const add=(k,v)=>{dl.appendChild(el("dt",null,k));dl.appendChild(el("dd",null,v));};
   add("Modèle",m?m.label:"—");add("Ligne","Ligne "+currentLineId);
   const sorted=[...selectedStations].sort((a,b)=>STATIONS.indexOf(a)-STATIONS.indexOf(b));
+  if($("annonce").value.trim())add("Voyageurs",$("annonce").value.trim());
+  add("MAJ",$("majTime").value||"heure du téléchargement");
+  if($("repriseTime").value)add("Reprise estimée",$("repriseTime").value);
   if(m&&m.kind==="traffic")add("Voie",effVoie()==="1"?"Voie 1 (→)":effVoie()==="2"?"Voie 2 (←)":"Les deux voies");
   if(m&&m.kind==="traffic"&&trafficSegs.length>1)add("Tronçons",sortedSegs().map(([a,b])=>a===b?a:a+" → "+b).join(" ; "));
   else if(m&&m.kind!=="free")add(m.kind==="served"?"Desservies":"Stations",sorted.length?(sorted.length>6?sorted.slice(0,6).join(", ")+" … (+"+(sorted.length-6)+")":sorted.join(", ")):"Aucune");
@@ -2197,7 +2244,7 @@ function renderRecap(){
 
 /* ── Brouillons et visuels récents (stockage local de l'appareil) ─────── */
 function snapshot(){
-  return{lineId:currentLineId,type:els.type.value,titre:els.titre.value,infos:els.infos.value,stations:[...selectedStations],segs:trafficSegs.map(x=>[...x]),voie:trafficVoie,inter:currentInterName()||desiredInter,
+  return{lineId:currentLineId,type:els.type.value,titre:els.titre.value,infos:els.infos.value,annonce:$("annonce").value,maj:$("majTime").value,reprise:$("repriseTime").value,theme:visTheme,layout:visLayout,stations:[...selectedStations],segs:trafficSegs.map(x=>[...x]),voie:trafficVoie,inter:currentInterName()||desiredInter,
     off:JSON.parse(JSON.stringify(OFF)),hidden:[...HIDDEN],textBoxes:textBoxes.map(b=>({...b})),
     strokes:strokes.map(s=>({color:s.color,w:s.w,pts:s.pts.map(p=>({x:Math.round(p.x),y:Math.round(p.y)}))})),stickers:stickers.map(s=>({...s})),step};
 }
@@ -2240,7 +2287,7 @@ function newVisual(){
   flushDraft();
   resetEdits();
   curDraftId=null;modelChosen=false;pickTouched=false;lastAutoTitle="";trafficVoie="both";
-  els.type.value="";els.titre.value="";els.infos.value="";desiredInter="";
+  els.type.value="";els.titre.value="";els.infos.value="";$("annonce").value="";$("majTime").value="";$("repriseTime").value="";visLayout="v2";syncLookUI();desiredInter="";
   currentLineId=null;STATIONS=[];clearSegs();rows.clear();els.zlist.innerHTML="";
   els.titre.placeholder="Titre du visuel";
   updateStep1UI();updateTextHints();
@@ -2264,7 +2311,7 @@ function loadSnapshot(s,draftId,startStep){
   if(!trafficSegs.length&&m&&m.kind==="traffic"&&selectedStations.size===2)trafficSegs=[[...selectedStations]];
   if(trafficSegs.length)syncSelFromSegs();
   trafficVoie=["1","2","both"].includes(s.voie)?s.voie:"both";
-  els.titre.value=s.titre||"";els.infos.value=s.infos||"";lastAutoTitle=autoTitle()===els.titre.value.trim()?els.titre.value.trim():"";desiredInter=s.inter||"";
+  els.titre.value=s.titre||"";els.infos.value=s.infos||"";$("annonce").value=s.annonce||"";$("majTime").value=s.maj||"";$("repriseTime").value=s.reprise||"";if(s.theme&&THEMES[s.theme])visTheme=s.theme;visLayout=s.layout==="classique"?"classique":"v2";syncLookUI();lastAutoTitle=autoTitle()===els.titre.value.trim()?els.titre.value.trim():"";desiredInter=s.inter||"";
   applyModelUI();updateStep1UI();updateTextHints();
   curDraftId=draftId;
   restoring=false;
@@ -2320,7 +2367,7 @@ function openList(kind){listKind=kind;renderList(kind);showView("list");}
 
 /* ── Aperçu : plein écran, réduction ──────────────────────────────────── */
 async function ensureFonts(){
-  try{await document.fonts.ready;await Promise.all(["400","700","900"].map(w=>document.fonts.load(w+" 40px Lato")).concat([document.fonts.load("italic 700 40px Lato")]));}catch(e){}
+  try{await document.fonts.ready;await Promise.all(["400","500","600","700","800","900"].map(w=>document.fonts.load(w+" 40px Lato")).concat(["700","800"].map(w=>document.fonts.load(w+" 40px Montserrat")),[document.fonts.load("italic 700 40px Lato")]));}catch(e){}
 }
 function renderClean(){const was=editMode;if(was)editMode=false;_cleanRender=true;draw();_cleanRender=false;return()=>{if(was)editMode=true;draw();};}
 // Plein écran : le visuel est ajusté à la taille de l'écran (sans déborder), en vrai plein écran quand le navigateur le permet
@@ -3238,12 +3285,263 @@ function drawSPBadge(name,x,yLine,isTerm,below){
   ctx.fillText("SP",cx,cy+1*SCALE);
   ctx.restore();
 }
+/* ═══════════════════════════════════════════════════════════════════════
+   MISE EN PAGE « OPÉRATIONNELLE » (v2) — lecture en 2 secondes
+   ┌ En-tête : badge INFO CONDUCTEURS · EN DIRECT │ ligne │ MAJ hh:mm │ pastille
+   ├ Bandeau d'état : ! STATUT  │  Entre [A] et [B]  · Voie / sens
+   ├ Schéma : vue d'ensemble (fine) + zoom lisible sur la zone concernée
+   ├ Cartes : Consigne conducteurs │ Info voyageurs │ Reprise estimée
+   └ Légende des codes métier + horodatage
+   Tout est dessiné sur le canevas 3840×2160 : l'aperçu = le fichier exporté.
+   ═══════════════════════════════════════════════════════════════════════ */
+const STATUS_STYLE={
+  "Interruption de trafic":{label:"TRAFIC INTERROMPU",bg:"#E2001A",ink:"#FFFFFF",seg:"#E2001A",kind:"cut"},
+  "Ralentissement provisoire":{label:"RALENTISSEMENT PROVISOIRE",bg:"#F0AA00",ink:"#1A1200",seg:"#F08A00",kind:"slow"},
+  "Service de sécurité":{label:"SERVICE DE SÉCURITÉ",bg:"#F0AA00",ink:"#1A1200",seg:"#F08A00",kind:"slow"},
+  "Service de sécurité sur ordre":{label:"SERVICE DE SÉCURITÉ SUR ORDRE",bg:"#F0AA00",ink:"#1A1200",seg:"#F08A00",kind:"slow"},
+  "Station(s) fermée(s)":{label:"STATION(S) FERMÉE(S)",bg:"#E2001A",ink:"#FFFFFF",seg:"#E2001A",kind:"closed"},
+  "Station(s) fermée(s) > 20":{label:"STATIONS FERMÉES",bg:"#E2001A",ink:"#FFFFFF",seg:"#E2001A",kind:"served"},
+  "":{label:"INFORMATION",bg:"#0A0082",ink:"#FFFFFF",seg:"#0A0082",kind:"info"}
+};
+const FT="Montserrat, Lato, Arial, sans-serif",FB="Lato, Arial, sans-serif";
+function hhmm(d){const p=n=>String(n).padStart(2,"0");return p(d.getHours())+":"+p(d.getMinutes());}
+function majText(){const v=($("majTime")&&$("majTime").value)||"";return v||hhmm(new Date());}
+// Parcours linéaire de la ligne (lignes à fourche : tronc + branche contenant la sélection)
+function lineRoute(){
+  const L=LINES[currentLineId];
+  if(!L.fork)return L.forkLeft?L.stations.slice().reverse():L.stations.slice();
+  const T=L.fork.trunk,A=L.fork.branchA,B=L.fork.branchB,sel=[...selectedStations];
+  const inB=sel.some(s=>B.includes(s)),inA=sel.some(s=>A.includes(s));
+  let r=T.concat(inB&&!inA?B:A);
+  return L.forkLeft?r.reverse():r;
+}
+// Analyse du titre (1re ligne = statut, puis tronçons « A ↔ B », puis « Voie … »)
+function parseTitle(titre){
+  const rows=(titre||"").split("\n").map(l=>l.replace(/\s+/g," ").trim()).filter(Boolean);
+  const head=rows.length&&!SEP_RE.test(rows[0])?rows[0]:null;
+  let segs=head?rows.slice(1):rows;
+  const vRow=segs.length&&/^voies?\b/i.test(segs[segs.length-1])&&!SEP_RE.test(segs[segs.length-1])?segs[segs.length-1]:null;
+  if(vRow)segs=segs.slice(0,-1);
+  return{head,segs:segs.filter(l=>SEP_RE.test(l)),free:segs.filter(l=>!SEP_RE.test(l)),vRow};
+}
+function wrapText(t,maxW,font){ctx.font=font;const out=[];(t||"").split("\n").forEach(par=>{let cur="";par.split(/\s+/).filter(Boolean).forEach(w=>{const c=cur?cur+" "+w:w;if(ctx.measureText(c).width<=maxW||!cur)cur=c;else{out.push(cur);cur=w;}});if(cur)out.push(cur);});return out;}
+function fitBlock(t,maxW,maxH,fs0,fsMin,weight,lh){
+  let fs=fs0;for(let n=0;n<40;n++){const L=wrapText(t,maxW,`${weight} ${fs}px ${FB}`);if(L.length*fs*lh<=maxH||fs<=fsMin)return{lines:L,fs};fs=Math.max(fsMin,fs*0.93);}
+  return{lines:wrapText(t,maxW,`${weight} ${fsMin}px ${FB}`),fs:fsMin};
+}
+function drawV2(){
+  const u=SCALE,th=THEMES[visTheme]||THEMES.clair,PAD=48*u;
+  const type=els.type.value,st=STATUS_STYLE[type]||STATUS_STYLE[""];
+  const P=parseTitle(els.titre.value);
+  ctx.save();
+  ctx.fillStyle=th.bg;ctx.fillRect(0,0,W,H);
+  ctx.textBaseline="middle";
+  // ── 1. En-tête ────────────────────────────────────────────────────────
+  const hH=104*u;ctx.fillStyle=th.head;ctx.fillRect(0,0,W,hH);
+  let x=PAD;const hy=hH/2;
+  ctx.font=`800 ${25*u}px ${FT}`;const b1="INFO CONDUCTEURS",b1w=ctx.measureText(b1).width+44*u;
+  rrect(x,hy-28*u,b1w,56*u,10*u);ctx.fillStyle="#FFFFFF";ctx.fill();
+  ctx.fillStyle="#0A0082";ctx.textAlign="left";ctx.fillText(b1,x+22*u,hy+1*u);x+=b1w+22*u;
+  ctx.beginPath();ctx.arc(x+10*u,hy,10*u,0,Math.PI*2);ctx.fillStyle="#FF2D2D";ctx.fill();
+  ctx.beginPath();ctx.arc(x+10*u,hy,17*u,0,Math.PI*2);ctx.strokeStyle="rgba(255,45,45,.45)";ctx.lineWidth=3*u;ctx.stroke();
+  ctx.font=`700 ${24*u}px ${FT}`;ctx.fillStyle=th.headInk;ctx.fillText("EN DIRECT",x+36*u,hy+1*u);
+  ctx.font=`700 ${24*u}px ${FT}`;const ew=ctx.measureText("EN DIRECT").width;x+=36*u+ew+40*u;
+  // terminus de la ligne
+  const R=lineRoute(),tA=R[0],tB=R[R.length-1];
+  ctx.font=`500 ${22*u}px ${FB}`;ctx.fillStyle="rgba(255,255,255,.78)";ctx.fillText("Ligne "+currentLineId+" · "+tA+" ⇄ "+tB,x,hy+1*u);
+  // pastille ligne + MAJ
+  const br=40*u,bx=W-PAD-br;
+  const pImg=_cachedLineLogos[currentLineId];
+  if(pImg&&pImg.complete){ctx.save();ctx.beginPath();ctx.arc(bx,hy,br,0,Math.PI*2);ctx.clip();ctx.drawImage(pImg,bx-br,hy-br,br*2,br*2);ctx.restore();}
+  else{ctx.beginPath();ctx.arc(bx,hy,br,0,Math.PI*2);ctx.fillStyle=LINE_COLOR;ctx.fill();}
+  ctx.font=`800 ${46*u}px ${FT}`;const mt=majText(),mw=ctx.measureText(mt).width;
+  ctx.textAlign="right";ctx.fillStyle="#FFFFFF";ctx.fillText(mt,bx-br-26*u,hy+3*u);
+  ctx.font=`700 ${20*u}px ${FT}`;ctx.fillStyle="rgba(255,255,255,.72)";ctx.fillText("MAJ",bx-br-26*u-mw-14*u,hy+2*u);
+  // ── 2. Bandeau d'état ─────────────────────────────────────────────────
+  const statusLabel=(P.head||st.label).toUpperCase();
+  const segRows=P.segs;
+  const bY=hH;let bandH=150*u;
+  // mesure de la partie droite (tronçons)
+  const plateFs=34*u,plH=58*u,plPx=20*u,arW=54*u,gapX=16*u,rowG=12*u;
+  const rowW=l=>{const {names,seps}=splitSep(l);ctx.font=`500 ${28*u}px ${FB}`;let w=ctx.measureText("Entre").width+gapX;ctx.font=`800 ${plateFs}px ${FB}`;
+    names.forEach((n,i)=>{w+=ctx.measureText(n).width+2*plPx;if(i<names.length-1){ctx.font=`500 ${28*u}px ${FB}`;w+=(seps[i]==="↔"?ctx.measureText("et").width:arW)+2*gapX;ctx.font=`800 ${plateFs}px ${FB}`;}});return w;};
+  const rightW=Math.max(0,...segRows.map(rowW));
+  const vInfo=P.vRow?(()=>{const m=P.vRow.match(/^(voies?\s*[0-9]+)(.*)$/i);return{tag:(m?m[1]:P.vRow).toUpperCase(),rest:(m?m[2]:"").replace(/^\s*·\s*/,"")};})():null;
+  const rightH=segRows.length*plH+(segRows.length-1)*rowG+(vInfo?56*u:0);
+  bandH=Math.max(bandH,rightH+48*u);
+  ctx.fillStyle=st.bg;ctx.fillRect(0,bY,W,bandH);
+  const by=bY+bandH/2;
+  // icône
+  ctx.beginPath();ctx.arc(PAD+42*u,by,42*u,0,Math.PI*2);ctx.fillStyle=st.ink;ctx.fill();
+  ctx.fillStyle=st.bg;rrect(PAD+42*u-5*u,by-25*u,10*u,32*u,5*u);ctx.fill();ctx.beginPath();ctx.arc(PAD+42*u,by+18*u,6*u,0,Math.PI*2);ctx.fill();
+  // statut (taille ajustée)
+  const sx=PAD+108*u,availS=W-PAD-sx-(rightW?rightW+60*u:0);
+  let sf=70*u;ctx.font=`800 ${sf}px ${FT}`;while(ctx.measureText(statusLabel).width>availS&&sf>34*u){sf*=0.95;ctx.font=`800 ${sf}px ${FT}`;}
+  ctx.fillStyle=st.ink;ctx.textAlign="left";ctx.fillText(statusLabel,sx,by+2*u);
+  // tronçons (plaques)
+  if(segRows.length){
+    let ry=by-rightH/2+plH/2;const rx0=W-PAD-rightW;
+    segRows.forEach(l=>{
+      const {names,seps}=splitSep(l);let xx=W-PAD-rowW(l);
+      ctx.font=`500 ${28*u}px ${FB}`;ctx.fillStyle=st.ink;ctx.textAlign="left";ctx.fillText("Entre",xx,ry+1*u);xx+=ctx.measureText("Entre").width+gapX;
+      names.forEach((n,i)=>{
+        ctx.font=`800 ${plateFs}px ${FB}`;const pw=ctx.measureText(n).width+2*plPx;
+        rrect(xx,ry-plH/2,pw,plH,6*u);ctx.fillStyle="#0A0082";ctx.fill();
+        ctx.strokeStyle="rgba(255,255,255,.9)";ctx.lineWidth=2*u;ctx.stroke();
+        ctx.fillStyle="#FFFFFF";ctx.fillText(n,xx+plPx,ry+2*u);xx+=pw;
+        if(i<names.length-1){xx+=gapX;const sp=seps[i];
+          if(sp==="↔"){ctx.font=`500 ${28*u}px ${FB}`;ctx.fillStyle=st.ink;ctx.fillText("et",xx,ry+1*u);xx+=ctx.measureText("et").width;}
+          else{drawOneArrow(xx,ry,arW,30*u,st.ink,sp==="→"?1:-1);xx+=arW;}
+          xx+=gapX;}
+      });
+      ry+=plH+rowG;
+    });
+    if(vInfo){
+      const vy=ry-rowG+28*u+6*u;ctx.font=`800 ${24*u}px ${FT}`;const tw=ctx.measureText(vInfo.tag).width+28*u;
+      ctx.font=`600 ${24*u}px ${FB}`;const rw=vInfo.rest?ctx.measureText(vInfo.rest).width+16*u:0;
+      let vx=W-PAD-tw-rw;
+      rrect(vx,vy-21*u,tw,42*u,8*u);ctx.fillStyle=st.ink;ctx.fill();
+      ctx.font=`800 ${24*u}px ${FT}`;ctx.fillStyle=st.bg;ctx.fillText(vInfo.tag,vx+14*u,vy+1*u);
+      if(vInfo.rest){ctx.font=`600 ${24*u}px ${FB}`;ctx.fillStyle=st.ink;ctx.fillText(vInfo.rest,vx+tw+16*u,vy+1*u);}
+    }
+  }else if(P.free.length){
+    // titre libre : affiché sous le statut, à droite
+    const t=P.free.join(" ");const F=fitBlock(t,W-PAD-sx-40*u-ctx.measureText(statusLabel).width,bandH-30*u,34*u,22*u,"700",1.2);
+    ctx.font=`700 ${F.fs}px ${FB}`;ctx.fillStyle=st.ink;ctx.textAlign="right";
+    F.lines.forEach((l,i)=>ctx.fillText(l,W-PAD,by-(F.lines.length-1)*F.fs*0.6+i*F.fs*1.2));
+  }
+  // ── 3. Schéma ─────────────────────────────────────────────────────────
+  const cY=bY+bandH+26*u,cX=PAD,cW=W-2*PAD;
+  const hasCards=!!((els.infos.value||"").trim()||(($("annonce")&&$("annonce").value)||"").trim()||($("repriseTime")&&$("repriseTime").value));
+  const maxCH=hasCards?Math.min(520*u,H-cY-84*u-220*u):H-cY-84*u-20*u;
+  const cH=Math.max(300*u,Math.min(maxCH,drawSchemaV2(R,st,th,cX,cY,cW,maxCH,true)));
+  rrect(cX,cY,cW,cH,20*u);ctx.fillStyle=th.card;ctx.fill();ctx.strokeStyle=th.border;ctx.lineWidth=2*u;ctx.stroke();
+  drawSchemaV2(R,st,th,cX,cY,cW,cH);
+  // ── 4. Cartes texte ───────────────────────────────────────────────────
+  const tY=cY+cH+26*u,tH=H-tY-84*u;
+  const cards=[];
+  const cons=(els.infos.value||"").trim(),ann=(($("annonce")&&$("annonce").value)||"").trim(),rep=($("repriseTime")&&$("repriseTime").value)||"";
+  if(cons)cards.push({t:"CONSIGNE CONDUCTEURS",ic:"conducteur",body:cons,flex:1.4});
+  if(ann)cards.push({t:"INFO VOYAGEURS",ic:"voyageurs",body:ann,flex:1.2});
+  if(rep)cards.push({t:"REPRISE ESTIMÉE",ic:"horloge",big:rep,flex:0.62});
+  textOver={titre:false,infos:false};
+  if(cards.length&&tH>80*u){
+    const gap=24*u,tot=cards.reduce((a,c)=>a+c.flex,0),avail=W-2*PAD-gap*(cards.length-1);let xx=PAD;
+    cards.forEach(c=>{
+      const w=avail*c.flex/tot;
+      rrect(xx,tY,w,tH,18*u);ctx.fillStyle=th.card;ctx.fill();ctx.strokeStyle=th.border;ctx.lineWidth=2*u;ctx.stroke();
+      ctx.fillStyle=c.ic==="conducteur"?"#0A0082":c.ic==="voyageurs"?"#00AA91":st.bg;
+      ctx.save();rrect(xx,tY,w,tH,18*u);ctx.clip();ctx.fillRect(xx,tY,10*u,tH);ctx.restore();
+      ctx.font=`800 ${22*u}px ${FT}`;ctx.fillStyle=th.muted;ctx.textAlign="left";ctx.fillText(c.t,xx+34*u,tY+38*u);
+      if(c.big){ctx.font=`800 ${Math.min(96*u,tH*0.5)}px ${FT}`;ctx.fillStyle=th.ink;ctx.fillText(c.big,xx+34*u,tY+tH*0.6);}
+      else{const F=fitBlock(c.body,w-68*u,tH-80*u,36*u,22*u,"600",1.3);ctx.font=`600 ${F.fs}px ${FB}`;ctx.fillStyle=th.ink;
+        F.lines.forEach((l,i)=>ctx.fillText(l,xx+34*u,tY+78*u+F.fs*0.5+i*F.fs*1.3));
+        if(c.ic==="conducteur"&&F.fs<36*u*0.999)textOver.infos="small";}
+      xx+=w+gap;
+    });
+  }
+  // ── 5. Légende + horodatage ───────────────────────────────────────────
+  const lY=H-42*u;ctx.textAlign="left";let lx=PAD;
+  const leg=(draw,txt)=>{draw(lx,lY);lx+=60*u;ctx.font=`600 ${21*u}px ${FB}`;ctx.fillStyle=th.muted;ctx.fillText(txt,lx,lY+1*u);lx+=ctx.measureText(txt).width+40*u;};
+  if(st.kind==="cut"||st.kind==="slow"){
+    leg((x,y)=>{ctx.strokeStyle=st.seg;ctx.lineWidth=10*u;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+44*u,y);ctx.stroke();},st.kind==="cut"?"Trafic interrompu":"Zone de ralentissement");
+  }
+  if(st.kind==="cut")leg((x,y)=>{spBadgeAt(x+22*u,y,0.8);},"Terminus provisoire (service provisoire)");
+  if(st.kind==="cut"||st.kind==="closed"||st.kind==="served")leg((x,y)=>{crossAt(x+22*u,y,12*u,th);},"Station non desservie");
+  ctx.font=`500 ${20*u}px ${FB}`;ctx.fillStyle=th.muted;ctx.textAlign="right";
+  ctx.fillText("Live Incident · Ligne "+currentLineId+" · "+nowStamp(),W-PAD,lY+1*u);
+  ctx.restore();ctx.textAlign="center";
+}
+function spBadgeAt(cx,cy,sc){const u=SCALE*(sc||1),bw=52*u,bh=30*u;rrect(cx-bw/2,cy-bh/2,bw,bh,6*u);ctx.fillStyle="#0A0082";ctx.fill();ctx.lineWidth=2*u;ctx.strokeStyle="#fff";ctx.stroke();
+  ctx.fillStyle="#fff";ctx.font=`900 ${19*u}px ${FB}`;ctx.textAlign="center";ctx.fillText("SP",cx,cy+1*u);ctx.textAlign="left";}
+function crossAt(x,y,r,th){ctx.lineCap="round";const cr=()=>{ctx.beginPath();ctx.moveTo(x-r,y-r);ctx.lineTo(x+r,y+r);ctx.moveTo(x-r,y+r);ctx.lineTo(x+r,y-r);ctx.stroke();};
+  ctx.strokeStyle=th.card;ctx.lineWidth=r*0.9;cr();ctx.strokeStyle="#E2001A";ctx.lineWidth=r*0.5;cr();}
+// Schéma : vue d'ensemble (toute la ligne) + zoom lisible sur la zone concernée
+function drawSchemaV2(R,st,th,cX,cY,cW,cH,measure){
+  const u=SCALE,ix=n=>R.indexOf(n);
+  // états des arêtes et stations
+  const _ss=[...selectedStations].sort((p,q)=>ix(p)-ix(q));
+  const segs=(trafficSegs.length?trafficSegs:((selectedStations.size>=2&&(st.kind==="cut"||st.kind==="slow"))?[[_ss[0],_ss[_ss.length-1]]]:[]))
+    .map(([a,b])=>[ix(a),ix(b)].sort((p,q)=>p-q)).filter(([a,b])=>a>=0&&b>=0);
+  const red=new Set();segs.forEach(([a,b])=>{for(let i=a;i<b;i++)red.add(i);});
+  const inner=new Set(),lim=new Set();segs.forEach(([a,b])=>{if(a===b){lim.add(a);return;}lim.add(a);lim.add(b);for(let i=a+1;i<b;i++)inner.add(i);});
+  const sel=new Set([...selectedStations].map(ix).filter(i=>i>=0));
+  const closed=new Set();
+  if(st.kind==="closed")sel.forEach(i=>closed.add(i));
+  if(st.kind==="served"&&sel.size)R.forEach((_,i)=>{if(!sel.has(i))closed.add(i);});
+  if(st.kind==="cut")inner.forEach(i=>{if(!lim.has(i))closed.add(i);});
+  // fenêtre de zoom
+  let lo=0,hi=R.length-1;
+  const marks=[...lim,...inner,...(st.kind==="closed"?sel:[])];
+  if(marks.length&&st.kind!=="served"){lo=Math.max(0,Math.min(...marks)-2);hi=Math.min(R.length-1,Math.max(...marks)+2);
+    while(hi-lo<6){if(lo>0)lo--;if(hi<R.length-1)hi++;if(lo===0&&hi===R.length-1)break;}}
+  const zoomed=!(lo===0&&hi===R.length-1);
+  // — vue d'ensemble
+  const oy=cY+46*u;
+  ctx.font=`800 ${18*u}px ${FT}`;const otw=ctx.measureText("VUE D'ENSEMBLE").width;ctx.font=`700 ${20*u}px ${FB}`;
+  const ox0=cX+30*u+otw+40*u+ctx.measureText(R[0]).width+20*u,ox1=cX+cW-30*u-ctx.measureText(R[R.length-1]).width-20*u,ostep=(ox1-ox0)/Math.max(1,R.length-1);
+  ctx.font=`800 ${18*u}px ${FT}`;ctx.fillStyle=th.muted;ctx.textAlign="left";ctx.fillText("VUE D'ENSEMBLE",cX+30*u,oy);
+  ctx.lineCap="round";ctx.lineWidth=8*u;ctx.strokeStyle=th.over;ctx.beginPath();ctx.moveTo(ox0,oy);ctx.lineTo(ox1,oy);ctx.stroke();
+  ctx.strokeStyle=LINE_COLOR;ctx.beginPath();ctx.moveTo(ox0,oy);ctx.lineTo(ox1,oy);ctx.stroke();
+  red.forEach(i=>{ctx.strokeStyle=st.seg;ctx.beginPath();ctx.moveTo(ox0+i*ostep,oy);ctx.lineTo(ox0+(i+1)*ostep,oy);ctx.stroke();});
+  [0,R.length-1].forEach((i,k)=>{ctx.beginPath();ctx.arc(ox0+i*ostep,oy,8*u,0,Math.PI*2);ctx.fillStyle=th.stFill;ctx.fill();ctx.lineWidth=4*u;ctx.strokeStyle=LINE_COLOR;ctx.stroke();
+    ctx.font=`700 ${20*u}px ${FB}`;ctx.fillStyle=th.ink;ctx.textAlign=k?"left":"right";ctx.fillText(R[i],ox0+i*ostep+(k?18:-18)*u,oy+1*u);});
+  if(zoomed){const zx0=ox0+lo*ostep-8*u,zx1=ox0+hi*ostep+8*u;rrect(zx0,oy-20*u,zx1-zx0,40*u,8*u);ctx.strokeStyle=th.ink;ctx.lineWidth=2.5*u;ctx.setLineDash([8*u,6*u]);ctx.stroke();ctx.setLineDash([]);
+    ctx.font=`700 ${16*u}px ${FB}`;ctx.fillStyle=th.muted;ctx.textAlign="center";ctx.fillText("ZOOM",(zx0+zx1)/2,oy+34*u);}
+  // séparateur
+  ctx.fillStyle=th.border;ctx.fillRect(cX+30*u,cY+96*u,cW-60*u,2*u);
+  // — zoom
+  const n=hi-lo,zx0=cX+(zoomed?150:110)*u;let zx1=cX+cW-(zoomed?150:110)*u;
+  const big=n<=16,mr=big?14*u:10*u,lw=big?20*u:14*u;let lf=big?(cH>560*u?40*u:32*u):(n<=26?24*u:19*u);
+  const SIN=Math.sin(Math.PI/5),COS=Math.cos(Math.PI/5);
+  const reachOf=f=>{let m=0;for(let i=lo;i<=hi;i++){ctx.font=`800 ${f*1.08}px ${FB}`;m=Math.max(m,ctx.measureText(R[i]).width);}return m*SIN+f*0.8+mr*1.35+14*u;};
+  const needOf=f=>110*u+reachOf(f)+mr+92*u;
+  while(needOf(lf)>cH&&lf>16*u)lf*=0.93;
+  if(measure)return needOf(lf);
+  // marge droite : les derniers noms (inclinés) ne doivent pas sortir du cadre
+  {let st0=(zx1-zx0)/Math.max(1,n),rm=0;for(let i=lo;i<=hi;i++){ctx.font=`800 ${lf*1.08}px ${FB}`;const w=ctx.measureText(R[i]).width*Math.cos(Math.PI/5)+(i===0||i===R.length-1?24*u:8*u);rm=Math.max(rm,w-(hi-i)*st0);}
+   zx1=Math.min(zx1,cX+cW-30*u-rm);}
+  const step=(zx1-zx0)/Math.max(1,n);
+  const zy=cY+cH-92*u;
+  const X=i=>zx0+(i-lo)*step;
+  // prolongements pointillés si la vue est rognée
+  ctx.setLineDash([14*u,12*u]);ctx.lineWidth=lw*0.6;ctx.strokeStyle=LINE_COLOR;ctx.lineCap="butt";
+  if(lo>0){ctx.beginPath();ctx.moveTo(cX+40*u,zy);ctx.lineTo(zx0,zy);ctx.stroke();}
+  if(hi<R.length-1){ctx.beginPath();ctx.moveTo(zx1,zy);ctx.lineTo(cX+cW-40*u,zy);ctx.stroke();}
+  ctx.setLineDash([]);
+  if(lo>0){ctx.font=`600 ${20*u}px ${FB}`;ctx.fillStyle=th.muted;ctx.textAlign="left";ctx.fillText("← "+R[0],cX+40*u,zy+40*u);}
+  if(hi<R.length-1){ctx.font=`600 ${20*u}px ${FB}`;ctx.fillStyle=th.muted;ctx.textAlign="right";ctx.fillText(R[R.length-1]+" →",cX+cW-40*u,zy+40*u);}
+  ctx.lineCap="round";ctx.lineWidth=lw;
+  for(let i=lo;i<hi;i++){ctx.strokeStyle=red.has(i)?st.seg:LINE_COLOR;ctx.beginPath();ctx.moveTo(X(i),zy);ctx.lineTo(X(i+1),zy);ctx.stroke();}
+  for(let i=lo;i<=hi;i++){
+    const term=(i===0||i===R.length-1),r=term?mr*1.35:mr,on=red.has(i)||red.has(i-1);
+    ctx.beginPath();ctx.arc(X(i),zy,r,0,Math.PI*2);ctx.fillStyle=th.stFill;ctx.fill();ctx.lineWidth=r*0.55;ctx.strokeStyle=on?st.seg:LINE_COLOR;ctx.stroke();
+    if(closed.has(i))crossAt(X(i),zy,r*1.05,th);
+    // étiquette
+    const nm=R[i],key=lim.has(i)||term||sel.has(i);
+    ctx.save();ctx.translate(X(i)+4*u,zy-r-14*u);ctx.rotate(-Math.PI/5);
+    ctx.font=`${key?800:600} ${key?lf*1.08:lf}px ${FB}`;ctx.textAlign="left";
+    if(term){const tw=ctx.measureText(nm).width;rrect(-8*u,-lf*0.75,tw+16*u,lf*1.5,6*u);ctx.fillStyle="#0A0082";ctx.fill();ctx.fillStyle="#fff";}
+    else ctx.fillStyle=closed.has(i)?(visTheme==="sombre"?"#FF8A95":"#B0001A"):th.label;
+    ctx.fillText(nm,0,0);ctx.restore();
+  }
+  if(st.kind==="cut")lim.forEach(i=>{if(i>=lo&&i<=hi)spBadgeAt(X(i),zy+mr+32*u,1);});
+  // sens de circulation (voie) : flèche au-dessus du tronçon
+  if((st.kind==="slow")&&trafficVoie!=="both"&&segs.length){
+    segs.forEach(([a,b])=>{if(a===b)return;const x1=X(Math.max(a,lo)),x2=X(Math.min(b,hi)),y=zy+mr+34*u;
+      ctx.font=`800 ${20*u}px ${FT}`;const lab="VOIE "+trafficVoie;const tw=ctx.measureText(lab).width;
+      drawOneArrow(Math.min(x1,x2)+8*u,y,Math.abs(x2-x1)-16*u-tw-20*u>40*u?Math.abs(x2-x1)-16*u-tw-20*u:40*u,22*u,st.seg,trafficVoie==="1"?1:-1);
+      ctx.fillStyle=st.seg;ctx.textAlign="right";ctx.fillText(lab,Math.max(x1,x2)-4*u,y+1*u);});
+  }
+}
+
 function draw(){
   if(!currentLineId)return;
   if(!_cleanRender)updateSelBar();
   const type=els.type.value,typeLow=type.toLowerCase();
   const chosen=[...selectedStations].sort((a,b)=>STATIONS.indexOf(a)-STATIONS.indexOf(b));
   const titre=els.titre.value,infos=els.infos.value;
+  if(visLayout==="v2"){drawV2();if(typeof drawStickers==='function')drawStickers();}else{
   ctx.clearRect(0,0,W,H);ctx.fillStyle="#fff";ctx.fillRect(0,0,W,H);
 
   // ── EN-TÊTE STRUCTURÉ ─────────────────────────────────────────────
@@ -3465,6 +3763,7 @@ function draw(){
    }
   }
   ctx.restore();
+  }
   }
   // ── handles édition + traits annotation (toujours en dernier) ──
   drawHandles();
