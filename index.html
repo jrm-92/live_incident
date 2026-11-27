@@ -3177,28 +3177,21 @@ function drawStructTitle(titre,yB,ts,maxW){
     if(vRow){ctx.font=`800 ${o.vf}px Lato, Arial`;o.tagW=ctx.measureText(vTag).width+o.vf*1.1;ctx.font=`500 ${o.vf}px Lato, Arial`;o.restW=vRest?ctx.measureText(vRest).width+o.vf*0.7:0;o.rw=o.gap*2+3*k+o.tagW+o.restW;}else o.rw=0;
     o.r2w=o.lw+o.rw;
     o.w=o.pad*2+Math.max(o.r1w,o.r2w);
-    o.bh=head?o.bandH:0;
-    o.h=o.bh+(segs.length?o.pad*0.75*2+o.lh:0);return o;};
+    o.bh=head?o.hf*1.3:0;
+    o.h=o.bh+(segs.length?(head?o.pad*0.6:0)+o.lh:0);return o;};
   let o=M();for(let n=0;n<40&&o.w>maxW;n++){k*=0.94;o=M();}
   const x0=W/2-o.w/2,y0=yB+16*k,rad=18*k;
   ctx.save();
-  // ombre douce + carte blanche
-  ctx.shadowColor="rgba(11,21,51,.16)";ctx.shadowBlur=24*k;ctx.shadowOffsetY=6*k;
-  rrect(x0,y0,o.w,o.h,rad);ctx.fillStyle="#fff";ctx.fill();
-  ctx.shadowColor="transparent";
   ctx.textBaseline="middle";
-  // bandeau rouge
+  // titre « ! TRAFIC INTERROMPU » en rouge, sans encart
   if(head){
-    ctx.save();rrect(x0,y0,o.w,o.h,rad);ctx.clip();ctx.fillStyle=RED;ctx.fillRect(x0,y0,o.w,o.bh);ctx.restore();
     const cy=y0+o.bh/2;let x=W/2-o.r1w/2;const cx=x+o.ic;
-    ctx.beginPath();ctx.arc(cx,cy,o.ic,0,Math.PI*2);ctx.fillStyle="#fff";ctx.fill();
-    ctx.fillStyle=RED;ctx.beginPath();rrect(cx-3.2*k,cy-15*k,6.4*k,20*k,3.2*k);ctx.fill();ctx.beginPath();ctx.arc(cx,cy+11*k,3.9*k,0,Math.PI*2);ctx.fill();
-    x+=o.ic*2+o.hg;ctx.font=`900 ${o.hf}px Lato, Arial`;ctx.fillStyle="#fff";ctx.textAlign="left";ctx.fillText(head,x,cy+o.hf*0.04);
+    ctx.beginPath();ctx.arc(cx,cy,o.ic,0,Math.PI*2);ctx.fillStyle=RED;ctx.fill();
+    ctx.fillStyle="#fff";ctx.beginPath();rrect(cx-3.2*k,cy-15*k,6.4*k,20*k,3.2*k);ctx.fill();ctx.beginPath();ctx.arc(cx,cy+11*k,3.9*k,0,Math.PI*2);ctx.fill();
+    x+=o.ic*2+o.hg;ctx.font=`900 ${o.hf}px Lato, Arial`;ctx.fillStyle=RED;ctx.textAlign="left";ctx.fillText(head,x,cy+o.hf*0.04);
   }
-  // bordure fine rouge
-  rrect(x0,y0,o.w,o.h,rad);ctx.lineWidth=3*k;ctx.strokeStyle=RED;ctx.stroke();
-  // corps : tronçons
-  const top=y0+o.bh+o.pad*0.75,lx=W/2-o.r2w/2;
+  // tronçons
+  const top=y0+o.bh+(head?o.pad*0.6:0),lx=W/2-o.r2w/2;
   ctx.textAlign="left";
   segs.forEach((l,si)=>{
     const {names,seps}=parts(l);let x=lx+(o.lw-o.segW[si])/2;const yy=top+si*(o.ph+o.rowG)+o.ph/2;
