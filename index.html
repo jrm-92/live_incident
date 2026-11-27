@@ -1808,7 +1808,7 @@ function updateThermo(){
     else if(isSel&&kind==="closed")tag="Fermée";
     else if(isSel&&kind==="served")tag="Desservie";
     else if(shut)tag="Fermée";
-    else if(inc.has(name))tag=isInter?"Barrée":"Incluse";
+    else if(inc.has(name))tag=isInter?"":"Incluse";
     else if(r.term)tag="Terminus";
     r.tag.textContent=tag;r.tag.style.display=tag?"":"none";
   });
