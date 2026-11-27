@@ -524,6 +524,11 @@
   :focus-visible{outline-color:var(--ratp-yellow);}
   .import-btn{width:100%;margin-bottom:6px;border-style:dashed;border-color:var(--brand);color:var(--brand);}
   .stk-txt.wide{width:100%;flex:1 1 0;min-width:0;text-align:left;}
+  .stk-row{flex-wrap:wrap;}
+  #stkList:not(:empty){margin-top:16px;padding-top:14px;border-top:1px dashed var(--border-strong);}
+  .stk-field{flex:1 0 100%;display:flex;flex-direction:column;gap:4px;padding:2px 2px 4px;}
+  .stk-field-lbl{font-size:12px;font-weight:800;color:var(--muted);}
+  .stk-field .stk-txt.wide{margin:0;min-height:48px;font-size:17px;padding:10px 12px;border-radius:10px;}
   .stk-row .btn.small{flex:none;}
   .draw-tools{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px;}
   .draw-tools .btn[aria-pressed="true"]{background:var(--night);border-color:var(--night);color:#fff;}
@@ -854,8 +859,8 @@
             <label class="btn import-btn" for="userImgInput">＋ Importer mes images (QR code, schéma, photo…)</label>
             <input type="file" id="userImgInput" accept="image/*" multiple class="sr-only">
             <p class="note" style="margin-top:6px">Les images importées restent sur cet appareil (dans le brouillon) et ne sont envoyées nulle part.</p>
-            <div class="stk-list" id="stkList"></div>
             <div class="bank" id="bankGrid"></div>
+            <div class="stk-list" id="stkList"></div>
           </div>
         </details>
         <p class="note">La date et l'heure du visuel sont ajoutées automatiquement au moment du téléchargement.</p>
@@ -2668,7 +2673,9 @@ function renderStkList(){
       inp.addEventListener("focus",()=>{setSel([i]);row.classList.add("sel");scheduleDraw();});
       // le clic dans la case ne doit pas reconstruire la liste (sinon la saisie est perdue)
       ["click","pointerdown","mousedown","touchstart"].forEach(ev=>inp.addEventListener(ev,e=>e.stopPropagation()));
-      nm.appendChild(inp);
+      if(isQ){const lab=el("label","stk-field");lab.appendChild(el("span","stk-field-lbl",s.k==="quai"?"Nom de la station":"Texte"));lab.appendChild(inp);
+        ["click","pointerdown","mousedown","touchstart"].forEach(ev=>lab.addEventListener(ev,e=>e.stopPropagation()));row._field=lab;}
+      else nm.appendChild(inp);
     }
     if(s.k==="arrow"||s.k==="text"){
       const sel=el("select","stk-color");sel.setAttribute("aria-label","Couleur");
@@ -2685,6 +2692,7 @@ function renderStkList(){
     row.appendChild(mk("−",tr?"Raccourcir":"Réduire",()=>resizeSticker(i,1/1.2)));
     row.appendChild(mk("+",tr?"Allonger":"Agrandir",()=>resizeSticker(i,1.2)));
     row.appendChild(mk("✕","Retirer",()=>removeSticker(i)));
+    if(row._field)row.appendChild(row._field);
     box.appendChild(row);
   });
 }
