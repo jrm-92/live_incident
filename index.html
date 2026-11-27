@@ -1714,7 +1714,7 @@ function buildModelList(){
     const o=document.createElement("option");o.value=m.v;o.textContent=m.label;els.type.appendChild(o);
     if(m.group!==lastG){lastG=m.group;const g=el("div","model-group",m.group==="Trafic"?"Incident de trafic":m.group==="Stations"?"Stations fermées":"Information");g.style.gridColumn="1/-1";box.appendChild(g);}
     const b=el("button","model");b.type="button";b.setAttribute("role","radio");b.setAttribute("aria-checked","false");b.dataset.v=m.v;
-    const r=el("span","rad");const t=el("span");t.appendChild(el("b",null,m.label));t.appendChild(el("small",null,m.desc));
+    const r=el("span","rad");const t=el("span");t.appendChild(el("b",null,m.label));
     b.appendChild(r);b.appendChild(t);
     b.addEventListener("click",()=>pickModel(m.v));
     box.appendChild(b);
