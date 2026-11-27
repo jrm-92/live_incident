@@ -3159,14 +3159,14 @@ function drawStructTitle(titre,yB,ts,maxW){
     ctx.font=`900 ${o.hf}px Lato, Arial`;o.hw=head?ctx.measureText(head).width:0;
     o.r1w=head?o.ic*2+o.hg+o.hw:0;
     ctx.font=`500 ${o.sf}px Lato, Arial`;o.preW=ctx.measureText("Entre ").width;
-    o.segW=segs.map(l=>{const {names}=splitSep(l);ctx.font=`700 ${o.sf}px Lato, Arial`;let w=names.length>1?o.preW:0;names.forEach((x,i)=>{w+=ctx.measureText(x).width;if(i<names.length-1)w+=o.arW+2*o.arG;});return w;});
+    o.segW=segs.map(l=>{const {names}=splitSep(l);ctx.font=`700 ${o.sf}px Lato, Arial`;let w=0;names.forEach((x,i)=>{w+=ctx.measureText(x).width;if(i<names.length-1)w+=o.arW+2*o.arG;});return w;});
     o.lw=Math.max(...o.segW,0);
-    o.lh=segs.length*o.sf*1.45;
+    o.ent=segs.some(l=>splitSep(l).names.length>1);o.eh=o.ent?o.sf*1.25:0;o.lh=segs.length*o.sf*1.45;
     if(vRow){ctx.font=`800 ${o.vf}px Lato, Arial`;o.tagW=ctx.measureText(vTag).width+o.vf*1.1;ctx.font=`500 ${o.vf}px Lato, Arial`;o.restW=vRest?ctx.measureText(vRest).width+o.vf*0.7:0;o.rw=o.gap*2+3*k+o.tagW+o.restW;}else o.rw=0;
     o.r2w=o.lw+o.rw;
     o.w=o.pad*2+Math.max(o.r1w,o.r2w);
     o.r1h=head?Math.max(o.hf*1.1,o.ic*2):0;
-    o.h=o.pad*0.9+o.r1h+(head&&segs.length?14*k:0)+o.lh+o.pad*0.7;return o;};
+    o.h=o.pad*0.9+o.r1h+(head&&segs.length?14*k:0)+o.eh+o.lh+o.pad*0.7;return o;};
   let o=M();for(let n=0;n<40&&o.w>maxW;n++){k*=0.94;o=M();}
   const x0=W/2-o.w/2,y0=yB+12*k;
   ctx.save();
@@ -3180,11 +3180,11 @@ function drawStructTitle(titre,yB,ts,maxW){
     x+=o.ic*2+o.hg;ctx.font=`900 ${o.hf}px Lato, Arial`;ctx.fillStyle=RED;ctx.textAlign="left";ctx.fillText(head,x,cy+o.hf*0.04);
     y+=o.r1h+(segs.length?14*k:0);
   }
+  if(o.ent){ctx.font=`500 ${o.sf}px Lato, Arial`;ctx.fillStyle=INK;ctx.textAlign="center";ctx.fillText("Entre",W/2,y+o.sf*0.6);y+=o.eh;}
   const lx=W/2-o.r2w/2;let ly=y;
   ctx.textAlign="left";
   segs.forEach((l,si)=>{
     const {names,seps}=splitSep(l);let x=lx+(o.lw-o.segW[si])/2;const yy=ly+o.sf*0.72;
-    if(names.length>1){ctx.font=`500 ${o.sf}px Lato, Arial`;ctx.fillStyle=INK;ctx.fillText("Entre ",x,yy);x+=o.preW;}
     ctx.font=`700 ${o.sf}px Lato, Arial`;
     names.forEach((part,i)=>{ctx.fillStyle=INK;ctx.fillText(part,x,yy);x+=ctx.measureText(part).width;
       if(i<names.length-1){x+=o.arG;const sp=seps[i];
