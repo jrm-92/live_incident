@@ -2059,9 +2059,9 @@ let lastAutoTitle="";
 function autoTitle(){
   if(els.type.value!=="Interruption de trafic"||!modelChosen||selectedStations.size<2)return "";
   const L=sortedSegs().filter(([a,b])=>a!==b);
-  if(L.length>1)return "Trafic interrompu\n"+L.map(([a,b])=>a+" ↔ "+b).join("\n");
+  if(L.length)return "Trafic interrompu\n"+L.map(([a,b])=>a+" ↔ "+b).join("\n");
   const s=[...selectedStations].sort((x,y)=>STATIONS.indexOf(x)-STATIONS.indexOf(y));
-  return "Trafic interrompu entre "+s[0]+" et "+s[s.length-1];
+  return "Trafic interrompu\n"+s[0]+" ↔ "+s[s.length-1];
 }
 function syncAutoTitle(){
   const t=autoTitle(),cur=els.titre.value.trim();
