@@ -3629,7 +3629,7 @@ function draw(){
   const _iF=fitRich(infoRich||plainToRich(infos||""),_maxTW,8,_ifs,_ifs*0.55);
   if(_iF.lines.length){
     const idx=OFF.infos.dx||0,idy=OFF.infos.dy||0;
-    yB+=_iF.fs*0.35+(infoFmt.frame?(/^m:/.test(infoFmt.frame)?64:46)*SCALE:0);
+    yB+=_iF.fs*0.35+(infoFmt.frame?(/^m:/.test(infoFmt.frame)?54:46)*SCALE:0);
     const iy0=yB+idy,_ilh=_iF.fs*1.3;let iw=0;
     // position de chaque ligne : une ligne vide (séparation de paragraphes) = ½ ligne
     const _iy=[];let _acc=0;_iF.lines.forEach((L,i)=>{if(i)_acc+=L.length?_ilh:_ilh*0.55;_iy.push(_acc);});const _ih=_acc;
@@ -3637,15 +3637,15 @@ function draw(){
     _iF.lines.forEach((L,i)=>{const lw=L.reduce((a,k)=>a+k.w,0);let x=W/2+idx-lw/2;const y=iy0+_iy[i];iw=Math.max(iw,lw);
       L.forEach(k=>{if(k.ico){const im=ICO_IMG[k.ico],sz=_iF.fs*1.3;if(im&&im.complete&&im.naturalWidth)ctx.drawImage(im,x+(k.w-sz)/2,y-sz/2,sz,sz);x+=k.w;return;}
         ctx.font=richFont(k,_iF.fs);ctx.fillStyle=k.c||"#1e2230";ctx.fillText(k.t,x,y);if(k.u)ctx.fillRect(x,y+_iF.fs*0.52,k.w,Math.max(2,_iF.fs*0.07));x+=k.w;});});
-    if(infoFmt.frame){const mir=/^m:/.test(infoFmt.frame),col=infoFmt.frame.replace(/^m:/,""),pd=(mir?52:34)*SCALE;
+    if(infoFmt.frame){const mir=/^m:/.test(infoFmt.frame),col=infoFmt.frame.replace(/^m:/,""),pd=(mir?42:34)*SCALE;
       const fx=W/2+idx-iw/2-pd,fy=iy0-_iF.fs*0.8-pd*0.5,fw=iw+2*pd,fh=_ih+_iF.fs*1.6+pd;ctx.save();
       if(mir){// cadre mirliton : bande à rayures diagonales
-        const bw=20*SCALE,st=14*SCALE;
+        const bw=10*SCALE,st=9*SCALE;
         ctx.save();ctx.beginPath();rrect(fx,fy,fw,fh,10*SCALE);ctx.rect(fx+bw,fy+bw,fw-2*bw,fh-2*bw);ctx.clip("evenodd");
         ctx.fillStyle="#fff";ctx.fillRect(fx,fy,fw,fh);
         ctx.strokeStyle=col;ctx.lineWidth=st/(2*Math.SQRT2);ctx.lineCap="butt";ctx.beginPath();
         for(let d=-fh;d<fw+fh;d+=st){ctx.moveTo(fx+d,fy+fh);ctx.lineTo(fx+d+fh,fy);}ctx.stroke();ctx.restore();
-        ctx.lineWidth=2.5*SCALE;ctx.strokeStyle=col;rrect(fx,fy,fw,fh,10*SCALE);ctx.stroke();ctx.strokeRect(fx+bw,fy+bw,fw-2*bw,fh-2*bw);
+        ctx.lineWidth=1.5*SCALE;ctx.strokeStyle=col;rrect(fx,fy,fw,fh,10*SCALE);ctx.stroke();ctx.strokeRect(fx+bw,fy+bw,fw-2*bw,fh-2*bw);
       }else{ctx.lineWidth=6*SCALE;ctx.strokeStyle=col;rrect(fx,fy,fw,fh,18*SCALE);ctx.stroke();}
       ctx.restore();}
     ctx.textAlign="center";
