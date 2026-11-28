@@ -3022,6 +3022,29 @@ els.canvas.addEventListener("pointermove",e=>{
   }
   if(_raf)cancelAnimationFrame(_raf);_raf=requestAnimationFrame(()=>{_raf=null;draw();});
 },{capture:true});
+// Bloc titre (« ! TRAFIC INTERROMPU » + « Entre … ») : déplaçable directement dans l'aperçu
+const inTitle=p=>{const b=BBOX.title;return !!b&&p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h;};
+els.canvas.addEventListener("pointerdown",e=>{
+  if(editMode||drawTool||view!=="app"||step<2)return;
+  const p=cvPt(e);if(!inTitle(p))return;
+  e.preventDefault();e.stopImmediatePropagation();
+  try{els.canvas.setPointerCapture(e.pointerId);}catch(err){}
+  _titleDrag={sx:p.x,sy:p.y,ox:OFF.title.dx||0,oy:OFF.title.dy||0};
+},{capture:true});
+els.canvas.addEventListener("pointermove",e=>{
+  if(_titleDrag){e.preventDefault();e.stopImmediatePropagation();const p=cvPt(e);
+    OFF.title.dx=Math.max(-W*0.45,Math.min(W*0.45,_titleDrag.ox+p.x-_titleDrag.sx));
+    OFF.title.dy=Math.max(-H*0.4,Math.min(H*0.6,_titleDrag.oy+p.y-_titleDrag.sy));
+    if(_raf)cancelAnimationFrame(_raf);_raf=requestAnimationFrame(()=>{_raf=null;draw();});return;}
+  if(editMode||drawTool||e.pointerType==="touch")return;
+  const h=inTitle(cvPt(e));
+  if(h!==_titleHover){_titleHover=h;els.canvas.style.cursor=h?"move":"";scheduleDraw();}
+});
+els.canvas.addEventListener("pointerleave",()=>{if(_titleHover&&!_titleDrag){_titleHover=false;els.canvas.style.cursor="";scheduleDraw();}});
+const endTitleDrag=e=>{if(!_titleDrag)return;e.stopImmediatePropagation();_titleDrag=null;draw();touchDraft();};
+els.canvas.addEventListener("pointerup",endTitleDrag,{capture:true});
+els.canvas.addEventListener("pointercancel",endTitleDrag,{capture:true});
+els.canvas.addEventListener("dblclick",e=>{if(editMode||!inTitle(cvPt(e)))return;OFF.title.dx=0;OFF.title.dy=0;draw();touchDraft();});
 function endStkDrag(e){if(!stkDrag)return;e.stopImmediatePropagation();stkDrag=null;draw();touchDraft();}
 els.canvas.addEventListener("pointerup",endStkDrag,{capture:true});
 els.canvas.addEventListener("pointercancel",endStkDrag,{capture:true});
@@ -3182,6 +3205,7 @@ function drawOneArrow(x,cy,w,fs,color,dir){
 }
 const SEP_RE=/\s*(↔|→|←)\s*/;
 function splitSep(l){const parts=l.split(SEP_RE);const names=[],seps=[];parts.forEach((x,i)=>i%2?seps.push(x):names.push(x.trim()));return{names,seps};}
+let _lastStructW=0,_titleHover=false,_titleDrag=null;
 function drawStructTitle(titre,yB,ts,maxW){
   // Encart d'alerte : bandeau rouge « ! TITRE » + corps blanc « Entre [plaque] et [plaque] » (+ voie)
   const rows=titre.split("\n").map(l=>l.replace(/\s+/g," ").trim()).filter(Boolean);
@@ -3212,7 +3236,7 @@ function drawStructTitle(titre,yB,ts,maxW){
     o.bh=head?o.hf*1.3:0;
     o.h=o.bh+(segs.length?(head?o.pad*0.6:0)+o.lh:0);return o;};
   let o=M();for(let n=0;n<40&&o.w>maxW;n++){k*=0.94;o=M();}
-  const x0=W/2-o.w/2,y0=yB+16*k,rad=18*k;
+  const x0=W/2-o.w/2,y0=yB+16*k,rad=18*k;_lastStructW=o.w;
   ctx.save();
   ctx.textBaseline="middle";
   // titre « ! TRAFIC INTERROMPU » en rouge, sans encart
@@ -3350,16 +3374,17 @@ function draw(){
   }
 
   yB+=(OFF.title.dy||0);
-  regBox('title',W*0.15,yB-8*SCALE,W*0.7,(/\n|↔/.test(titre||"")?Math.max(1,titre.trim().split("\n").length)*62:90)*SCALE);
+  const _tdx=OFF.title.dx||0,_ty0=yB;let _tbw=0;
+  ctx.save();ctx.translate(_tdx,0);
   // === Titre : typographie pure, rouge RATP — description anthracite (retour à la ligne + réduction auto) ===
   const _ts=OFF.title.s||1,_tfs=30*SCALE*_ts,_tlh=52*SCALE*_ts,_maxTW=W-2*110*SCALE;
   textOver={titre:false,infos:false};
   const _struct=/\n|↔/.test(titre||"");
-  if(_struct){yB=drawStructTitle(titre,yB,_ts,_maxTW);}
+  if(_struct){yB=drawStructTitle(titre,yB,_ts,_maxTW);_tbw=Math.max(_tbw,_lastStructW);}
   const _tF=_struct?{lines:[]}:fitLines((titre||"").toUpperCase(),_maxTW,3,_tfs,_tfs*0.5,"900");
   if(_tF.lines.length){
     ctx.font=`900 ${_tF.fs}px Lato, Arial`;ctx.fillStyle="#E2001A";ctx.textAlign="center";ctx.textBaseline="middle";
-    const _lh=_tF.fs*1.28;_tF.lines.forEach((l,i)=>ctx.fillText(l,W/2,yB+i*_lh));
+    const _lh=_tF.fs*1.28;_tF.lines.forEach((l,i)=>{ctx.fillText(l,W/2,yB+i*_lh);_tbw=Math.max(_tbw,ctx.measureText(l).width);});
     yB+=(_tF.lines.length-1)*_lh+_tlh+10*SCALE;
     textOver.titre=_tF.over?"cut":(_tF.fs<_tfs*0.999?"small":false);
   }
@@ -3367,9 +3392,15 @@ function draw(){
   const _iF=fitLines(infos||"",_maxTW,3,_ifs,_ifs*0.6,"400");
   if(_iF.lines.length){
     ctx.font=`400 ${_iF.fs}px Lato, Arial`;ctx.fillStyle="#1e2230";ctx.textAlign="center";ctx.textBaseline="middle";
-    const _ilh=_iF.fs*1.3;_iF.lines.forEach((l,i)=>ctx.fillText(l,W/2,yB+i*_ilh));
+    const _ilh=_iF.fs*1.3;_iF.lines.forEach((l,i)=>{ctx.fillText(l,W/2,yB+i*_ilh);_tbw=Math.max(_tbw,ctx.measureText(l).width);});
     yB+=(_iF.lines.length-1)*_ilh+36*SCALE*_ts;
     textOver.infos=_iF.over?"cut":(_iF.fs<_ifs*0.999?"small":false);
+  }
+  ctx.restore();
+  if(_tbw>0){const bx=W/2+_tdx-_tbw/2-24*SCALE,by=_ty0-30*SCALE,bh=Math.max(60*SCALE,yB-_ty0+10*SCALE);regBox('title',bx,by,_tbw+48*SCALE,bh);
+    if(_titleHover&&!_cleanRender&&!editMode){ctx.save();ctx.setLineDash([14*SCALE,10*SCALE]);ctx.lineWidth=3*SCALE;ctx.strokeStyle="rgba(10,0,130,.55)";rrect(bx,by,_tbw+48*SCALE,bh,12*SCALE);ctx.stroke();ctx.restore();}
+  }else BBOX.title=null;
+  {
   }
   // liste des stations fermées : panneaux nominatifs RATP, croix rouge à gauche du nom
   if(chosen.length&&(isFerme||isFerme20)){
