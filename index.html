@@ -360,7 +360,7 @@
   .frame{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--border-strong);background:#fff;}
   canvas#preview{width:100%;height:auto;display:block;touch-action:auto;}
   body.is-editing canvas#preview{touch-action:none;}
-  .edit-zone{margin-top:12px;}
+  .edit-zone{margin:12px 0;}
   .edit-zone .btn{width:100%;}
   #masterEditBtn{min-height:48px;width:100%;font-size:15px;}
   #masterTabs{flex-wrap:wrap;}
@@ -895,6 +895,18 @@
           <select id="interSel"></select>
           <div class="field-hint"><span id="interMsg"></span></div>
         </div>
+        <div class="edit-zone">
+          <h2 class="sec">Retouches (facultatif)</h2>
+          <p class="note" style="margin-top:0">Déplacer un élément, ajouter du texte ou dessiner directement sur l'aperçu.</p>
+          <button id="masterEditBtn" class="etool" type="button">✏️ Modifier le visuel</button>
+          <div id="masterTabs" style="display:none;align-items:center;gap:6px;">
+            <button class="etool active" id="eTSelect" type="button">↖ Sélection</button>
+            <button class="etool" id="eTText" type="button">T Texte</button>
+            <button class="etool" id="eTDraw" type="button">✏ Dessin</button>
+            <button class="etool" id="eTUndo" type="button" onclick="undo()">↶ Annuler</button>
+            <button id="masterQuitBtn" type="button">✕ Terminer</button>
+          </div>
+        </div>
         <details class="adv bank-box" id="bankBox">
           <summary>Images et QR codes : schéma explicatif<span id="bankCount" class="bank-count"></span></summary>
           <div class="adv-body">
@@ -928,18 +940,6 @@
           </select>
         </div>
         <div class="msg hidden" id="exportMsg" role="status" aria-live="polite"></div>
-        <div class="edit-zone">
-          <h2 class="sec">Retouches (facultatif)</h2>
-          <p class="note" style="margin-top:0">Déplacer un élément, ajouter du texte ou dessiner directement sur l'aperçu.</p>
-          <button id="masterEditBtn" class="etool" type="button">✏️ Modifier le visuel</button>
-          <div id="masterTabs" style="display:none;align-items:center;gap:6px;">
-            <button class="etool active" id="eTSelect" type="button">↖ Sélection</button>
-            <button class="etool" id="eTText" type="button">T Texte</button>
-            <button class="etool" id="eTDraw" type="button">✏ Dessin</button>
-            <button class="etool" id="eTUndo" type="button" onclick="undo()">↶ Annuler</button>
-            <button id="masterQuitBtn" type="button">✕ Terminer</button>
-          </div>
-        </div>
       </div>
 
       <div class="stepnav hidden" id="stepnav">
@@ -2155,7 +2155,7 @@ function goStep(n,opts){
   opts=opts||{};
   n=Math.max(1,Math.min(4,n));
   if(!opts.force&&n>step){const b=firstBlock(n-1);if(b){setHint(b.msg);if(b.step!==step)goStep(b.step,{});return false;}}
-  if(step===4&&n!==4&&editMode)$("masterQuitBtn").click();
+  if(step===3&&n!==3&&editMode)$("masterQuitBtn").click();
   step=n;
   renderStep();
   if(view!=="app")showView("app",{noPush:true});
