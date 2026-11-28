@@ -228,6 +228,9 @@
     display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;line-height:1;color:#fff;}
   .trow.term .dot{width:22px;height:22px;margin-top:-11px;left:12px;}
   .trow .nm{flex:1;min-width:0;line-height:1.2;}
+  .trow .spchoice{flex:none;display:inline-flex;border:1px solid var(--night);border-radius:999px;overflow:hidden;}
+  .trow .spopt{font-size:12px;font-weight:800;padding:6px 10px;color:var(--night);background:#fff;cursor:pointer;white-space:nowrap;}
+  .trow .spopt.on{background:var(--night);color:#fff;}
   .trow .tag{flex:none;font-size:12px;font-weight:800;padding:3px 8px;border-radius:999px;background:var(--panel-2);border:1px solid var(--border);color:var(--muted);}
   .trow.sel .dot{background:var(--night);border-color:var(--night);}
   .trow.sel .dot::after{content:"✓";}
@@ -1024,7 +1027,7 @@ const SCALE=2,W=1920*SCALE,H=1080*SCALE,NAVY="#000082",RED_SEG="#E2001A",HDR=124
 const TYPES_AVEC_INTER=["Service de sécurité","Service de sécurité sur ordre","Ralentissement provisoire"];
 const KNOWN=["ralentissement_provisoire.png","service_securite.png","service_securite_sur_ordre.png","interruption_trafic.png","station_fermee.png"];
 let currentLineId=null,STATIONS=[],LINE_COLOR="#B7E600";
-const assets={};let interstations=[];const selectedStations=new Set();let trafficSegs=[];let trafficVoie="both"; // "1" (gauche → droite), "2" (droite → gauche), "both"
+const assets={};let interstations=[];const selectedStations=new Set();let trafficSegs=[];let trafficVoie="both";let spPos={}; // SP : "avant" (avant gare) ou "apres" (après gare), par station // "1" (gauche → droite), "2" (droite → gauche), "both"
 
 function hexToRgb(h){const m=h.replace("#","");return{r:parseInt(m.substr(0,2),16),g:parseInt(m.substr(2,2),16),b:parseInt(m.substr(4,2),16)};}
 function lighten(hex,a){const c=hexToRgb(hex);const f=v=>Math.round(v+(255-v)*a);return`rgb(${f(c.r)},${f(c.g)},${f(c.b)})`;}
@@ -1809,9 +1812,13 @@ function buildThermo(){
       b.type="button";b.setAttribute("role","checkbox");b.setAttribute("aria-checked","false");b.dataset.st=name;
       b.appendChild(el("span","dot"));b.appendChild(el("span","nm",name));
       const tag=el("span","tag");b.appendChild(tag);
+      const spc=el("span","spchoice");spc.style.display="none";
+      [["avant","Avant gare"],["apres","Après gare"]].forEach(([v,t])=>{const o=el("span","spopt",t);o.dataset.v=v;o.setAttribute("role","button");
+        o.addEventListener("click",e=>{e.stopPropagation();spPos[name]=v;updateThermo();afterChange();touchDraft();});spc.appendChild(o);});
+      b.appendChild(spc);
       b.addEventListener("click",()=>onStationTap(name));
       box.appendChild(b);
-      rows.set(name,{el:b,tag,sec,i,term:b.classList.contains("term")});
+      rows.set(name,{el:b,tag,spc,sec,i,term:b.classList.contains("term")});
     });
   });
   updateThermo();
@@ -1853,13 +1860,16 @@ function updateThermo(){
     b.setAttribute("aria-checked",String(isSel));
     let tag="";
     if(isPend)tag="Début ?";
-    else if(isSel&&kind==="traffic"){const seg=trafficSegs.find(([a,b])=>a===name||b===name);const isPt=seg?seg[0]===seg[1]&&!trafficSegs.some(([a,b])=>a!==b&&(a===name||b===name)):sel.size<2;tag=isPt?"Point":(isInter?"Limite · SP":"Limite");}
+    else if(isSel&&kind==="traffic"){const seg=trafficSegs.find(([a,b])=>a===name||b===name);const isPt=seg?seg[0]===seg[1]&&!trafficSegs.some(([a,b])=>a!==b&&(a===name||b===name)):sel.size<2;tag=isPt?"Point":(isInter?"":"Limite");}
     else if(isSel&&kind==="closed")tag="Fermée";
     else if(isSel&&kind==="served")tag="Desservie";
     else if(shut)tag="Fermée";
     else if(inc.has(name))tag=isInter?"":"Incluse";
     else if(r.term)tag="Terminus";
     r.tag.textContent=tag;r.tag.style.display=tag?"":"none";
+    const showSP=isSel&&isInter&&kind==="traffic"&&!isPend&&!tag;
+    r.spc.style.display=showSP?"":"none";
+    if(showSP){const v=spPos[name]==="apres"?"apres":"avant";r.spc.querySelectorAll(".spopt").forEach(o=>o.classList.toggle("on",o.dataset.v===v));}
   });
   updateStatus(inc);
   els.counter.textContent=`${sel.size} sélectionnée(s)`;
@@ -2197,7 +2207,7 @@ function renderRecap(){
 
 /* ── Brouillons et visuels récents (stockage local de l'appareil) ─────── */
 function snapshot(){
-  return{lineId:currentLineId,type:els.type.value,titre:els.titre.value,infos:els.infos.value,stations:[...selectedStations],segs:trafficSegs.map(x=>[...x]),voie:trafficVoie,inter:currentInterName()||desiredInter,
+  return{lineId:currentLineId,type:els.type.value,titre:els.titre.value,infos:els.infos.value,stations:[...selectedStations],segs:trafficSegs.map(x=>[...x]),voie:trafficVoie,sp:{...spPos},inter:currentInterName()||desiredInter,
     off:JSON.parse(JSON.stringify(OFF)),hidden:[...HIDDEN],textBoxes:textBoxes.map(b=>({...b})),
     strokes:strokes.map(s=>({color:s.color,w:s.w,pts:s.pts.map(p=>({x:Math.round(p.x),y:Math.round(p.y)}))})),stickers:stickers.map(s=>({...s})),step};
 }
@@ -2239,7 +2249,7 @@ function resetEdits(){
 function newVisual(){
   flushDraft();
   resetEdits();
-  curDraftId=null;modelChosen=false;pickTouched=false;lastAutoTitle="";trafficVoie="both";
+  curDraftId=null;modelChosen=false;pickTouched=false;lastAutoTitle="";trafficVoie="both";spPos={};
   els.type.value="";els.titre.value="";els.infos.value="";desiredInter="";
   currentLineId=null;STATIONS=[];clearSegs();rows.clear();els.zlist.innerHTML="";
   els.titre.placeholder="Titre du visuel";
@@ -2263,7 +2273,7 @@ function loadSnapshot(s,draftId,startStep){
   trafficSegs=(s.segs||[]).filter(x=>Array.isArray(x)&&STATIONS.includes(x[0])&&STATIONS.includes(x[1])).map(x=>[x[0],x[1]]);
   if(!trafficSegs.length&&m&&m.kind==="traffic"&&selectedStations.size===2)trafficSegs=[[...selectedStations]];
   if(trafficSegs.length)syncSelFromSegs();
-  trafficVoie=["1","2","both"].includes(s.voie)?s.voie:"both";
+  trafficVoie=["1","2","both"].includes(s.voie)?s.voie:"both";spPos={...(s.sp||{})};
   els.titre.value=s.titre||"";els.infos.value=s.infos||"";lastAutoTitle=autoTitle()===els.titre.value.trim()?els.titre.value.trim():"";desiredInter=s.inter||"";
   applyModelUI();updateStep1UI();updateTextHints();
   curDraftId=draftId;
@@ -3219,16 +3229,27 @@ function drawStructTitle(titre,yB,ts,maxW){
   return y0+o.h+40*k;
 }
 // Pastille « SP » sous les stations limites du tronçon
+// Plaque SP : quais + « SP » d'un côté, communication (aiguillage) de l'autre.
+// Avant gare : communication en bas ; après gare : communication en haut.
 function drawSPBadge(name,x,yLine,isTerm,below){
-  const bw=52*SCALE,bh=30*SCALE;
-  const gap=_mR*(isTerm?1.5:1)+9*SCALE;
-  let cx=x,cy;
-  cy=below?yLine-gap-bh/2:yLine+gap+bh/2;
+  const u=SCALE,bw=56*u,bh=44*u,apres=spPos[name]==="apres";
+  const gap=_mR*(isTerm?1.5:1)+9*u;
+  const cx=x,cy=below?yLine-gap-bh/2:yLine+gap+bh/2,x0=cx-bw/2,y0=cy-bh/2;
   ctx.save();
-  rrect(cx-bw/2,cy-bh/2,bw,bh,7*SCALE);ctx.fillStyle="#0A0082";ctx.fill();
-  ctx.lineWidth=1.6*SCALE;ctx.strokeStyle="#fff";ctx.stroke();
-  ctx.fillStyle="#fff";ctx.font=`900 ${20*SCALE}px Lato, Arial`;ctx.textAlign="center";ctx.textBaseline="middle";
-  ctx.fillText("SP",cx,cy+1*SCALE);
+  rrect(x0,y0,bw,bh,4*u);ctx.fillStyle="#0A0082";ctx.fill();
+  ctx.lineWidth=1.6*u;ctx.strokeStyle="#fff";ctx.stroke();
+  // moitié « gare » : deux quais + SP
+  const gy0=apres?y0+bh*0.46:y0+bh*0.08,gh=bh*0.46;
+  ctx.fillStyle="#fff";
+  rrect(x0+bw*0.08,gy0,bw*0.1,gh,1.5*u);ctx.fill();
+  rrect(x0+bw*0.82,gy0,bw*0.1,gh,1.5*u);ctx.fill();
+  ctx.font=`900 ${17*u}px Lato, Arial`;ctx.textAlign="center";ctx.textBaseline="middle";
+  ctx.fillText("SP",cx,gy0+gh/2+1*u);
+  // communication
+  ctx.strokeStyle="#fff";ctx.lineWidth=2.4*u;ctx.lineCap="butt";ctx.lineJoin="miter";ctx.beginPath();
+  if(!apres){ctx.moveTo(x0+bw*0.3,y0+bh);ctx.lineTo(x0+bw*0.3,y0+bh*0.84);ctx.lineTo(x0+bw*0.68,y0+bh*0.76);ctx.lineTo(x0+bw*0.68,y0+bh*0.6);}
+  else{ctx.moveTo(x0+bw*0.7,y0);ctx.lineTo(x0+bw*0.7,y0+bh*0.16);ctx.lineTo(x0+bw*0.32,y0+bh*0.24);ctx.lineTo(x0+bw*0.32,y0+bh*0.4);}
+  ctx.stroke();
   ctx.restore();
 }
 function draw(){
