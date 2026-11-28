@@ -3302,12 +3302,12 @@ function buildPlan(){
   if(fork){cols=L.fork.trunk.length+Math.max(L.fork.branchA.length,L.fork.branchB.length);}
   else{cols=LIST.length;}
   // espacement : remplit la largeur utile, plafonné pour les lignes courtes
-  const sideMargin=210*SCALE;const usable=W-2*sideMargin;
+  const sideMargin=140*SCALE;const usable=W-2*sideMargin;
   const sp=Math.min(usable/Math.max(cols-1,1),300*SCALE);
   // tailles adaptatives selon la densité (espacement)
-  _mR=Math.max(5*SCALE,Math.min(sp*0.085,14*SCALE));
-  _lf=Math.max(11*SCALE,Math.min(sp*0.14,24*SCALE));
-  _lw=Math.max(6*SCALE,Math.min(sp*0.058,13*SCALE));
+  _mR=Math.max(6*SCALE,Math.min(sp*0.115,16*SCALE));
+  _lf=Math.max(12*SCALE,Math.min(sp*0.24,26*SCALE));
+  _lw=Math.max(7*SCALE,Math.min(sp*0.08,14*SCALE));
   // hauteur réservée aux libellés (selon la police adaptative + nom le plus long)
   ctx.font=`700 ${_lf}px Lato, Arial`;
   let maxLabelW=0;LIST.forEach(s=>splitName(s).forEach(p=>{maxLabelW=Math.max(maxLabelW,ctx.measureText(p).width);}));
