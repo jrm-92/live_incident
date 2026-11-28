@@ -918,8 +918,7 @@
       <!-- Étape 4 : aperçu final + téléchargement -->
       <div class="card step hidden" id="step4">
         <h1 class="step-title">Vérifier et télécharger</h1>
-        <p class="step-sub">Vérifiez l'aperçu ci-dessus (touchez « Plein écran » pour le voir en grand). Le fichier téléchargé est identique.</p>
-        <dl class="recap" id="recap"></dl>
+        <dl class="recap hidden" id="recap"></dl>
         <ul class="checks" id="checks"></ul>
         <div class="field">
           <label class="fld" for="resSel">Résolution du fichier</label>
@@ -2402,9 +2401,8 @@ function renderRecap(){
   const chk=(cls,ic,txt)=>{const li=el("li",cls);li.appendChild(el("span","ic",ic));li.appendChild(el("span",null,txt));ul.appendChild(li);};
   const b=firstBlock(3);
   if(b)chk("err","✕",b.msg);
-  else chk("ok","✓","Informations indispensables renseignées");
   [2,3].forEach(n=>validate(n).warn.forEach(w=>chk("warn","⚠",w)));
-  chk("ok","✓","La date et l'heure seront ajoutées au moment du téléchargement");
+  ul.classList.toggle("hidden",!ul.children.length);
 }
 
 /* ── Brouillons et visuels récents (stockage local de l'appareil) ─────── */
