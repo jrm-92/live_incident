@@ -1938,7 +1938,7 @@ function updateStatus(inc){
   let txt="",warn=false;
   if(pendingStart){txt="Début"+(trafficSegs.length?" du tronçon "+(trafficSegs.length+1):"")+" : "+pendingStart+". Touchez maintenant la station de fin du tronçon (ou la même station pour annuler).";warn=true;}
   else if(kind==="traffic"){
-    if(!sel.size){txt="Aucune station sélectionnée. Touchez la 1re station du tronçon, puis la dernière.";warn=true;}
+    if(!sel.size){txt="Aucune station sélectionnée. Touchez la ou les stations concernée(s).";warn=true;}
     else if(sel.size===1){txt="1 station : "+sorted[0]+". Touchez-en une deuxième pour former un tronçon.";warn=true;}
     else if(trafficSegs.length>1){const L=sortedSegs();txt=L.length+" tronçons : "+L.map(([a,b])=>a===b?a:a+" → "+b).join(" · ")+" — touchez un tronçon pour le retirer, ou une autre station pour en ajouter un.";}
     else txt="Tronçon : "+sorted[0]+" → "+sorted[sorted.length-1]+" · "+inc.size+(els.type.value==="Interruption de trafic"?" station(s) barrée(s) d'une croix rouge · SP aux limites":" station(s) entre les deux")+(trafficSegs.length?" — touchez une autre station pour ajouter un 2e tronçon.":"");
@@ -1978,12 +1978,12 @@ function updateStep2Texts(){
   const m=curModel();if(!m)return;
   const k=m.kind;
   const hint={
-    traffic:pickMode==="troncon"?(els.type.value==="Interruption de trafic"?"Touchez la première station du tronçon, puis la dernière. « SP » est inscrit sur ces deux stations et les stations entre les deux sont barrées d'une croix rouge. Pour un 2e tronçon (ex. côté ouest et côté est), touchez à nouveau deux stations. Touchez un tronçon existant pour le retirer.":"Touchez la première station du tronçon, puis la dernière. Les stations entre les deux sont incluses. Vous pouvez ajouter plusieurs tronçons ; touchez un tronçon existant pour le retirer."):"Touchez chaque station concernée (en général les deux limites du tronçon).",
+    traffic:pickMode==="troncon"?(els.type.value==="Interruption de trafic"?"":"Touchez la première station du tronçon, puis la dernière. Les stations entre les deux sont incluses. Vous pouvez ajouter plusieurs tronçons ; touchez un tronçon existant pour le retirer."):"Touchez chaque station concernée (en général les deux limites du tronçon).",
     closed:pickMode==="troncon"?"Touchez la première et la dernière d'une suite de stations fermées.":"Touchez chaque station fermée.",
     served:pickMode==="troncon"?"Touchez la première et la dernière d'une suite de stations desservies.":"Touchez les stations desservies. Les autres seront barrées d'une croix rouge.",
     free:""
   }[k];
-  $("step2Hint").textContent=hint;
+  $("step2Hint").textContent=hint;$("step2Hint").classList.toggle("hidden",!hint);
   $("thermoBox").classList.toggle("hidden",k==="free");
   $("freeNote").classList.toggle("hidden",k!=="free");
 }
