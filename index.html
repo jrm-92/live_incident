@@ -233,6 +233,8 @@
   .fmt-bar button[aria-pressed="true"]{background:var(--night);border-color:var(--night);color:#fff;}
   .fmt-size{min-width:28px;text-align:center;font-weight:800;color:var(--night);font-size:14px;}
   .fmt-sep{width:1px;height:26px;background:var(--border);margin:0 4px;}
+  .fmt-bar .fmt-col{min-width:0;width:32px;height:32px;min-height:0;padding:0;border-radius:50%;background:var(--c);border:3px solid #fff;box-shadow:0 0 0 1.5px var(--border-strong);}
+  .fmt-bar .fmt-col:hover{box-shadow:0 0 0 2px var(--night);}
   .fmt-help{flex-basis:100%;font-size:12px;color:var(--muted);}
   .rich-ed{width:100%;min-height:120px;max-height:240px;overflow-y:auto;padding:12px;font-size:16px;line-height:1.35;color:var(--ink);border:1.5px solid var(--border-strong);border-radius:10px;background:#fff;white-space:pre-wrap;word-wrap:break-word;outline:none;cursor:text;}
   .rich-ed:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(10,0,130,.12);}
@@ -871,7 +873,13 @@
             <button type="button" data-f="b" aria-pressed="false" title="Gras"><b>G</b></button>
             <button type="button" data-f="i" aria-pressed="false" title="Italique"><i>I</i></button>
             <button type="button" data-f="u" aria-pressed="false" title="Souligné"><u>S</u></button>
-            <span class="fmt-help">Sélectionnez un passage du texte, puis G (gras), I (italique) ou S (souligné).</span>
+            <span class="fmt-sep"></span>
+            <button type="button" class="fmt-col" data-f="color" data-c="#1e2230" title="Noir" aria-label="Couleur noire" style="--c:#1e2230"></button>
+            <button type="button" class="fmt-col" data-f="color" data-c="#E2001A" title="Rouge" aria-label="Couleur rouge" style="--c:#E2001A"></button>
+            <button type="button" class="fmt-col" data-f="color" data-c="#0A0082" title="Bleu RATP" aria-label="Couleur bleu RATP" style="--c:#0A0082"></button>
+            <button type="button" class="fmt-col" data-f="color" data-c="#00A88F" title="Vert" aria-label="Couleur verte" style="--c:#00A88F"></button>
+            <button type="button" class="fmt-col" data-f="color" data-c="#F28E00" title="Orange" aria-label="Couleur orange" style="--c:#F28E00"></button>
+            <span class="fmt-help">Sélectionnez un passage du texte, puis G (gras), I (italique), S (souligné) ou une couleur. Le bloc se déplace dans l'aperçu à la souris.</span>
           </div>
           <div class="field-hint" id="infosHint"><span id="infosMsg"></span><span id="infosCount">0 / 500</span></div>
         </div>
@@ -1074,7 +1082,7 @@ let HIDDEN=new Set();
 const SHOW_HELP_BUBBLE=false; // bulle « Besoin d'aide ? » + QR retirés du visuel
 const SHOW_REFERENCE_IMAGE=false; // image de consignes sous le plan, retirée du visuel
 const DELETABLE=['bubble'];
-const OFF={logo:{dx:0,dy:0,s:1},badge:{dx:0,dy:0,s:1},plan:{dx:0,dy:0,s:1},title:{dx:0,dy:0,s:1},stations:{dx:0,dy:0,s:1},bubble:{dx:0,dy:0,s:0.65}};
+const OFF={logo:{dx:0,dy:0,s:1},badge:{dx:0,dy:0,s:1},plan:{dx:0,dy:0,s:1},title:{dx:0,dy:0,s:1},stations:{dx:0,dy:0,s:1},infos:{dx:0,dy:0,s:1},bubble:{dx:0,dy:0,s:0.65}};
 const BBOX={};
 const HC={logo:'#004f9e',badge:'#e2001a',plan:'#00814F',title:'#662483',stations:'#F28E42',bubble:'#B7E600'};
 const HNAMES={logo:'Logo',badge:'Pastille ligne',plan:'Plan de ligne',title:'Titre & infos',stations:'Liste stations',bubble:'Bulle QR'};
@@ -2172,17 +2180,19 @@ function richFromEd(){
   const BLOCK=/^(DIV|P|LI|H[1-6])$/;
   const walk=(n,st)=>{
     n.childNodes.forEach(c=>{
-      if(c.nodeType===3){const t=c.nodeValue.replace(/\u00a0/g," ");if(!t)return;if(need){paras.push([]);need=false;}cur().push({t,b:st.b,i:st.i,u:st.u});return;}
+      if(c.nodeType===3){const t=c.nodeValue.replace(/\u00a0/g," ").replace(/\r/g,"");if(!t)return;if(need){paras.push([]);need=false;}
+        t.split("\n").forEach((part,j)=>{if(j)paras.push([]);if(part)cur().push({t:part,b:st.b,i:st.i,u:st.u,c:st.c||null});});return;}
       if(c.nodeType!==1)return;
       const tg=c.tagName;
       if(tg==="BR"){if(need){paras.push([]);need=false;}const p=c.parentNode;if(p!==infosEd&&BLOCK.test(p.tagName)&&p.lastChild===c)return;paras.push([]);return;}
       const sty=c.style||{};
-      const ns={b:st.b||tg==="B"||tg==="STRONG"||/^(bold|[6-9]00)$/.test(sty.fontWeight||""),i:st.i||tg==="I"||tg==="EM"||sty.fontStyle==="italic",u:st.u||tg==="U"||/underline/.test(sty.textDecoration||sty.textDecorationLine||"")};
+      const col=(tg==="FONT"&&c.getAttribute("color"))||sty.color||"";
+      const ns={c:col||st.c||null,b:st.b||tg==="B"||tg==="STRONG"||/^(bold|[6-9]00)$/.test(sty.fontWeight||""),i:st.i||tg==="I"||tg==="EM"||sty.fontStyle==="italic",u:st.u||tg==="U"||/underline/.test(sty.textDecoration||sty.textDecorationLine||"")};
       if(BLOCK.test(tg)){if(cur().length||need){paras.push([]);}need=false;walk(c,ns);need=true;}
       else walk(c,ns);
     });
   };
-  walk(infosEd,{b:false,i:false,u:false});
+  walk(infosEd,{b:false,i:false,u:false,c:null});
   return paras;
 }
 const richPlain=r=>(r||[]).map(p=>p.map(x=>x.t).join("")).join("\n");
@@ -2195,6 +2205,7 @@ function setEdFromRich(paras){
     const d=document.createElement("div");
     if(!p.length)d.appendChild(document.createElement("br"));
     p.forEach(r=>{let n=document.createTextNode(r.t);
+      if(r.c){const e=document.createElement("font");e.setAttribute("color",r.c);e.appendChild(n);n=e;}
       if(r.u){const e=document.createElement("u");e.appendChild(n);n=e;}
       if(r.i){const e=document.createElement("i");e.appendChild(n);n=e;}
       if(r.b){const e=document.createElement("b");e.appendChild(n);n=e;}
@@ -2211,10 +2222,10 @@ infosEd.addEventListener("input",()=>{
 infosEd.addEventListener("paste",e=>{e.preventDefault();const t=(e.clipboardData||window.clipboardData).getData("text/plain");document.execCommand("insertText",false,t);});
 infosEd.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&/^[biu]$/i.test(e.key)){e.preventDefault();applyFmt({b:"bold",i:"italic",u:"underline"}[e.key.toLowerCase()]);}});
 function selInEd(){const s=window.getSelection();return s&&s.rangeCount&&infosEd.contains(s.anchorNode)&&infosEd.contains(s.focusNode);}
-function applyFmt(cmd){
+function applyFmt(cmd,arg){
   if(!selInEd()){infosEd.focus();const r=document.createRange();r.selectNodeContents(infosEd);const s=window.getSelection();s.removeAllRanges();s.addRange(r);}
   try{document.execCommand("styleWithCSS",false,false);}catch(_){}
-  document.execCommand(cmd,false,null);
+  document.execCommand(cmd,false,arg===undefined?null:arg);
   infosEd.dispatchEvent(new Event("input"));
 }
 function syncFmtState(){const b=$("infosFmt");if(!b)return;const on=selInEd();
@@ -2224,6 +2235,7 @@ function syncInfoFmtUI(){const b=$("infosFmt");if(!b)return;$("infosSize").textC
 $("infosFmt").addEventListener("mousedown",e=>{if(e.target.closest("button[data-f]"))e.preventDefault();});
 $("infosFmt").addEventListener("click",e=>{const x=e.target.closest("button[data-f]");if(!x)return;const f=x.dataset.f;
   if(f==="plus"||f==="minus"){infoFmt.size=f==="plus"?Math.min(80,infoFmt.size+4):Math.max(16,infoFmt.size-4);syncInfoFmtUI();scheduleDraw();touchDraft();return;}
+  if(f==="color"){applyFmt("foreColor",x.dataset.c);return;}
   applyFmt({b:"bold",i:"italic",u:"underline"}[f]);});
 function renderStep(){
   for(let i=1;i<=4;i++)$("step"+i).classList.toggle("hidden",i!==step);
@@ -2351,7 +2363,7 @@ function saveRecent(name,thumb){
 }
 function updateCounts(){$("cntDrafts").textContent=String(LS.get(K_DR,[]).length);$("cntRecents").textContent=String(LS.get(K_RC,[]).length);}
 function resetEdits(){
-  ["logo","badge","plan","title","stations"].forEach(k=>{OFF[k]={dx:0,dy:0,s:1};});OFF.bubble={dx:0,dy:0,s:0.65};
+  ["logo","badge","plan","title","stations","infos"].forEach(k=>{OFF[k]={dx:0,dy:0,s:1};});OFF.bubble={dx:0,dy:0,s:0.65};
   HIDDEN.clear();textBoxes=[];strokes.length=0;_history.length=0;stickers=[];stkSel=-1;selIdx.clear();stkDrag=null;if(typeof renderStkList==='function')renderStkList();
   selItem=null;_selType=null;_selIdx=-1;_tbIdx=-1;_tbState='idle';_drag=null;_drawStroke=null;
   $("textBoxOverlay").style.display="none";hideFloatTextPanel();$("floatDrawPanel").style.display="none";
@@ -2371,7 +2383,7 @@ function loadSnapshot(s,draftId,startStep){
   if(!LINES[s.lineId]){toast("Cette ligne n'existe plus.");return;}
   restoring=true;
   resetEdits();
-  const base={logo:{dx:0,dy:0,s:1},badge:{dx:0,dy:0,s:1},plan:{dx:0,dy:0,s:1},title:{dx:0,dy:0,s:1},stations:{dx:0,dy:0,s:1},bubble:{dx:0,dy:0,s:0.65}};
+  const base={logo:{dx:0,dy:0,s:1},badge:{dx:0,dy:0,s:1},plan:{dx:0,dy:0,s:1},title:{dx:0,dy:0,s:1},stations:{dx:0,dy:0,s:1},infos:{dx:0,dy:0,s:1},bubble:{dx:0,dy:0,s:0.65}};
   Object.keys(OFF).forEach(k=>{OFF[k]=s.off&&s.off[k]?{...s.off[k]}:base[k];});
   (s.hidden||[]).forEach(h=>HIDDEN.add(h));
   textBoxes=(s.textBoxes||[]).map(b=>({...b}));
@@ -3114,28 +3126,29 @@ els.canvas.addEventListener("pointermove",e=>{
   if(_raf)cancelAnimationFrame(_raf);_raf=requestAnimationFrame(()=>{_raf=null;draw();});
 },{capture:true});
 // Bloc titre (« ! TRAFIC INTERROMPU » + « Entre … ») : déplaçable directement dans l'aperçu
-const inTitle=p=>{const b=BBOX.title;return !!b&&p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h;};
+const DRAG_IDS=["infos","title"];
+const blockAt=p=>DRAG_IDS.find(id=>{const b=BBOX[id];return !!b&&p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h;})||null;
 els.canvas.addEventListener("pointerdown",e=>{
   if(editMode||drawTool||view!=="app"||step<2)return;
-  const p=cvPt(e);if(!inTitle(p))return;
+  const p=cvPt(e),id=blockAt(p);if(!id)return;
   e.preventDefault();e.stopImmediatePropagation();
   try{els.canvas.setPointerCapture(e.pointerId);}catch(err){}
-  _titleDrag={sx:p.x,sy:p.y,ox:OFF.title.dx||0,oy:OFF.title.dy||0};
+  _titleDrag={id,sx:p.x,sy:p.y,ox:OFF[id].dx||0,oy:OFF[id].dy||0};
 },{capture:true});
 els.canvas.addEventListener("pointermove",e=>{
-  if(_titleDrag){e.preventDefault();e.stopImmediatePropagation();const p=cvPt(e);
-    OFF.title.dx=Math.max(-W*0.45,Math.min(W*0.45,_titleDrag.ox+p.x-_titleDrag.sx));
-    OFF.title.dy=Math.max(-H*0.4,Math.min(H*0.6,_titleDrag.oy+p.y-_titleDrag.sy));
+  if(_titleDrag){e.preventDefault();e.stopImmediatePropagation();const p=cvPt(e),o=OFF[_titleDrag.id];
+    o.dx=Math.max(-W*0.45,Math.min(W*0.45,_titleDrag.ox+p.x-_titleDrag.sx));
+    o.dy=Math.max(-H*0.6,Math.min(H*0.7,_titleDrag.oy+p.y-_titleDrag.sy));
     if(_raf)cancelAnimationFrame(_raf);_raf=requestAnimationFrame(()=>{_raf=null;draw();});return;}
   if(editMode||drawTool||e.pointerType==="touch")return;
-  const h=inTitle(cvPt(e));
-  if(h!==_titleHover){_titleHover=h;els.canvas.style.cursor=h?"move":"";scheduleDraw();}
+  const h=blockAt(cvPt(e));
+  if(h!==_dragHover){_dragHover=h;els.canvas.style.cursor=h?"move":"";scheduleDraw();}
 });
-els.canvas.addEventListener("pointerleave",()=>{if(_titleHover&&!_titleDrag){_titleHover=false;els.canvas.style.cursor="";scheduleDraw();}});
+els.canvas.addEventListener("pointerleave",()=>{if(_dragHover&&!_titleDrag){_dragHover=null;els.canvas.style.cursor="";scheduleDraw();}});
 const endTitleDrag=e=>{if(!_titleDrag)return;e.stopImmediatePropagation();_titleDrag=null;draw();touchDraft();};
 els.canvas.addEventListener("pointerup",endTitleDrag,{capture:true});
 els.canvas.addEventListener("pointercancel",endTitleDrag,{capture:true});
-els.canvas.addEventListener("dblclick",e=>{if(editMode||!inTitle(cvPt(e)))return;OFF.title.dx=0;OFF.title.dy=0;draw();touchDraft();});
+els.canvas.addEventListener("dblclick",e=>{if(editMode)return;const id=blockAt(cvPt(e));if(!id)return;OFF[id].dx=0;OFF[id].dy=0;draw();touchDraft();});
 function endStkDrag(e){if(!stkDrag)return;e.stopImmediatePropagation();stkDrag=null;draw();touchDraft();}
 els.canvas.addEventListener("pointerup",endStkDrag,{capture:true});
 els.canvas.addEventListener("pointercancel",endStkDrag,{capture:true});
@@ -3273,7 +3286,7 @@ function fitRich(paras,maxW,maxLines,baseFs,minFs){
   for(;;){
     const lines=[];let wide=false;
     paras.forEach(p=>{
-      const toks=[];p.forEach(r=>r.t.split(/(\s+)/).forEach(t=>{if(!t)return;const sp=/^\s+$/.test(t);const k={t:sp?" ":t,b:r.b,i:r.i,u:r.u,sp};ctx.font=richFont(k,fs);k.w=ctx.measureText(k.t).width;toks.push(k);}));
+      const toks=[];p.forEach(r=>r.t.split(/(\s+)/).forEach(t=>{if(!t)return;const sp=/^\s+$/.test(t);const k={t:sp?" ":t,b:r.b,i:r.i,u:r.u,c:r.c,sp};ctx.font=richFont(k,fs);k.w=ctx.measureText(k.t).width;toks.push(k);}));
       let cur=[],w=0;
       const flush=()=>{while(cur.length&&cur[cur.length-1].sp){w-=cur.pop().w;}lines.push(cur);cur=[];w=0;};
       toks.forEach(k=>{
@@ -3334,7 +3347,7 @@ function drawOneArrow(x,cy,w,fs,color,dir){
 }
 const SEP_RE=/\s*(↔|→|←)\s*/;
 function splitSep(l){const parts=l.split(SEP_RE);const names=[],seps=[];parts.forEach((x,i)=>i%2?seps.push(x):names.push(x.trim()));return{names,seps};}
-let _lastStructW=0,_titleHover=false,_titleDrag=null;
+let _lastStructW=0,_dragHover=null,_titleDrag=null;
 function drawStructTitle(titre,yB,ts,maxW){
   // Encart d'alerte : bandeau rouge « ! TITRE » + corps blanc « Entre [plaque] et [plaque] » (+ voie)
   const rows=titre.split("\n").map(l=>l.replace(/\s+/g," ").trim()).filter(Boolean);
@@ -3517,21 +3530,25 @@ function draw(){
     yB+=(_tF.lines.length-1)*_lh+_tlh+10*SCALE;
     textOver.titre=_tF.over?"cut":(_tF.fs<_tfs*0.999?"small":false);
   }
+  ctx.restore();
+  const _hoverBox=(id,bx,by,bw,bh)=>{regBox(id,bx,by,bw,bh);
+    if(_dragHover===id&&!_cleanRender&&!editMode){ctx.save();ctx.setLineDash([14*SCALE,10*SCALE]);ctx.lineWidth=3*SCALE;ctx.strokeStyle="rgba(10,0,130,.55)";rrect(bx,by,bw,bh,12*SCALE);ctx.stroke();ctx.restore();}};
+  if(_tbw>0)_hoverBox('title',W/2+_tdx-_tbw/2-24*SCALE,_ty0-30*SCALE,_tbw+48*SCALE,Math.max(60*SCALE,yB-_ty0+10*SCALE));else BBOX.title=null;
+  // informations complémentaires : bloc indépendant, déplaçable
   const _ifs=(infoFmt.size||34)*SCALE*_ts;
   const _iF=fitRich(infoRich||plainToRich(infos||""),_maxTW,8,_ifs,_ifs*0.55);
   if(_iF.lines.length){
+    const idx=OFF.infos.dx||0,idy=OFF.infos.dy||0;
     yB+=_iF.fs*0.35;
-    ctx.fillStyle="#1e2230";ctx.textAlign="left";ctx.textBaseline="middle";
-    const _ilh=_iF.fs*1.3;_iF.lines.forEach((L,i)=>{const lw=L.reduce((a,k)=>a+k.w,0);let x=W/2-lw/2;const y=yB+i*_ilh;_tbw=Math.max(_tbw,lw);
-      L.forEach(k=>{ctx.font=richFont(k,_iF.fs);ctx.fillText(k.t,x,y);if(k.u)ctx.fillRect(x,y+_iF.fs*0.52,k.w,Math.max(2,_iF.fs*0.07));x+=k.w;});});
+    const iy0=yB+idy,_ilh=_iF.fs*1.3;let iw=0;
+    ctx.textAlign="left";ctx.textBaseline="middle";
+    _iF.lines.forEach((L,i)=>{const lw=L.reduce((a,k)=>a+k.w,0);let x=W/2+idx-lw/2;const y=iy0+i*_ilh;iw=Math.max(iw,lw);
+      L.forEach(k=>{ctx.font=richFont(k,_iF.fs);ctx.fillStyle=k.c||"#1e2230";ctx.fillText(k.t,x,y);if(k.u)ctx.fillRect(x,y+_iF.fs*0.52,k.w,Math.max(2,_iF.fs*0.07));x+=k.w;});});
     ctx.textAlign="center";
+    _hoverBox('infos',W/2+idx-iw/2-24*SCALE,iy0-_iF.fs*0.8,iw+48*SCALE,(_iF.lines.length-1)*_ilh+_iF.fs*1.6);
     yB+=(_iF.lines.length-1)*_ilh+36*SCALE*_ts;
     textOver.infos=_iF.over?"cut":(_iF.fs<_ifs*0.999?"small":false);
-  }
-  ctx.restore();
-  if(_tbw>0){const bx=W/2+_tdx-_tbw/2-24*SCALE,by=_ty0-30*SCALE,bh=Math.max(60*SCALE,yB-_ty0+10*SCALE);regBox('title',bx,by,_tbw+48*SCALE,bh);
-    if(_titleHover&&!_cleanRender&&!editMode){ctx.save();ctx.setLineDash([14*SCALE,10*SCALE]);ctx.lineWidth=3*SCALE;ctx.strokeStyle="rgba(10,0,130,.55)";rrect(bx,by,_tbw+48*SCALE,bh,12*SCALE);ctx.stroke();ctx.restore();}
-  }else BBOX.title=null;
+  }else BBOX.infos=null;
   {
   }
   // liste des stations fermées : panneaux nominatifs RATP, croix rouge à gauche du nom
