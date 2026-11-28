@@ -559,6 +559,13 @@
   @media(min-width:1000px) and (min-height:700px){
     /* l'aperçu remplit la hauteur disponible sans dépasser l'écran */
     #app:not([data-step="1"]) .viewport{max-width:calc((100vh - 220px) * 16 / 9);margin:0 auto;}
+    /* tout tient dans l'écran : la colonne de gauche défile à l'intérieur, les boutons restent visibles */
+    #app:not([data-step="1"]) .col-steps{display:flex;flex-direction:column;height:calc(100vh - var(--colTop,150px) - 36px);min-height:420px;}
+    #app:not([data-step="1"]) .col-steps>.step:not(.hidden){flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;}
+    #app:not([data-step="1"]) .col-steps>.stepnav{flex:none;margin-top:12px;}
+    #app:not([data-step="1"]) .col-preview{position:static;}
+    .col-preview,.col-steps{min-width:0;}
+    .img-strip{max-width:100%;}
   }
 </style>
 </head>
@@ -2115,6 +2122,20 @@ function goStep(n,opts){
   return true;
 }
 function setHint(msg){$("navHint").textContent=msg||"";}
+function fitEditor(){
+  const c=document.querySelector("#app .col-steps");if(!c||view!=="app")return;
+  const t=c.getBoundingClientRect().top+window.scrollY;
+  document.documentElement.style.setProperty("--colTop",Math.round(t)+"px");
+  // l'aperçu : on réduit sa largeur pour que toute la colonne tienne en hauteur
+  const vp=$("viewport"),dock=$("previewDock");
+  if(!vp||!dock||dock.classList.contains("hidden"))return;
+  if(!matchMedia("(min-width:1000px) and (min-height:600px)").matches){vp.style.maxWidth="";return;}
+  vp.style.maxWidth="";
+  const avail=window.innerHeight-t-36,extra=dock.getBoundingClientRect().height-vp.getBoundingClientRect().height;
+  const w=Math.max(320,(avail-extra)*16/9);
+  if(w<vp.getBoundingClientRect().width)vp.style.maxWidth=Math.floor(w)+"px";
+}
+window.addEventListener("resize",()=>{if(typeof view!=="undefined")fitEditor();});
 function renderStep(){
   for(let i=1;i<=4;i++)$("step"+i).classList.toggle("hidden",i!==step);
   els.app.dataset.step=String(step);
@@ -2146,6 +2167,7 @@ function renderStep(){
   if(step===4)renderRecap();
   updateStep1UI();updateTopCtx();
   $("topTitle").textContent=(curModel()&&view==="app")?curModel().label:"";
+  fitEditor();
   $("dockFoot").textContent="Aperçu réduit · fichier exporté : "+($("resSel").value==="fhd"?"1920 × 1080":"3840 × 2160")+" px";
 }
 // Titre proposé automatiquement (modifiable : il suffit de l'effacer ou de le réécrire)
