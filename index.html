@@ -241,6 +241,7 @@
   .chk-line input{width:20px;height:20px;accent-color:var(--night);}
   .bang-mini{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:#E2001A;color:#fff;font-size:12px;}
   .frm-sw{width:22px;height:16px;border-radius:4px;border:3px solid var(--c);flex:none;}
+  .frm-sw.mirl{border:5px solid transparent;border-radius:3px;background:linear-gradient(#fff,#fff) padding-box,repeating-linear-gradient(45deg,var(--c) 0 3px,#fff 3px 6px) border-box;}
   .fmt-bar .fmt-ddbtn{font-size:14px;display:inline-flex;align-items:center;gap:6px;}
   .fmt-a{font-weight:900;font-size:17px;color:var(--c);border-bottom:4px solid var(--c);line-height:1;padding:0 1px;}
   .fmt-menu{position:absolute;z-index:60;top:calc(100% + 4px);right:0;min-width:180px;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-lg,0 8px 24px rgba(0,0,0,.15));padding:6px;display:grid;gap:2px;}
@@ -915,6 +916,8 @@
                 <button type="button" data-frm="#E2001A" role="option"><span class="frm-sw" style="--c:#E2001A"></span>Rouge</button>
                 <button type="button" data-frm="#1e2230" role="option"><span class="frm-sw" style="--c:#1e2230"></span>Noir</button>
                 <button type="button" data-frm="#F28E00" role="option"><span class="frm-sw" style="--c:#F28E00"></span>Orange</button>
+                <button type="button" data-frm="m:#E2001A" role="option"><span class="frm-sw mirl" style="--c:#E2001A"></span>Mirliton rouge</button>
+                <button type="button" data-frm="m:#0A0082" role="option"><span class="frm-sw mirl" style="--c:#0A0082"></span>Mirliton bleu</button>
               </div>
             </div>
             <span class="fmt-help">Sélectionnez un passage du texte, puis G (gras), I (italique), S (souligné) ou une couleur. « Pictos » insère un logo à l'endroit du curseur. Le bloc se déplace dans l'aperçu à la souris.</span>
@@ -3626,7 +3629,7 @@ function draw(){
   const _iF=fitRich(infoRich||plainToRich(infos||""),_maxTW,8,_ifs,_ifs*0.55);
   if(_iF.lines.length){
     const idx=OFF.infos.dx||0,idy=OFF.infos.dy||0;
-    yB+=_iF.fs*0.35+(infoFmt.frame?46*SCALE:0);
+    yB+=_iF.fs*0.35+(infoFmt.frame?(/^m:/.test(infoFmt.frame)?64:46)*SCALE:0);
     const iy0=yB+idy,_ilh=_iF.fs*1.3;let iw=0;
     // position de chaque ligne : une ligne vide (séparation de paragraphes) = ½ ligne
     const _iy=[];let _acc=0;_iF.lines.forEach((L,i)=>{if(i)_acc+=L.length?_ilh:_ilh*0.55;_iy.push(_acc);});const _ih=_acc;
@@ -3634,7 +3637,17 @@ function draw(){
     _iF.lines.forEach((L,i)=>{const lw=L.reduce((a,k)=>a+k.w,0);let x=W/2+idx-lw/2;const y=iy0+_iy[i];iw=Math.max(iw,lw);
       L.forEach(k=>{if(k.ico){const im=ICO_IMG[k.ico],sz=_iF.fs*1.3;if(im&&im.complete&&im.naturalWidth)ctx.drawImage(im,x+(k.w-sz)/2,y-sz/2,sz,sz);x+=k.w;return;}
         ctx.font=richFont(k,_iF.fs);ctx.fillStyle=k.c||"#1e2230";ctx.fillText(k.t,x,y);if(k.u)ctx.fillRect(x,y+_iF.fs*0.52,k.w,Math.max(2,_iF.fs*0.07));x+=k.w;});});
-    if(infoFmt.frame){const pd=34*SCALE;ctx.save();ctx.lineWidth=6*SCALE;ctx.strokeStyle=infoFmt.frame;rrect(W/2+idx-iw/2-pd,iy0-_iF.fs*0.8-pd*0.5,iw+2*pd,_ih+_iF.fs*1.6+pd,18*SCALE);ctx.stroke();ctx.restore();}
+    if(infoFmt.frame){const mir=/^m:/.test(infoFmt.frame),col=infoFmt.frame.replace(/^m:/,""),pd=(mir?52:34)*SCALE;
+      const fx=W/2+idx-iw/2-pd,fy=iy0-_iF.fs*0.8-pd*0.5,fw=iw+2*pd,fh=_ih+_iF.fs*1.6+pd;ctx.save();
+      if(mir){// cadre mirliton : bande à rayures diagonales
+        const bw=20*SCALE,st=14*SCALE;
+        ctx.save();ctx.beginPath();rrect(fx,fy,fw,fh,10*SCALE);ctx.rect(fx+bw,fy+bw,fw-2*bw,fh-2*bw);ctx.clip("evenodd");
+        ctx.fillStyle="#fff";ctx.fillRect(fx,fy,fw,fh);
+        ctx.strokeStyle=col;ctx.lineWidth=st/(2*Math.SQRT2);ctx.lineCap="butt";ctx.beginPath();
+        for(let d=-fh;d<fw+fh;d+=st){ctx.moveTo(fx+d,fy+fh);ctx.lineTo(fx+d+fh,fy);}ctx.stroke();ctx.restore();
+        ctx.lineWidth=2.5*SCALE;ctx.strokeStyle=col;rrect(fx,fy,fw,fh,10*SCALE);ctx.stroke();ctx.strokeRect(fx+bw,fy+bw,fw-2*bw,fh-2*bw);
+      }else{ctx.lineWidth=6*SCALE;ctx.strokeStyle=col;rrect(fx,fy,fw,fh,18*SCALE);ctx.stroke();}
+      ctx.restore();}
     ctx.textAlign="center";
     _hoverBox('infos',W/2+idx-iw/2-24*SCALE,iy0-_iF.fs*0.8,iw+48*SCALE,_ih+_iF.fs*1.6);
     yB+=_ih+36*SCALE*_ts;
