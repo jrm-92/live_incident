@@ -857,7 +857,7 @@
         </div>
         <div class="field" id="infosField">
           <label class="fld" for="infos">Informations complémentaires <span class="opt">(facultatif)</span></label>
-          <textarea id="infos" maxlength="500" rows="2" autocomplete="off" placeholder="Ex : Reprise estimée à …"></textarea>
+          <textarea id="infos" maxlength="500" rows="5" autocomplete="off" placeholder="Ex : Reprise estimée à …"></textarea>
           <div class="fmt-bar" id="infosFmt" role="group" aria-label="Mise en forme du texte">
             <button type="button" data-f="minus" title="Texte plus petit" aria-label="Texte plus petit">A−</button>
             <span class="fmt-size" id="infosSize">34</span>
@@ -3195,6 +3195,20 @@ function getInterImg(){if(!TYPES_AVEC_INTER.includes(els.type.value))return null
 function nowStamp(){const d=new Date();const p=n=>String(n).padStart(2,"0");return`${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;}
 
 // Ajuste un texte : retour à la ligne puis réduction de la police (jamais de coupe silencieuse)
+// Comme fitLines, mais en gardant les retours à la ligne tapés (paragraphes, lignes vides)
+function fitParas(text,maxW,maxLines,baseFs,minFs,weight){
+  const paras=(text||"").replace(/\r/g,"").split("\n").map(p=>p.replace(/[ \t]+/g," ").trim());
+  while(paras.length&&!paras[paras.length-1])paras.pop();while(paras.length&&!paras[0])paras.shift();
+  if(!paras.length)return{lines:[],fs:baseFs,over:false};
+  let fs=baseFs;
+  for(;;){
+    ctx.font=`${weight} ${fs}px Lato, Arial`;const lines=[];
+    paras.forEach(p=>{if(!p){lines.push("");return;}let cur="";p.split(" ").forEach(w=>{const t=cur?cur+" "+w:w;if(!cur||ctx.measureText(t).width<=maxW)cur=t;else{lines.push(cur);cur=w;}});if(cur)lines.push(cur);});
+    const wide=lines.some(l=>ctx.measureText(l).width>maxW);
+    if((lines.length<=maxLines&&!wide)||fs<=minFs)return{lines:lines.slice(0,Math.max(maxLines,lines.length<=maxLines?lines.length:maxLines)),fs,over:lines.length>maxLines||wide};
+    fs=Math.max(minFs,fs*0.94);
+  }
+}
 function fitLines(text,maxW,maxLines,baseFs,minFs,weight){
   text=(text||"").replace(/\s+/g," ").trim();
   if(!text)return{lines:[],fs:baseFs,over:false};
@@ -3412,7 +3426,7 @@ function draw(){
     textOver.titre=_tF.over?"cut":(_tF.fs<_tfs*0.999?"small":false);
   }
   const _ifs=(infoFmt.size||34)*SCALE*_ts,_iw=(infoFmt.i?"italic ":"")+(infoFmt.b?"700":"400");
-  const _iF=fitLines(infos||"",_maxTW,4,_ifs,_ifs*0.6,_iw);
+  const _iF=fitParas(infos||"",_maxTW,8,_ifs,_ifs*0.55,_iw);
   if(_iF.lines.length){
     yB+=_iF.fs*0.35;
     ctx.font=`${_iw} ${_iF.fs}px Lato, Arial`;ctx.fillStyle="#1e2230";ctx.textAlign="center";ctx.textBaseline="middle";
