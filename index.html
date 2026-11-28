@@ -2224,19 +2224,27 @@ const ICO_IMG={};Object.keys(ICONS).forEach(k=>{const im=new Image();im.onload=(
 function makeIcoEl(k){const im=document.createElement("img");im.className="ico";im.dataset.ico=k;im.alt=ICONS[k].label;im.src=icoSrc(k);im.contentEditable="false";return im;}
 // ── Éditeur « Informations complémentaires » : gras / italique / souligné sur une partie du texte ──
 const infosEd=$("infosEd");
+try{document.execCommand("defaultParagraphSeparator",false,"div");}catch(_){}
 $("infosLbl").addEventListener("click",e=>{e.preventDefault();infosEd.focus();});
 function richFromEd(){
   const paras=[[]];let need=false;
   const cur=()=>paras[paras.length-1];
   const BLOCK=/^(DIV|P|LI|H[1-6])$/;
+  const meaningful=n=>!(n.nodeType===3&&n.nodeValue==="")&&n.nodeType!==8;
+  const nextM=n=>{let x=n.nextSibling;while(x&&!meaningful(x))x=x.nextSibling;return x;};
+  // dernier nœud utile de son bloc (en remontant les balises de style)
+  const lastInBlock=n=>{let x=n;for(;;){if(nextM(x))return false;const p=x.parentNode;if(!p||p===infosEd||BLOCK.test(p.tagName))return true;x=p;}};
+  // <br> de remplissage : dernier élément d'un bloc / de l'éditeur, ou juste avant un bloc
+  const isFiller=n=>{if(lastInBlock(n)){const p=n.parentNode;const prev=n.previousSibling;return !(p===infosEd&&prev&&prev.nodeName==="BR");}const nx=nextM(n);if(!(nx&&nx.nodeType===1&&BLOCK.test(nx.tagName)))return false;
+    let pv=n.previousSibling;while(pv&&!meaningful(pv))pv=pv.previousSibling;return !!pv&&!(pv.nodeType===1&&(pv.tagName==="BR"||BLOCK.test(pv.tagName)));};
   const walk=(n,st)=>{
     n.childNodes.forEach(c=>{
-      if(c.nodeType===3){const t=c.nodeValue.replace(/\u00a0/g," ").replace(/\r/g,"");if(!t)return;if(need){paras.push([]);need=false;}
+      if(c.nodeType===3){let t=c.nodeValue.replace(/\u00a0/g," ").replace(/\r/g,"");if(/\n$/.test(t)&&lastInBlock(c))t=t.slice(0,-1);if(!t)return;if(need){paras.push([]);need=false;}
         t.split("\n").forEach((part,j)=>{if(j)paras.push([]);if(part)cur().push({t:part,b:st.b,i:st.i,u:st.u,c:st.c||null});});return;}
       if(c.nodeType!==1)return;
       const tg=c.tagName;
       if(tg==="IMG"&&c.dataset&&ICONS[c.dataset.ico]){if(need){paras.push([]);need=false;}cur().push({t:"",ico:c.dataset.ico,b:st.b,i:st.i,u:st.u,c:st.c||null});return;}
-      if(tg==="BR"){if(need){paras.push([]);need=false;}const p=c.parentNode;if(p!==infosEd&&BLOCK.test(p.tagName)&&p.lastChild===c)return;paras.push([]);return;}
+      if(tg==="BR"){if(need){paras.push([]);need=false;}if(isFiller(c))return;paras.push([]);return;}
       const sty=c.style||{};
       const col=(tg==="FONT"&&c.getAttribute("color"))||sty.color||"";
       const ns={c:col||st.c||null,b:st.b||tg==="B"||tg==="STRONG"||/^(bold|[6-9]00)$/.test(sty.fontWeight||""),i:st.i||tg==="I"||tg==="EM"||sty.fontStyle==="italic",u:st.u||tg==="U"||/underline/.test(sty.textDecoration||sty.textDecorationLine||"")};
@@ -3620,14 +3628,16 @@ function draw(){
     const idx=OFF.infos.dx||0,idy=OFF.infos.dy||0;
     yB+=_iF.fs*0.35+(infoFmt.frame?46*SCALE:0);
     const iy0=yB+idy,_ilh=_iF.fs*1.3;let iw=0;
+    // position de chaque ligne : une ligne vide (séparation de paragraphes) = ½ ligne
+    const _iy=[];let _acc=0;_iF.lines.forEach((L,i)=>{if(i)_acc+=L.length?_ilh:_ilh*0.55;_iy.push(_acc);});const _ih=_acc;
     ctx.textAlign="left";ctx.textBaseline="middle";
-    _iF.lines.forEach((L,i)=>{const lw=L.reduce((a,k)=>a+k.w,0);let x=W/2+idx-lw/2;const y=iy0+i*_ilh;iw=Math.max(iw,lw);
+    _iF.lines.forEach((L,i)=>{const lw=L.reduce((a,k)=>a+k.w,0);let x=W/2+idx-lw/2;const y=iy0+_iy[i];iw=Math.max(iw,lw);
       L.forEach(k=>{if(k.ico){const im=ICO_IMG[k.ico],sz=_iF.fs*1.3;if(im&&im.complete&&im.naturalWidth)ctx.drawImage(im,x+(k.w-sz)/2,y-sz/2,sz,sz);x+=k.w;return;}
         ctx.font=richFont(k,_iF.fs);ctx.fillStyle=k.c||"#1e2230";ctx.fillText(k.t,x,y);if(k.u)ctx.fillRect(x,y+_iF.fs*0.52,k.w,Math.max(2,_iF.fs*0.07));x+=k.w;});});
-    if(infoFmt.frame){const pd=34*SCALE;ctx.save();ctx.lineWidth=6*SCALE;ctx.strokeStyle=infoFmt.frame;rrect(W/2+idx-iw/2-pd,iy0-_iF.fs*0.8-pd*0.5,iw+2*pd,(_iF.lines.length-1)*_ilh+_iF.fs*1.6+pd,18*SCALE);ctx.stroke();ctx.restore();}
+    if(infoFmt.frame){const pd=34*SCALE;ctx.save();ctx.lineWidth=6*SCALE;ctx.strokeStyle=infoFmt.frame;rrect(W/2+idx-iw/2-pd,iy0-_iF.fs*0.8-pd*0.5,iw+2*pd,_ih+_iF.fs*1.6+pd,18*SCALE);ctx.stroke();ctx.restore();}
     ctx.textAlign="center";
-    _hoverBox('infos',W/2+idx-iw/2-24*SCALE,iy0-_iF.fs*0.8,iw+48*SCALE,(_iF.lines.length-1)*_ilh+_iF.fs*1.6);
-    yB+=(_iF.lines.length-1)*_ilh+36*SCALE*_ts;
+    _hoverBox('infos',W/2+idx-iw/2-24*SCALE,iy0-_iF.fs*0.8,iw+48*SCALE,_ih+_iF.fs*1.6);
+    yB+=_ih+36*SCALE*_ts;
     textOver.infos=_iF.over?"cut":(_iF.fs<_ifs*0.999?"small":false);
   }else BBOX.infos=null;
   {
