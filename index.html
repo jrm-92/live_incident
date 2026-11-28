@@ -567,6 +567,10 @@
     .col-preview,.col-steps{min-width:0;}
     .img-strip{max-width:100%;}
   }
+  /* images : sur ordinateur, seulement la banque du formulaire ; sur téléphone, seulement la bande sous l'aperçu */
+  @media(min-width:1000px){#imgStrip{display:none !important;}}
+  @media(max-width:999px){#bankGrid,#bankBox label.import-btn{display:none !important;}
+  }
 </style>
 </head>
 <body>
