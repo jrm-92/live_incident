@@ -233,6 +233,10 @@
   .fmt-bar button[aria-pressed="true"]{background:var(--night);border-color:var(--night);color:#fff;}
   .fmt-size{min-width:28px;text-align:center;font-weight:800;color:var(--night);font-size:14px;}
   .fmt-sep{width:1px;height:26px;background:var(--border);margin:0 4px;}
+  .fmt-help{flex-basis:100%;font-size:12px;color:var(--muted);}
+  .rich-ed{width:100%;min-height:120px;max-height:240px;overflow-y:auto;padding:12px;font-size:16px;line-height:1.35;color:var(--ink);border:1.5px solid var(--border-strong);border-radius:10px;background:#fff;white-space:pre-wrap;word-wrap:break-word;outline:none;cursor:text;}
+  .rich-ed:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(10,0,130,.12);}
+  .rich-ed:empty::before{content:attr(data-placeholder);color:#8a93a6;pointer-events:none;}
   .trow .spchoice{flex:none;display:inline-flex;border:1px solid var(--night);border-radius:999px;overflow:hidden;}
   .trow .spopt{font-size:12px;font-weight:800;padding:6px 10px;color:var(--night);background:#fff;cursor:pointer;white-space:nowrap;}
   .trow .spopt.on{background:var(--night);color:#fff;}
@@ -856,8 +860,9 @@
           <div class="field-hint" id="titreHint"><span id="titreMsg"></span><span id="titreCount">0 / 500</span></div>
         </div>
         <div class="field" id="infosField">
-          <label class="fld" for="infos">Informations complémentaires <span class="opt">(facultatif)</span></label>
-          <textarea id="infos" maxlength="500" rows="5" autocomplete="off" placeholder="Ex : Reprise estimée à …"></textarea>
+          <label class="fld" id="infosLbl" for="infosEd">Informations complémentaires <span class="opt">(facultatif)</span></label>
+          <div id="infosEd" class="rich-ed" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Informations complémentaires" data-placeholder="Ex : Reprise estimée à …" spellcheck="true"></div>
+          <textarea id="infos" maxlength="500" hidden></textarea>
           <div class="fmt-bar" id="infosFmt" role="group" aria-label="Mise en forme du texte">
             <button type="button" data-f="minus" title="Texte plus petit" aria-label="Texte plus petit">A−</button>
             <span class="fmt-size" id="infosSize">34</span>
@@ -866,6 +871,7 @@
             <button type="button" data-f="b" aria-pressed="false" title="Gras"><b>G</b></button>
             <button type="button" data-f="i" aria-pressed="false" title="Italique"><i>I</i></button>
             <button type="button" data-f="u" aria-pressed="false" title="Souligné"><u>S</u></button>
+            <span class="fmt-help">Sélectionnez un passage du texte, puis G (gras), I (italique) ou S (souligné).</span>
           </div>
           <div class="field-hint" id="infosHint"><span id="infosMsg"></span><span id="infosCount">0 / 500</span></div>
         </div>
@@ -1052,7 +1058,10 @@ const SCALE=2,W=1920*SCALE,H=1080*SCALE,NAVY="#000082",RED_SEG="#E2001A",HDR=124
 const TYPES_AVEC_INTER=["Service de sécurité","Service de sécurité sur ordre","Ralentissement provisoire"];
 const KNOWN=["ralentissement_provisoire.png","service_securite.png","service_securite_sur_ordre.png","interruption_trafic.png","station_fermee.png"];
 let currentLineId=null,STATIONS=[],LINE_COLOR="#B7E600";
-const assets={};let interstations=[];const selectedStations=new Set();let trafficSegs=[];let trafficVoie="both";let infoFmt={size:34,b:false,i:false,u:false}; // mise en forme des informations complémentaireslet spPos={}; // SP : "avant" (avant gare) ou "apres" (après gare), par station // "1" (gauche → droite), "2" (droite → gauche), "both"
+const assets={};let interstations=[];const selectedStations=new Set();let trafficSegs=[];let trafficVoie="both"; // "1" (gauche → droite), "2" (droite → gauche), "both"
+let spPos={}; // SP : "avant" (avant gare) ou "apres" (après gare), par station
+let infoFmt={size:34}; // taille des informations complémentaires
+let infoRich=null; // informations complémentaires mises en forme : [[{t,b,i,u}…] par paragraphe]
 
 function hexToRgb(h){const m=h.replace("#","");return{r:parseInt(m.substr(0,2),16),g:parseInt(m.substr(2,2),16),b:parseInt(m.substr(4,2),16)};}
 function lighten(hex,a){const c=hexToRgb(hex);const f=v=>Math.round(v+(255-v)*a);return`rgb(${f(c.r)},${f(c.g)},${f(c.b)})`;}
@@ -2154,11 +2163,68 @@ function fitEditor(){
   if(w<vp.getBoundingClientRect().width)vp.style.maxWidth=Math.floor(w)+"px";
 }
 window.addEventListener("resize",()=>{if(typeof view!=="undefined")fitEditor();});
-function syncInfoFmtUI(){const b=$("infosFmt");if(!b)return;$("infosSize").textContent=String(infoFmt.size);
-  b.querySelectorAll("button[data-f]").forEach(x=>{if("biu".includes(x.dataset.f))x.setAttribute("aria-pressed",String(!!infoFmt[x.dataset.f]));});}
+// ── Éditeur « Informations complémentaires » : gras / italique / souligné sur une partie du texte ──
+const infosEd=$("infosEd");
+$("infosLbl").addEventListener("click",e=>{e.preventDefault();infosEd.focus();});
+function richFromEd(){
+  const paras=[[]];let need=false;
+  const cur=()=>paras[paras.length-1];
+  const BLOCK=/^(DIV|P|LI|H[1-6])$/;
+  const walk=(n,st)=>{
+    n.childNodes.forEach(c=>{
+      if(c.nodeType===3){const t=c.nodeValue.replace(/\u00a0/g," ");if(!t)return;if(need){paras.push([]);need=false;}cur().push({t,b:st.b,i:st.i,u:st.u});return;}
+      if(c.nodeType!==1)return;
+      const tg=c.tagName;
+      if(tg==="BR"){if(need){paras.push([]);need=false;}const p=c.parentNode;if(p!==infosEd&&BLOCK.test(p.tagName)&&p.lastChild===c)return;paras.push([]);return;}
+      const sty=c.style||{};
+      const ns={b:st.b||tg==="B"||tg==="STRONG"||/^(bold|[6-9]00)$/.test(sty.fontWeight||""),i:st.i||tg==="I"||tg==="EM"||sty.fontStyle==="italic",u:st.u||tg==="U"||/underline/.test(sty.textDecoration||sty.textDecorationLine||"")};
+      if(BLOCK.test(tg)){if(cur().length||need){paras.push([]);}need=false;walk(c,ns);need=true;}
+      else walk(c,ns);
+    });
+  };
+  walk(infosEd,{b:false,i:false,u:false});
+  return paras;
+}
+const richPlain=r=>(r||[]).map(p=>p.map(x=>x.t).join("")).join("\n");
+const plainToRich=t=>(t||"").replace(/\r/g,"").split("\n").map(l=>l?[{t:l,b:false,i:false,u:false}]:[]);
+function setEdFromRich(paras){
+  infosEd.innerHTML="";
+  const has=(paras||[]).some(p=>p.some(x=>x.t));
+  if(!has)return;
+  paras.forEach(p=>{
+    const d=document.createElement("div");
+    if(!p.length)d.appendChild(document.createElement("br"));
+    p.forEach(r=>{let n=document.createTextNode(r.t);
+      if(r.u){const e=document.createElement("u");e.appendChild(n);n=e;}
+      if(r.i){const e=document.createElement("i");e.appendChild(n);n=e;}
+      if(r.b){const e=document.createElement("b");e.appendChild(n);n=e;}
+      d.appendChild(n);});
+    infosEd.appendChild(d);
+  });
+}
+function setInfos(rich){infoRich=rich&&rich.length?rich:null;els.infos.value=richPlain(infoRich);setEdFromRich(infoRich);}
+infosEd.addEventListener("input",()=>{
+  infoRich=richFromEd();const txt=richPlain(infoRich);
+  if(!txt.trim()){infoRich=null;if(infosEd.textContent==="")infosEd.innerHTML="";}
+  els.infos.value=txt;els.infos.dispatchEvent(new Event("input"));touchDraft();syncFmtState();
+});
+infosEd.addEventListener("paste",e=>{e.preventDefault();const t=(e.clipboardData||window.clipboardData).getData("text/plain");document.execCommand("insertText",false,t);});
+infosEd.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&/^[biu]$/i.test(e.key)){e.preventDefault();applyFmt({b:"bold",i:"italic",u:"underline"}[e.key.toLowerCase()]);}});
+function selInEd(){const s=window.getSelection();return s&&s.rangeCount&&infosEd.contains(s.anchorNode)&&infosEd.contains(s.focusNode);}
+function applyFmt(cmd){
+  if(!selInEd()){infosEd.focus();const r=document.createRange();r.selectNodeContents(infosEd);const s=window.getSelection();s.removeAllRanges();s.addRange(r);}
+  try{document.execCommand("styleWithCSS",false,false);}catch(_){}
+  document.execCommand(cmd,false,null);
+  infosEd.dispatchEvent(new Event("input"));
+}
+function syncFmtState(){const b=$("infosFmt");if(!b)return;const on=selInEd();
+  [["b","bold"],["i","italic"],["u","underline"]].forEach(([f,c])=>{const x=b.querySelector(`[data-f="${f}"]`);let v=false;try{v=on&&document.queryCommandState(c);}catch(_){}x.setAttribute("aria-pressed",String(!!v));});}
+document.addEventListener("selectionchange",()=>{if(view==="app"&&step===3)syncFmtState();});
+function syncInfoFmtUI(){const b=$("infosFmt");if(!b)return;$("infosSize").textContent=String(infoFmt.size);syncFmtState();}
+$("infosFmt").addEventListener("mousedown",e=>{if(e.target.closest("button[data-f]"))e.preventDefault();});
 $("infosFmt").addEventListener("click",e=>{const x=e.target.closest("button[data-f]");if(!x)return;const f=x.dataset.f;
-  if(f==="plus")infoFmt.size=Math.min(80,infoFmt.size+4);else if(f==="minus")infoFmt.size=Math.max(16,infoFmt.size-4);else infoFmt[f]=!infoFmt[f];
-  syncInfoFmtUI();scheduleDraw();touchDraft();});
+  if(f==="plus"||f==="minus"){infoFmt.size=f==="plus"?Math.min(80,infoFmt.size+4):Math.max(16,infoFmt.size-4);syncInfoFmtUI();scheduleDraw();touchDraft();return;}
+  applyFmt({b:"bold",i:"italic",u:"underline"}[f]);});
 function renderStep(){
   for(let i=1;i<=4;i++)$("step"+i).classList.toggle("hidden",i!==step);
   els.app.dataset.step=String(step);
@@ -2252,7 +2318,7 @@ function renderRecap(){
 
 /* ── Brouillons et visuels récents (stockage local de l'appareil) ─────── */
 function snapshot(){
-  return{lineId:currentLineId,type:els.type.value,titre:els.titre.value,infos:els.infos.value,stations:[...selectedStations],segs:trafficSegs.map(x=>[...x]),voie:trafficVoie,sp:{...spPos},ifmt:{...infoFmt},inter:currentInterName()||desiredInter,
+  return{lineId:currentLineId,type:els.type.value,titre:els.titre.value,infos:els.infos.value,stations:[...selectedStations],segs:trafficSegs.map(x=>[...x]),voie:trafficVoie,sp:{...spPos},ifmt:{...infoFmt},infosRich:infoRich?JSON.parse(JSON.stringify(infoRich)):null,inter:currentInterName()||desiredInter,
     off:JSON.parse(JSON.stringify(OFF)),hidden:[...HIDDEN],textBoxes:textBoxes.map(b=>({...b})),
     strokes:strokes.map(s=>({color:s.color,w:s.w,pts:s.pts.map(p=>({x:Math.round(p.x),y:Math.round(p.y)}))})),stickers:stickers.map(s=>({...s})),step};
 }
@@ -2294,7 +2360,7 @@ function resetEdits(){
 function newVisual(){
   flushDraft();
   resetEdits();
-  curDraftId=null;modelChosen=false;pickTouched=false;lastAutoTitle="";trafficVoie="both";spPos={};infoFmt={size:34,b:false,i:false,u:false};syncInfoFmtUI();
+  curDraftId=null;modelChosen=false;pickTouched=false;lastAutoTitle="";trafficVoie="both";spPos={};infoFmt={size:34};setInfos(null);syncInfoFmtUI();
   els.type.value="";els.titre.value="";els.infos.value="";desiredInter="";
   currentLineId=null;STATIONS=[];clearSegs();rows.clear();els.zlist.innerHTML="";
   els.titre.placeholder="Titre du visuel";
@@ -2318,7 +2384,9 @@ function loadSnapshot(s,draftId,startStep){
   trafficSegs=(s.segs||[]).filter(x=>Array.isArray(x)&&STATIONS.includes(x[0])&&STATIONS.includes(x[1])).map(x=>[x[0],x[1]]);
   if(!trafficSegs.length&&m&&m.kind==="traffic"&&selectedStations.size===2)trafficSegs=[[...selectedStations]];
   if(trafficSegs.length)syncSelFromSegs();
-  trafficVoie=["1","2","both"].includes(s.voie)?s.voie:"both";spPos={...(s.sp||{})};infoFmt={size:34,b:false,i:false,u:false,...(s.ifmt||{})};syncInfoFmtUI();
+  trafficVoie=["1","2","both"].includes(s.voie)?s.voie:"both";spPos={...(s.sp||{})};infoFmt={size:(s.ifmt&&s.ifmt.size)||34};
+  {let r=Array.isArray(s.infosRich)?s.infosRich:plainToRich(s.infos||"");if(!s.infosRich&&s.ifmt)r=r.map(p=>p.map(x=>({...x,b:!!s.ifmt.b,i:!!s.ifmt.i,u:!!s.ifmt.u})));setInfos(r);}
+  syncInfoFmtUI();
   els.titre.value=s.titre||"";els.infos.value=s.infos||"";lastAutoTitle=autoTitle()===els.titre.value.trim()?els.titre.value.trim():"";desiredInter=s.inter||"";
   applyModelUI();updateStep1UI();updateTextHints();
   curDraftId=draftId;
@@ -3195,6 +3263,30 @@ function getInterImg(){if(!TYPES_AVEC_INTER.includes(els.type.value))return null
 function nowStamp(){const d=new Date();const p=n=>String(n).padStart(2,"0");return`${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;}
 
 // Ajuste un texte : retour à la ligne puis réduction de la police (jamais de coupe silencieuse)
+// Texte mis en forme (gras / italique / souligné par passage) : découpage en lignes, paragraphes conservés
+const richFont=(k,fs)=>`${k.i?"italic ":""}${k.b?"700":"400"} ${fs}px Lato, Arial`;
+function fitRich(paras,maxW,maxLines,baseFs,minFs){
+  while(paras.length&&!paras[paras.length-1].some(x=>x.t.trim()))paras=paras.slice(0,-1);
+  while(paras.length&&!paras[0].some(x=>x.t.trim()))paras=paras.slice(1);
+  if(!paras.length)return{lines:[],fs:baseFs,over:false};
+  let fs=baseFs;
+  for(;;){
+    const lines=[];let wide=false;
+    paras.forEach(p=>{
+      const toks=[];p.forEach(r=>r.t.split(/(\s+)/).forEach(t=>{if(!t)return;const sp=/^\s+$/.test(t);const k={t:sp?" ":t,b:r.b,i:r.i,u:r.u,sp};ctx.font=richFont(k,fs);k.w=ctx.measureText(k.t).width;toks.push(k);}));
+      let cur=[],w=0;
+      const flush=()=>{while(cur.length&&cur[cur.length-1].sp){w-=cur.pop().w;}lines.push(cur);cur=[];w=0;};
+      toks.forEach(k=>{
+        if(k.sp){if(cur.length){cur.push(k);w+=k.w;}return;}
+        if(cur.some(x=>!x.sp)&&w+k.w>maxW)flush();
+        cur.push(k);w+=k.w;if(w>maxW)wide=true;
+      });
+      flush();
+    });
+    if((lines.length<=maxLines&&!wide)||fs<=minFs)return{lines,fs,over:lines.length>maxLines||wide};
+    fs=Math.max(minFs,fs*0.94);
+  }
+}
 // Comme fitLines, mais en gardant les retours à la ligne tapés (paragraphes, lignes vides)
 function fitParas(text,maxW,maxLines,baseFs,minFs,weight){
   const paras=(text||"").replace(/\r/g,"").split("\n").map(p=>p.replace(/[ \t]+/g," ").trim());
@@ -3425,13 +3517,14 @@ function draw(){
     yB+=(_tF.lines.length-1)*_lh+_tlh+10*SCALE;
     textOver.titre=_tF.over?"cut":(_tF.fs<_tfs*0.999?"small":false);
   }
-  const _ifs=(infoFmt.size||34)*SCALE*_ts,_iw=(infoFmt.i?"italic ":"")+(infoFmt.b?"700":"400");
-  const _iF=fitParas(infos||"",_maxTW,8,_ifs,_ifs*0.55,_iw);
+  const _ifs=(infoFmt.size||34)*SCALE*_ts;
+  const _iF=fitRich(infoRich||plainToRich(infos||""),_maxTW,8,_ifs,_ifs*0.55);
   if(_iF.lines.length){
     yB+=_iF.fs*0.35;
-    ctx.font=`${_iw} ${_iF.fs}px Lato, Arial`;ctx.fillStyle="#1e2230";ctx.textAlign="center";ctx.textBaseline="middle";
-    const _ilh=_iF.fs*1.3;_iF.lines.forEach((l,i)=>{const lw=ctx.measureText(l).width;ctx.fillText(l,W/2,yB+i*_ilh);_tbw=Math.max(_tbw,lw);
-      if(infoFmt.u)ctx.fillRect(W/2-lw/2,yB+i*_ilh+_iF.fs*0.52,lw,Math.max(2,_iF.fs*0.07));});
+    ctx.fillStyle="#1e2230";ctx.textAlign="left";ctx.textBaseline="middle";
+    const _ilh=_iF.fs*1.3;_iF.lines.forEach((L,i)=>{const lw=L.reduce((a,k)=>a+k.w,0);let x=W/2-lw/2;const y=yB+i*_ilh;_tbw=Math.max(_tbw,lw);
+      L.forEach(k=>{ctx.font=richFont(k,_iF.fs);ctx.fillText(k.t,x,y);if(k.u)ctx.fillRect(x,y+_iF.fs*0.52,k.w,Math.max(2,_iF.fs*0.07));x+=k.w;});});
+    ctx.textAlign="center";
     yB+=(_iF.lines.length-1)*_ilh+36*SCALE*_ts;
     textOver.infos=_iF.over?"cut":(_iF.fs<_ifs*0.999?"small":false);
   }
