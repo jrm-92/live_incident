@@ -1917,7 +1917,7 @@ function updateThermo(){
     b.classList.toggle("down-red",r.i<list.length-1&&redPairs.has(name+"|"+list[r.i+1]));
     b.setAttribute("aria-checked",String(isSel));
     let tag="";
-    if(isPend)tag="Début ?";
+    if(isPend)tag="";
     else if(isSel&&kind==="traffic"){const seg=trafficSegs.find(([a,b])=>a===name||b===name);const isPt=seg?seg[0]===seg[1]&&!trafficSegs.some(([a,b])=>a!==b&&(a===name||b===name)):sel.size<2;tag=isPt?"Point":(isInter?"":"Limite");}
     else if(isSel&&kind==="closed")tag="Fermée";
     else if(isSel&&kind==="served")tag="Desservie";
