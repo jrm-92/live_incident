@@ -3521,8 +3521,8 @@ function draw(){
     const redDeg={};redSet.forEach(ei=>{const[u,v]=edges[ei];redDeg[u]=(redDeg[u]||0)+1;redDeg[v]=(redDeg[v]||0)+1;});
     const _isInt=typeLow==="interruption de trafic";
     Object.keys(pos).forEach(name=>{const p=pos[name];
-      // station SP (limite du tronçon interrompu) : desservie → rond vert
-      if(_isInt&&selectedStations.has(name)&&(redDeg[name]||0)===1){drawStationMarker(p.x,p.y,p.isTerm,"#00A650","#00A650");return;}
+      // station SP (limite du tronçon interrompu) : desservie → même rond que les stations ouvertes
+      if(_isInt&&selectedStations.has(name)&&(redDeg[name]||0)===1){drawStationMarker(p.x,p.y,p.isTerm,null);return;}
       drawStationMarker(p.x,p.y,p.isTerm,(redDeg[name]||0)>0?RED_SEG:null);});
     // croix rouges sur les stations sélectionnées (taille liée au marqueur)
     const xr=Math.max(5*SCALE,_mR*1.05);
