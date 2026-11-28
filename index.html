@@ -3193,7 +3193,7 @@ document.addEventListener("keydown",e=>{
 });
 
 function lineGeometry(){const n=STATIONS.length;const u=W-240;const sp=Math.min(u/Math.max(n-1,1),200);return{n,sp,xS:(W-sp*(n-1))/2};}
-function drawStationMarker(x,y,isTerm,col){const r=isTerm?_mR*1.5:_mR;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle="#fff";ctx.fill();ctx.strokeStyle=col||LINE_COLOR;ctx.lineWidth=Math.max(2.5*SCALE,r*0.52);ctx.stroke();}
+function drawStationMarker(x,y,isTerm,col,fill){const r=isTerm?_mR*1.5:_mR;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=fill||"#fff";ctx.fill();ctx.strokeStyle=col||LINE_COLOR;ctx.lineWidth=Math.max(2.5*SCALE,r*0.52);ctx.stroke();}
 // Stations à afficher sur deux lignes (liste manuelle, ordre = [ligne du haut, ligne du bas])
 // Stations affichées sur plusieurs lignes (haut -> bas)
 const WRAP={
@@ -3519,7 +3519,11 @@ function draw(){
       edges.forEach(([u,v],ei)=>{if(redSet.has(ei)){const a=pos[u],b=pos[v];ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}});
     }
     const redDeg={};redSet.forEach(ei=>{const[u,v]=edges[ei];redDeg[u]=(redDeg[u]||0)+1;redDeg[v]=(redDeg[v]||0)+1;});
-    Object.keys(pos).forEach(name=>{const p=pos[name];drawStationMarker(p.x,p.y,p.isTerm,(redDeg[name]||0)>0?RED_SEG:null);});
+    const _isInt=typeLow==="interruption de trafic";
+    Object.keys(pos).forEach(name=>{const p=pos[name];
+      // station SP (limite du tronçon interrompu) : desservie → rond vert
+      if(_isInt&&selectedStations.has(name)&&(redDeg[name]||0)===1){drawStationMarker(p.x,p.y,p.isTerm,"#00A650","#00A650");return;}
+      drawStationMarker(p.x,p.y,p.isTerm,(redDeg[name]||0)>0?RED_SEG:null);});
     // croix rouges sur les stations sélectionnées (taille liée au marqueur)
     const xr=Math.max(5*SCALE,_mR*1.05);
     Object.keys(pos).forEach(name=>{const p=pos[name];
