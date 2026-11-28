@@ -228,6 +228,11 @@
     display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;line-height:1;color:#fff;}
   .trow.term .dot{width:22px;height:22px;margin-top:-11px;left:12px;}
   .trow .nm{flex:1;min-width:0;line-height:1.2;}
+  .fmt-bar{display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap;}
+  .fmt-bar button{min-width:44px;min-height:40px;padding:4px 10px;border:1px solid var(--border);border-radius:10px;background:#fff;color:var(--night);font-size:16px;font-weight:800;cursor:pointer;}
+  .fmt-bar button[aria-pressed="true"]{background:var(--night);border-color:var(--night);color:#fff;}
+  .fmt-size{min-width:28px;text-align:center;font-weight:800;color:var(--night);font-size:14px;}
+  .fmt-sep{width:1px;height:26px;background:var(--border);margin:0 4px;}
   .trow .spchoice{flex:none;display:inline-flex;border:1px solid var(--night);border-radius:999px;overflow:hidden;}
   .trow .spopt{font-size:12px;font-weight:800;padding:6px 10px;color:var(--night);background:#fff;cursor:pointer;white-space:nowrap;}
   .trow .spopt.on{background:var(--night);color:#fff;}
@@ -853,6 +858,15 @@
         <div class="field" id="infosField">
           <label class="fld" for="infos">Informations complémentaires <span class="opt">(facultatif)</span></label>
           <textarea id="infos" maxlength="500" rows="2" autocomplete="off" placeholder="Ex : Reprise estimée à …"></textarea>
+          <div class="fmt-bar" id="infosFmt" role="group" aria-label="Mise en forme du texte">
+            <button type="button" data-f="minus" title="Texte plus petit" aria-label="Texte plus petit">A−</button>
+            <span class="fmt-size" id="infosSize">34</span>
+            <button type="button" data-f="plus" title="Texte plus grand" aria-label="Texte plus grand">A+</button>
+            <span class="fmt-sep"></span>
+            <button type="button" data-f="b" aria-pressed="false" title="Gras"><b>G</b></button>
+            <button type="button" data-f="i" aria-pressed="false" title="Italique"><i>I</i></button>
+            <button type="button" data-f="u" aria-pressed="false" title="Souligné"><u>S</u></button>
+          </div>
           <div class="field-hint" id="infosHint"><span id="infosMsg"></span><span id="infosCount">0 / 500</span></div>
         </div>
         <div class="field hidden" id="interRow">
@@ -1038,7 +1052,7 @@ const SCALE=2,W=1920*SCALE,H=1080*SCALE,NAVY="#000082",RED_SEG="#E2001A",HDR=124
 const TYPES_AVEC_INTER=["Service de sécurité","Service de sécurité sur ordre","Ralentissement provisoire"];
 const KNOWN=["ralentissement_provisoire.png","service_securite.png","service_securite_sur_ordre.png","interruption_trafic.png","station_fermee.png"];
 let currentLineId=null,STATIONS=[],LINE_COLOR="#B7E600";
-const assets={};let interstations=[];const selectedStations=new Set();let trafficSegs=[];let trafficVoie="both";let spPos={}; // SP : "avant" (avant gare) ou "apres" (après gare), par station // "1" (gauche → droite), "2" (droite → gauche), "both"
+const assets={};let interstations=[];const selectedStations=new Set();let trafficSegs=[];let trafficVoie="both";let infoFmt={size:34,b:false,i:false,u:false}; // mise en forme des informations complémentaireslet spPos={}; // SP : "avant" (avant gare) ou "apres" (après gare), par station // "1" (gauche → droite), "2" (droite → gauche), "both"
 
 function hexToRgb(h){const m=h.replace("#","");return{r:parseInt(m.substr(0,2),16),g:parseInt(m.substr(2,2),16),b:parseInt(m.substr(4,2),16)};}
 function lighten(hex,a){const c=hexToRgb(hex);const f=v=>Math.round(v+(255-v)*a);return`rgb(${f(c.r)},${f(c.g)},${f(c.b)})`;}
@@ -2140,6 +2154,11 @@ function fitEditor(){
   if(w<vp.getBoundingClientRect().width)vp.style.maxWidth=Math.floor(w)+"px";
 }
 window.addEventListener("resize",()=>{if(typeof view!=="undefined")fitEditor();});
+function syncInfoFmtUI(){const b=$("infosFmt");if(!b)return;$("infosSize").textContent=String(infoFmt.size);
+  b.querySelectorAll("button[data-f]").forEach(x=>{if("biu".includes(x.dataset.f))x.setAttribute("aria-pressed",String(!!infoFmt[x.dataset.f]));});}
+$("infosFmt").addEventListener("click",e=>{const x=e.target.closest("button[data-f]");if(!x)return;const f=x.dataset.f;
+  if(f==="plus")infoFmt.size=Math.min(80,infoFmt.size+4);else if(f==="minus")infoFmt.size=Math.max(16,infoFmt.size-4);else infoFmt[f]=!infoFmt[f];
+  syncInfoFmtUI();scheduleDraw();touchDraft();});
 function renderStep(){
   for(let i=1;i<=4;i++)$("step"+i).classList.toggle("hidden",i!==step);
   els.app.dataset.step=String(step);
@@ -2233,7 +2252,7 @@ function renderRecap(){
 
 /* ── Brouillons et visuels récents (stockage local de l'appareil) ─────── */
 function snapshot(){
-  return{lineId:currentLineId,type:els.type.value,titre:els.titre.value,infos:els.infos.value,stations:[...selectedStations],segs:trafficSegs.map(x=>[...x]),voie:trafficVoie,sp:{...spPos},inter:currentInterName()||desiredInter,
+  return{lineId:currentLineId,type:els.type.value,titre:els.titre.value,infos:els.infos.value,stations:[...selectedStations],segs:trafficSegs.map(x=>[...x]),voie:trafficVoie,sp:{...spPos},ifmt:{...infoFmt},inter:currentInterName()||desiredInter,
     off:JSON.parse(JSON.stringify(OFF)),hidden:[...HIDDEN],textBoxes:textBoxes.map(b=>({...b})),
     strokes:strokes.map(s=>({color:s.color,w:s.w,pts:s.pts.map(p=>({x:Math.round(p.x),y:Math.round(p.y)}))})),stickers:stickers.map(s=>({...s})),step};
 }
@@ -2275,7 +2294,7 @@ function resetEdits(){
 function newVisual(){
   flushDraft();
   resetEdits();
-  curDraftId=null;modelChosen=false;pickTouched=false;lastAutoTitle="";trafficVoie="both";spPos={};
+  curDraftId=null;modelChosen=false;pickTouched=false;lastAutoTitle="";trafficVoie="both";spPos={};infoFmt={size:34,b:false,i:false,u:false};syncInfoFmtUI();
   els.type.value="";els.titre.value="";els.infos.value="";desiredInter="";
   currentLineId=null;STATIONS=[];clearSegs();rows.clear();els.zlist.innerHTML="";
   els.titre.placeholder="Titre du visuel";
@@ -2299,7 +2318,7 @@ function loadSnapshot(s,draftId,startStep){
   trafficSegs=(s.segs||[]).filter(x=>Array.isArray(x)&&STATIONS.includes(x[0])&&STATIONS.includes(x[1])).map(x=>[x[0],x[1]]);
   if(!trafficSegs.length&&m&&m.kind==="traffic"&&selectedStations.size===2)trafficSegs=[[...selectedStations]];
   if(trafficSegs.length)syncSelFromSegs();
-  trafficVoie=["1","2","both"].includes(s.voie)?s.voie:"both";spPos={...(s.sp||{})};
+  trafficVoie=["1","2","both"].includes(s.voie)?s.voie:"both";spPos={...(s.sp||{})};infoFmt={size:34,b:false,i:false,u:false,...(s.ifmt||{})};syncInfoFmtUI();
   els.titre.value=s.titre||"";els.infos.value=s.infos||"";lastAutoTitle=autoTitle()===els.titre.value.trim()?els.titre.value.trim():"";desiredInter=s.inter||"";
   applyModelUI();updateStep1UI();updateTextHints();
   curDraftId=draftId;
@@ -3392,11 +3411,13 @@ function draw(){
     yB+=(_tF.lines.length-1)*_lh+_tlh+10*SCALE;
     textOver.titre=_tF.over?"cut":(_tF.fs<_tfs*0.999?"small":false);
   }
-  const _ifs=20*SCALE*_ts;
-  const _iF=fitLines(infos||"",_maxTW,3,_ifs,_ifs*0.6,"400");
+  const _ifs=(infoFmt.size||34)*SCALE*_ts,_iw=(infoFmt.i?"italic ":"")+(infoFmt.b?"700":"400");
+  const _iF=fitLines(infos||"",_maxTW,4,_ifs,_ifs*0.6,_iw);
   if(_iF.lines.length){
-    ctx.font=`400 ${_iF.fs}px Lato, Arial`;ctx.fillStyle="#1e2230";ctx.textAlign="center";ctx.textBaseline="middle";
-    const _ilh=_iF.fs*1.3;_iF.lines.forEach((l,i)=>{ctx.fillText(l,W/2,yB+i*_ilh);_tbw=Math.max(_tbw,ctx.measureText(l).width);});
+    yB+=_iF.fs*0.35;
+    ctx.font=`${_iw} ${_iF.fs}px Lato, Arial`;ctx.fillStyle="#1e2230";ctx.textAlign="center";ctx.textBaseline="middle";
+    const _ilh=_iF.fs*1.3;_iF.lines.forEach((l,i)=>{const lw=ctx.measureText(l).width;ctx.fillText(l,W/2,yB+i*_ilh);_tbw=Math.max(_tbw,lw);
+      if(infoFmt.u)ctx.fillRect(W/2-lw/2,yB+i*_ilh+_iF.fs*0.52,lw,Math.max(2,_iF.fs*0.07));});
     yB+=(_iF.lines.length-1)*_ilh+36*SCALE*_ts;
     textOver.infos=_iF.over?"cut":(_iF.fs<_ifs*0.999?"small":false);
   }
